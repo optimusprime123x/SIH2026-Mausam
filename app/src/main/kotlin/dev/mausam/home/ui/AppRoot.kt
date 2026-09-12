@@ -4,6 +4,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -42,7 +45,20 @@ fun AppRoot(graph: AppGraph) {
 private fun MainNav() {
     var route by rememberSaveable { mutableStateOf(Route.HOME) }
     BackHandler(enabled = route != Route.HOME) { route = Route.HOME }
-    AnimatedContent(route, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "nav") { r ->
+    val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntOffset>()
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    AnimatedContent(
+        route,
+        transitionSpec = {
+            val forward = targetState != Route.HOME
+            if (forward) {
+                (slideInHorizontally(spatial) { it / 3 } + fadeIn(effects)) togetherWith (slideOutHorizontally(spatial) { -it / 5 } + fadeOut(effects))
+            } else {
+                (slideInHorizontally(spatial) { -it / 5 } + fadeIn(effects)) togetherWith (slideOutHorizontally(spatial) { it / 3 } + fadeOut(effects))
+            }
+        },
+        label = "nav",
+    ) { r ->
         when (r) {
             Route.HOME -> HomeScreen(vm = graphViewModel(), onOpenLocations = { route = Route.LOCATIONS }, onOpenSettings = { route = Route.SETTINGS })
             Route.LOCATIONS -> LocationsScreen(vm = graphViewModel(), onBack = { route = Route.HOME })

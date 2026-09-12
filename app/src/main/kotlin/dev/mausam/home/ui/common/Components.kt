@@ -19,7 +19,36 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.DirectionsRun
+import androidx.compose.material.icons.rounded.AcUnit
+import androidx.compose.material.icons.rounded.Agriculture
+import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.Cloud
+import androidx.compose.material.icons.rounded.DepartureBoard
+import androidx.compose.material.icons.rounded.DeviceThermostat
+import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.Flare
+import androidx.compose.material.icons.rounded.Flight
+import androidx.compose.material.icons.rounded.GppGood
+import androidx.compose.material.icons.rounded.LocalFlorist
+import androidx.compose.material.icons.rounded.Luggage
+import androidx.compose.material.icons.rounded.NightsStay
+import androidx.compose.material.icons.rounded.Opacity
+import androidx.compose.material.icons.rounded.ReportProblem
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Spa
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Thunderstorm
+import androidx.compose.material.icons.rounded.Traffic
+import androidx.compose.material.icons.rounded.Umbrella
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.WaterDrop
+import androidx.compose.material.icons.rounded.Waves
+import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.material.icons.rounded.WbTwilight
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -52,21 +81,63 @@ import dev.mausam.home.ui.theme.MausamRadius
 import dev.mausam.home.ui.theme.Space
 import dev.mausam.home.ui.theme.onAccent
 
-/** Meteocons (MIT) animated icon from assets; Material Symbols fallback while it loads or if missing. */
+/** The Material symbol for an icon key: the real icon for symbol keys, the static stand-in for Meteocons. */
+fun symbolFor(icon: WeatherIcon): ImageVector = when (icon) {
+    WeatherIcon.CLEAR_DAY, WeatherIcon.SUN_HOT -> Icons.Rounded.WbSunny
+    WeatherIcon.CLEAR_NIGHT -> Icons.Rounded.NightsStay
+    WeatherIcon.PARTLY_CLOUDY_DAY, WeatherIcon.PARTLY_CLOUDY_NIGHT, WeatherIcon.CLOUDY, WeatherIcon.OVERCAST -> Icons.Rounded.Cloud
+    WeatherIcon.FOG, WeatherIcon.HAZE, WeatherIcon.MIST, WeatherIcon.DUST, WeatherIcon.SMOKE -> Icons.Rounded.Visibility
+    WeatherIcon.DRIZZLE, WeatherIcon.RAIN, WeatherIcon.RAINDROPS, WeatherIcon.RAINDROP -> Icons.Rounded.WaterDrop
+    WeatherIcon.THUNDERSTORMS, WeatherIcon.THUNDERSTORMS_RAIN -> Icons.Rounded.Thunderstorm
+    WeatherIcon.SNOW, WeatherIcon.SNOWFLAKE, WeatherIcon.HAIL -> Icons.Rounded.AcUnit
+    WeatherIcon.WIND, WeatherIcon.HURRICANE -> Icons.Rounded.Air
+    WeatherIcon.HUMIDITY -> Icons.Rounded.Opacity
+    WeatherIcon.UV_INDEX -> Icons.Rounded.Flare
+    WeatherIcon.SUNRISE, WeatherIcon.SUNSET -> Icons.Rounded.WbTwilight
+    WeatherIcon.THERMOMETER, WeatherIcon.THERMOMETER_WARMER, WeatherIcon.THERMOMETER_COLDER -> Icons.Rounded.DeviceThermostat
+    WeatherIcon.UMBRELLA -> Icons.Rounded.Umbrella
+    WeatherIcon.COMPASS -> Icons.Rounded.Explore
+    WeatherIcon.ALERT, WeatherIcon.ALERT_YELLOW, WeatherIcon.ALERT_RED -> Icons.Rounded.ReportProblem
+    WeatherIcon.TIDE, WeatherIcon.WAVES, WeatherIcon.TIDES -> Icons.Rounded.Waves
+    WeatherIcon.STAR -> Icons.Rounded.Star
+    WeatherIcon.CALENDAR -> Icons.Rounded.Event
+    WeatherIcon.NOT_AVAILABLE, WeatherIcon.PENDING -> Icons.Rounded.Schedule
+    WeatherIcon.RUN -> Icons.AutoMirrored.Rounded.DirectionsRun
+    WeatherIcon.POLLEN -> Icons.Rounded.LocalFlorist
+    WeatherIcon.SHIELD -> Icons.Rounded.GppGood
+    WeatherIcon.FLIGHT -> Icons.Rounded.Flight
+    WeatherIcon.SCHOOL -> Icons.Rounded.School
+    WeatherIcon.AGRO -> Icons.Rounded.Agriculture
+    WeatherIcon.TRAFFIC -> Icons.Rounded.Traffic
+    WeatherIcon.COMMUTE -> Icons.Rounded.DepartureBoard
+    WeatherIcon.COMFORT -> Icons.Rounded.Spa
+    WeatherIcon.LUGGAGE -> Icons.Rounded.Luggage
+    WeatherIcon.AIR -> Icons.Rounded.Air
+}
+
+/**
+ * Meteocons (MIT) animated icon from assets for weather keys; a Material symbol for activity keys,
+ * for previews, and while a Lottie file loads. [tint] colours the symbol only.
+ */
 @Composable
-fun MeteoconIcon(icon: WeatherIcon, size: Dp, modifier: Modifier = Modifier, animated: Boolean = true) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.Asset("meteocons/${icon.assetName}.json"))
+fun MeteoconIcon(icon: WeatherIcon, size: Dp, modifier: Modifier = Modifier, animated: Boolean = true, tint: Color = MaterialTheme.colorScheme.onSurface) {
     val a11y = LocalMausamA11y.current
-    Box(modifier.size(size)) {
-        if (composition != null) {
-            LottieAnimation(
-                composition = composition,
-                iterations = LottieConstants.IterateForever,
-                isPlaying = animated && !a11y.reduceMotion,
-                modifier = Modifier.size(size),
-            )
+    val useSymbol = icon.symbol || LocalInspectionMode.current
+    Box(modifier.size(size), contentAlignment = Alignment.Center) {
+        if (useSymbol) {
+            Icon(symbolFor(icon), contentDescription = null, modifier = Modifier.size(size * 0.62f), tint = tint)
         } else {
-            Icon(Icons.Rounded.Cloud, contentDescription = null, modifier = Modifier.size(size * 0.7f).padding(size * 0.15f), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            val composition by rememberLottieComposition(LottieCompositionSpec.Asset("meteocons/${icon.assetName}.json"))
+            if (composition != null) {
+                LottieAnimation(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    isPlaying = animated && !a11y.reduceMotion,
+                    modifier = Modifier.size(size),
+                )
+            } else {
+                Icon(symbolFor(icon), contentDescription = null, modifier = Modifier.size(size * 0.62f), tint = tint)
+            }
         }
     }
 }
@@ -82,7 +153,7 @@ fun AccentIconDisc(icon: WeatherIcon?, accent: AccentSet, size: Dp, modifier: Mo
             .background(accent.container.copy(alpha = 0.35f)),
         contentAlignment = Alignment.Center,
     ) {
-        if (icon != null) MeteoconIcon(icon, size = size * 0.82f, animated = animated)
+        if (icon != null) MeteoconIcon(icon, size = size * 0.82f, animated = animated, tint = accent.onContainer)
     }
 }
 

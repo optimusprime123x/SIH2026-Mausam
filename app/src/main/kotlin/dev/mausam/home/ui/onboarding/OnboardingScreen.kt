@@ -6,6 +6,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import kotlinx.coroutines.delay
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -127,13 +137,24 @@ class MorphShape(private val morph: Morph, private val progress: Float) : Shape 
 fun OnboardingScreen(vm: OnboardingViewModel, onDone: () -> Unit) {
     val step by vm.step.collectAsStateWithLifecycle()
     val a11y = LocalMausamA11y.current
+    val haze = remember { HazeState() }
+    haze.blurEnabled = a11y.glassBlur
+    val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntOffset>()
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     Box(Modifier.fillMaxSize()) {
-        AuroraBackdrop(animated = a11y.sceneAnimated, modifier = Modifier.fillMaxSize())
+        AuroraBackdrop(animated = a11y.sceneAnimated, modifier = Modifier.fillMaxSize().hazeSource(haze))
         Box(Modifier.fillMaxSize().safeDrawingPadding()) {
-            AnimatedContent(step, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "onboarding") { s ->
+            AnimatedContent(
+                step,
+                transitionSpec = {
+                    (slideInHorizontally(spatial) { it / 3 } + fadeIn(effects)) togetherWith
+                        (slideOutHorizontally(spatial) { -it / 3 } + fadeOut(effects))
+                },
+                label = "onboarding",
+            ) { s ->
                 when (s) {
                     OnboardingStep.LOCATION -> LocationStep(vm)
-                    OnboardingStep.PERSONAS -> PersonaStep(vm, onDone)
+                    OnboardingStep.PERSONAS -> PersonaStep(vm, onDone, haze)
                 }
             }
         }
@@ -196,7 +217,7 @@ fun LocationStepContent(
 }
 
 @Composable
-private fun PersonaStep(vm: OnboardingViewModel, onDone: () -> Unit) {
+private fun PersonaStep(vm: OnboardingViewModel, onDone: () -> Unit, haze: HazeState) {
     val selected by vm.selected.collectAsStateWithLifecycle()
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     fun finish(skip: Boolean) {
@@ -205,11 +226,11 @@ private fun PersonaStep(vm: OnboardingViewModel, onDone: () -> Unit) {
             onDone()
         }
     }
-    PersonaStepContent(selected = selected, onToggle = vm::toggle, onSkip = { finish(true) }, onContinue = { finish(false) })
+    PersonaStepContent(selected = selected, onToggle = vm::toggle, onSkip = { finish(true) }, onContinue = { finish(false) }, haze = haze)
 }
 
 @Composable
-fun PersonaStepContent(selected: Set<Persona>, onToggle: (Persona) -> Unit, onSkip: () -> Unit, onContinue: () -> Unit) {
+fun PersonaStepContent(selected: Set<Persona>, onToggle: (Persona) -> Unit, onSkip: () -> Unit, onContinue: () -> Unit, haze: HazeState? = null) {
     val cs = MaterialTheme.colorScheme
     val a11y = LocalMausamA11y.current
     Column(Modifier.fillMaxSize().padding(horizontal = Space.s4)) {
@@ -228,7 +249,7 @@ fun PersonaStepContent(selected: Set<Persona>, onToggle: (Persona) -> Unit, onSk
             verticalArrangement = Arrangement.spacedBy(Space.s3), horizontalArrangement = Arrangement.spacedBy(Space.s3),
             contentPadding = PaddingValues(bottom = Space.s4),
         ) {
-            items(Persona.pickable, key = { it.key }) { p -> PersonaTile(p, p in selected) { onToggle(p) } }
+            itemsIndexed(Persona.pickable, key = { _, p -> p.key }) { i, p -> PersonaTile(p, p in selected, i, haze) { onToggle(p) } }
         }
         Row(Modifier.fillMaxWidth().padding(vertical = Space.s3), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = onSkip) { Text("Skip") }
@@ -238,18 +259,27 @@ fun PersonaStepContent(selected: Set<Persona>, onToggle: (Persona) -> Unit, onSk
 }
 
 @Composable
-private fun PersonaTile(persona: Persona, selected: Boolean, onClick: () -> Unit) {
+private fun PersonaTile(persona: Persona, selected: Boolean, index: Int, haze: HazeState?, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
+    val a11y = LocalMausamA11y.current
     val accent = Fluent.forPersona(persona)
     val morph = remember(persona) { Morph(MaterialShapes.Circle, personaPolygon(persona)) }
+    // The morph follows the spatial spring; the pop overshoots on purpose (expressive bounce).
     val p by animateFloatAsState(if (selected) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "morph")
+    val pop by animateFloatAsState(if (selected) 1f else 0f, spring(dampingRatio = 0.45f, stiffness = 420f), label = "pop")
     val shape = remember(p) { MorphShape(morph, p) }
     val fill = lerp(accent.copy(alpha = 0.55f), accent, p)
+    // Staggered entrance: 50 ms per tile, rising 20 dp.
+    var shown by remember { mutableStateOf(a11y.reduceMotion) }
+    LaunchedEffect(Unit) { if (!shown) { delay(60L * index); shown = true } }
+    val enterA by animateFloatAsState(if (shown) 1f else 0f, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "enterA")
+    val enterY by animateFloatAsState(if (shown) 0f else 20f, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "enterY")
     Column(
         Modifier
             .fillMaxWidth()
-            .mausamGlass(null, GlassTier.CARD, MausamRadius.cardShape, tint = if (selected) lerp(cs.surfaceContainer, accent, 0.18f) else null, wash = accent.copy(alpha = if (selected) 0.35f else 0.12f))
+            .graphicsLayer { alpha = enterA; translationY = enterY * density }
+            .mausamGlass(haze, GlassTier.CARD, MausamRadius.cardShape, tint = if (selected) lerp(cs.surfaceContainer, accent, 0.18f) else null, wash = accent.copy(alpha = if (selected) 0.35f else 0.12f))
             .clickable { haptics.performHapticFeedback(if (selected) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn); onClick() }
             .padding(Space.s4),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -258,7 +288,7 @@ private fun PersonaTile(persona: Persona, selected: Boolean, onClick: () -> Unit
             Modifier
                 .fillMaxWidth(0.56f)
                 .aspectRatio(1f)
-                .graphicsLayer { scaleX = 1f + 0.05f * p; scaleY = 1f + 0.05f * p; rotationZ = -8f * p }
+                .graphicsLayer { scaleX = 1f + 0.08f * pop; scaleY = 1f + 0.08f * pop; rotationZ = -8f * pop }
                 .clip(shape)
                 .background(Brush.linearGradient(listOf(lerp(fill, androidx.compose.ui.graphics.Color.White, 0.18f), fill))),
             contentAlignment = Alignment.Center,

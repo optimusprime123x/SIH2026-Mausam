@@ -69,7 +69,7 @@ object CardRegistry {
         CardValue.Ready(
             primary = aq.aqi.toString(), unit = "AQI",
             secondary = "${cat.label} · $deltaText",
-            trend = trend, tone = tone, icon = WeatherIcon.HAZE, numeric = aq.aqi.toDouble(),
+            trend = trend, tone = tone, icon = WeatherIcon.AIR, numeric = aq.aqi.toDouble(),
             body = cat.advice,
         )
     }
@@ -155,7 +155,7 @@ object CardRegistry {
         CardValue.Ready(
             primary = "${ctx.fmt.clock(w.start)} – ${ctx.fmt.clock(w.end)}",
             secondary = "$quality conditions · score ${w.score}",
-            tone = tone, icon = WeatherIcon.THERMOMETER, numeric = w.score.toDouble(),
+            tone = tone, icon = WeatherIcon.RUN, numeric = w.score.toDouble(),
         )
     }
 
@@ -265,7 +265,7 @@ object CardRegistry {
     ) { ctx ->
         val target = ctx.destinations.firstOrNull() ?: ctx.bundle
         val tip = Packing.tip(target.daily) ?: return@CardSpec CardValue.Unavailable("No forecast cached")
-        CardValue.Ready(primary = tip, secondary = "For ${target.location.name}", icon = WeatherIcon.UMBRELLA)
+        CardValue.Ready(primary = tip, secondary = "For ${target.location.name}", icon = WeatherIcon.LUGGAGE)
     }
 
     // ---------------------------------------------------------------- Parents
@@ -364,7 +364,7 @@ object CardRegistry {
         sourceLabel = "GKMS bulletin", detail = DetailKind.Text, wide = true,
     ) { ctx ->
         val a = ctx.bundle.advisory ?: return@CardSpec CardValue.Pending("Agromet advisory source being added")
-        CardValue.Ready(primary = a.title, secondary = a.body.take(120), icon = WeatherIcon.COMPASS, body = a.body)
+        CardValue.Ready(primary = a.title, secondary = a.body.take(120), icon = WeatherIcon.AGRO, body = a.body)
     }
 
     // ---------------------------------------------------------------- Commuters
@@ -422,7 +422,7 @@ object CardRegistry {
         val minutes = if (r.likely) 20 else 10
         CardValue.Ready(
             primary = "+$minutes min", secondary = "${r.maxProbabilityPct}% rain chance ${ctx.fmt.clock(r.hours.first().time)} – ${ctx.fmt.clock(r.hours.last().time.plusSeconds(3600))}",
-            tone = if (r.likely) Tone.WARNING else Tone.CAUTION, icon = WeatherIcon.UMBRELLA, numeric = minutes.toDouble(),
+            tone = if (r.likely) Tone.WARNING else Tone.CAUTION, icon = WeatherIcon.COMMUTE, numeric = minutes.toDouble(),
         )
     }
 
@@ -431,7 +431,7 @@ object CardRegistry {
         sourceLabel = "Opens Maps", detail = DetailKind.None,
         action = CardAction.DeepLink("geo:0,0?q=traffic", "Open in Maps"),
     ) { ctx ->
-        CardValue.Ready(primary = "Live traffic", secondary = "Open Maps for ${ctx.location.name}", icon = WeatherIcon.COMPASS)
+        CardValue.Ready(primary = "Live traffic", secondary = "Open Maps for ${ctx.location.name}", icon = WeatherIcon.TRAFFIC)
     }
 
     // ---------------------------------------------------------------- Event planners
@@ -460,7 +460,7 @@ object CardRegistry {
         val feels = maxOf(Thermal.heatIndexC(cur.temperatureC, h.toDouble()), Thermal.humidexC(cur.temperatureC, h.toDouble()))
         CardValue.Ready(
             primary = c.label, secondary = "Feels like ${ctx.fmt.temp(feels)}",
-            tone = c.tone, icon = WeatherIcon.THERMOMETER, numeric = feels,
+            tone = c.tone, icon = WeatherIcon.COMFORT, numeric = feels,
         )
     }
 

@@ -30,7 +30,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.remember
 import dev.mausam.home.ui.common.AccentIconDisc
 import dev.mausam.home.ui.theme.Fluent
@@ -63,6 +67,7 @@ import dev.mausam.home.ui.glass.GlassTier
 import dev.mausam.home.ui.glass.mausamGlass
 import dev.mausam.home.ui.home.HomeUiState
 import dev.mausam.home.ui.home.toneColor
+import dev.mausam.home.ui.home.placeholderIcon
 import dev.mausam.home.ui.theme.ImdTiers
 import dev.mausam.home.ui.theme.LocalIsDark
 import dev.mausam.home.ui.theme.MausamRadius
@@ -156,7 +161,7 @@ fun SharedTransitionScope.DetailSheet(
                         }
                     }
                     Spacer(Modifier.width(Space.s3))
-                    AccentIconDisc((value as? CardValue.Ready)?.icon, accent, 72.dp)
+                    AccentIconDisc((value as? CardValue.Ready)?.icon ?: placeholderIcon(cardId), accent, 72.dp)
                 }
             }
             Column(
@@ -169,7 +174,7 @@ fun SharedTransitionScope.DetailSheet(
                     null -> Text("Nothing to show yet.", color = cs.onSurfaceVariant)
                     is CardValue.Pending -> Text(value.reason, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
                     is CardValue.Unavailable -> Text(value.message, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
-                    is CardValue.Ready -> if (spec != null && ctx != null) DetailBody(spec.detail, ctx, value, state)
+                    is CardValue.Ready -> if (spec != null && ctx != null) DetailBody(spec.detail, ctx, value, state, accent.accent)
                 }
                 Spacer(Modifier.height(Space.s6))
                 val src = state.bundle?.sources?.values?.firstOrNull { spec != null && it.label.contains(spec.sourceLabel.take(8), true) }?.label ?: spec?.sourceLabel
@@ -184,7 +189,7 @@ fun SharedTransitionScope.DetailSheet(
 private val dayFmt = DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)
 
 @Composable
-private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Ready, state: HomeUiState) {
+private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Ready, state: HomeUiState, accentColor: Color) {
     val cs = MaterialTheme.colorScheme
     val fmt = ctx.fmt
     when (kind) {
@@ -215,7 +220,11 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
                         HourlyMetric.HUMIDITY -> (h.humidityPct ?: 0) / 100f
                         else -> ((h.temperatureC - 5) / 40.0).toFloat()
                     }.coerceIn(0.05f, 1f)
-                    Box(Modifier.padding(top = Space.s1).width(6.dp).height((40 * bar).dp).clip(MausamRadius.chipShape).background(cs.primary))
+                    // Bars grow in from zero when the sheet opens, one after another.
+                    var grown by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) { kotlinx.coroutines.delay(30L * i); grown = true }
+                    val h by animateFloatAsState(if (grown) bar else 0.05f, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "bar")
+                    Box(Modifier.padding(top = Space.s1).width(6.dp).height((40 * h).dp).clip(MausamRadius.chipShape).background(accentColor))
                 }
             } }
         }
@@ -236,7 +245,7 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
                         val x0 = ((d.minC - lo) / span * size.width).toFloat()
                         val x1 = ((d.maxC - lo) / span * size.width).toFloat()
                         drawRoundRect(cs.surfaceVariant, size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
-                        drawRoundRect(cs.primary, topLeft = Offset(x0, 0f), size = androidx.compose.ui.geometry.Size((x1 - x0).coerceAtLeast(6.dp.toPx()), size.height), cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
+                        drawRoundRect(accentColor, topLeft = Offset(x0, 0f), size = androidx.compose.ui.geometry.Size((x1 - x0).coerceAtLeast(6.dp.toPx()), size.height), cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
                     }
                     Text(fmt.temp(d.maxC), style = MaterialTheme.typography.bodyMedium, color = cs.onSurface, modifier = Modifier.width(40.dp).padding(start = Space.s2))
                 }
@@ -255,7 +264,7 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
                         val y = size.height - (p.aqi - minV) / (maxV - minV) * size.height
                         if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
                     }
-                    drawPath(path, cs.primary, style = Stroke(width = 3.dp.toPx()))
+                    drawPath(path, accentColor, style = Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
                 }
                 Text("${pts.minOf { it.aqi }} to ${pts.maxOf { it.aqi }} AQI over the last day", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             } else Text("No trend history yet.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)

@@ -159,6 +159,8 @@ private fun SceneLayer(spec: SceneSpec, animated: Boolean, collapse: Float, modi
     val hillsNear = painterResource(R.drawable.scene_hills_near)
     val skyline = painterResource(R.drawable.scene_skyline)
     val bolt = painterResource(R.drawable.scene_bolt)
+    val storm = painterResource(R.drawable.scene_cloud_storm)
+    val birds = painterResource(R.drawable.scene_birds)
     val sun = painterResource(R.drawable.scene_sun)
     val moon = painterResource(R.drawable.scene_moon)
 
@@ -199,7 +201,8 @@ private fun SceneLayer(spec: SceneSpec, animated: Boolean, collapse: Float, modi
                 val cx = w * (0.14f + 0.72f * p)
                 val cy = h * (0.60f - 0.42f * sin(p * PI.toFloat())) - collapse * h * 0.15f
                 val glow = Color(0xFFFFD866)
-                drawCircle(Brush.radialGradient(0f to glow.copy(alpha = 0.55f), 1f to glow.copy(alpha = 0f), center = Offset(cx, cy), radius = sunSize * 1.4f), sunSize * 1.4f, Offset(cx, cy))
+                val breath = 0.50f + 0.10f * sin(t * 0.8f)
+                drawCircle(Brush.radialGradient(0f to glow.copy(alpha = breath), 0.5f to glow.copy(alpha = breath * 0.35f), 1f to glow.copy(alpha = 0f), center = Offset(cx, cy), radius = sunSize * 1.6f), sunSize * 1.6f, Offset(cx, cy))
                 val dim = if (kind == SceneKind.CLEAR_DAY) 1f else 0.55f
                 rotate(t * 2.5f, Offset(cx, cy)) {
                     translate(cx - sunSize / 2, cy - sunSize / 2) { with(sun) { draw(Size(sunSize, sunSize), alpha = dim) } }
@@ -240,11 +243,34 @@ private fun SceneLayer(spec: SceneSpec, animated: Boolean, collapse: Float, modi
                 cloud(cloud2, 0.50f, 0.34f, 0.44f, drift * 1.3f, cloudAlpha, 0.20f)
             }
             SceneKind.FOG -> { cloud(cloud1, 0.10f, 0.42f, 0.70f, drift * 0.4f, cloudAlpha, 0.16f); cloud(cloud3, -0.20f, 0.30f, 0.60f, drift * 0.6f, cloudAlpha, 0.12f) }
-            SceneKind.DRIZZLE, SceneKind.RAIN, SceneKind.THUNDERSTORM -> {
+            SceneKind.DRIZZLE -> {
                 cloud(cloud1, -0.15f, 0.06f, 0.70f, drift * 0.8f, cloudAlpha, 0.10f)
-                cloud(cloud1, 0.45f, 0.10f, 0.66f, drift * 1.1f, cloudAlpha, 0.14f)
-                cloud(cloud2, 0.15f, 0.24f, 0.48f, drift * 1.4f, cloudAlpha, 0.20f)
+                cloud(cloud2, 0.45f, 0.14f, 0.50f, drift * 1.1f, cloudAlpha, 0.14f)
+                cloud(cloud3, 0.15f, 0.30f, 0.48f, drift * 1.4f, cloudAlpha * 0.8f, 0.20f)
             }
+            SceneKind.RAIN, SceneKind.THUNDERSTORM -> {
+                // Storm clouds carry their own greys: alpha only, no tint.
+                fun stormCloud(baseX: Float, y: Float, widthFrac: Float, speed: Float, par: Float) {
+                    val cw = w * widthFrac
+                    val ch = cw * (storm.intrinsicSize.height / storm.intrinsicSize.width)
+                    val span = w + cw
+                    val cx = ((baseX * w + t * speed * d) % span + span) % span - cw
+                    translate(cx, y * h - collapse * h * par) { with(storm) { draw(Size(cw, ch), alpha = if (dark) 0.85f else 0.95f) } }
+                }
+                stormCloud(-0.20f, 0.02f, 0.78f, drift * 0.8f, 0.10f)
+                stormCloud(0.40f, 0.08f, 0.70f, drift * 1.1f, 0.14f)
+                cloud(cloud2, 0.10f, 0.26f, 0.44f, drift * 1.4f, 0.55f, 0.20f)
+            }
+        }
+
+        // Birds glide across on calm days.
+        if ((kind == SceneKind.CLEAR_DAY || kind == SceneKind.CLOUDY) && !dark) {
+            val bw = w * 0.22f
+            val bh = bw * (birds.intrinsicSize.height / birds.intrinsicSize.width)
+            val span = w + bw
+            val bx = ((w * 0.7f + t * 9f * d) % span + span) % span - bw
+            val by = h * 0.30f + sin(t * 1.3f) * 4f * d - collapse * h * 0.12f
+            translate(bx, by) { with(birds) { draw(Size(bw, bh), alpha = 0.55f, colorFilter = ColorFilter.tint(lerp(palette.landTint, base, 0.6f))) } }
         }
 
         // Land: far hills, near hills, skyline, each darker and moving more than the last.

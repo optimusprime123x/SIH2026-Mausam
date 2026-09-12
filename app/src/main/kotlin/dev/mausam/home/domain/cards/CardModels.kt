@@ -18,7 +18,7 @@ enum class Trend { UP, DOWN, FLAT }
  * Icon keys. Each maps to a Meteocons animated Lottie file (assets/icons/<assetName>.json)
  * with Material Symbols as the fallback. Keys are data, so cards stay UI-free.
  */
-enum class WeatherIcon(val assetName: String) {
+enum class WeatherIcon(val assetName: String, val symbol: Boolean = false) {
     CLEAR_DAY("clear-day"), CLEAR_NIGHT("clear-night"),
     PARTLY_CLOUDY_DAY("partly-cloudy-day"), PARTLY_CLOUDY_NIGHT("partly-cloudy-night"),
     CLOUDY("cloudy"), OVERCAST("overcast"), FOG("fog"), HAZE("haze"), DUST("dust"), SMOKE("smoke"),
@@ -27,7 +27,10 @@ enum class WeatherIcon(val assetName: String) {
     THERMOMETER("thermometer"), THERMOMETER_WARMER("thermometer-warmer"), THERMOMETER_COLDER("thermometer-colder"),
     RAINDROPS("raindrops"), RAINDROP("raindrop"), UMBRELLA("umbrella"), COMPASS("compass"),
     ALERT("code-orange"), ALERT_YELLOW("code-yellow"), ALERT_RED("code-red"), TIDE("tide-low"), WAVES("tide-high"), STAR("star"),
-    CALENDAR("celsius"), NOT_AVAILABLE("not-available"), SUN_HOT("sun-hot"), SNOWFLAKE("snowflake"), HAIL("hail"), HURRICANE("hurricane"), MIST("mist");
+    CALENDAR("celsius"), NOT_AVAILABLE("not-available"), SUN_HOT("sun-hot"), SNOWFLAKE("snowflake"), HAIL("hail"), HURRICANE("hurricane"), MIST("mist"),
+    // Symbols (no Lottie file): activities and services that Meteocons has no picture for.
+    RUN("", true), POLLEN("", true), TIDES("", true), SHIELD("", true), FLIGHT("", true), SCHOOL("", true),
+    AGRO("", true), TRAFFIC("", true), COMMUTE("", true), COMFORT("", true), LUGGAGE("", true), AIR("", true), PENDING("", true);
 
     companion object {
         fun forCondition(c: dev.mausam.home.domain.model.WeatherCondition, isDay: Boolean): WeatherIcon = when (c) {
