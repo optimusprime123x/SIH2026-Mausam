@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dev.mausam.home.AppGraph
 import dev.mausam.home.domain.cards.CardContext
 import dev.mausam.home.domain.cards.CardPref
+import dev.mausam.home.domain.cards.CardAction
 import dev.mausam.home.domain.cards.CardRegistry
 import dev.mausam.home.domain.cards.CardUsage
 import dev.mausam.home.domain.cards.Ranker
@@ -48,6 +49,8 @@ data class HomeUiState(
     val activeWarnings: List<WeatherWarning> = emptyList(),
     val scene: SceneSpec = SceneSpec(),
     val isRefreshing: Boolean = false,
+    /** The last refresh reached no source at all; cached data is still shown. */
+    val refreshFailed: Boolean = false,
     val isLoading: Boolean = true,
     val settings: UserSettings = UserSettings(),
     val context: CardContext? = null,
@@ -63,13 +66,15 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
     private val repo = graph.repository
     private val tick = MutableStateFlow(0L)
     private val refreshing = MutableStateFlow(false)
+    private val refreshFailed = MutableStateFlow(false)
     private var fetch: Job? = null
     private val freezeOrder = MutableStateFlow(false)
     private var lastOrder: List<String> = emptyList()
 
     val overlay = MutableStateFlow<HomeOverlay?>(null)
-    private val _refreshCompleted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val refreshCompleted: SharedFlow<Unit> = _refreshCompleted
+    /** True when at least one source answered. */
+    private val _refreshCompleted = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+    val refreshCompleted: SharedFlow<Boolean> = _refreshCompleted
 
     private val primary = combine(repo.locations, repo.primaryLocationId) { list, id ->
         list.firstOrNull { it.id == id } ?: list.firstOrNull()
@@ -81,6 +86,7 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
         val loc = inp.location ?: return@flatMapLatest flowOf(HomeUiState(isLoading = false, settings = inp.settings))
         combine(repo.bundle(loc), freezeOrder, repo.dismissedBanner) { cached, frozen, dismissed -> build(loc, inp, cached, frozen, dismissed) }
     }.combine(refreshing) { s, r -> s.copy(isRefreshing = r) }
+        .combine(refreshFailed) { s, f -> s.copy(refreshFailed = f) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     private data class Inputs(val location: Location?, val settings: UserSettings, val usage: Map<String, CardUsage>, val prefs: Map<String, CardPref>)
@@ -91,6 +97,11 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
             val cached = repo.cachedBundle(loc)
             if (cached == null || cached.isStale) refresh()
         }
+        consumePendingOpen()
+    }
+
+    /** A tapped alert notification, whether it launched the app or arrived while it was open. */
+    private fun consumePendingOpen() {
         graph.pendingOpen?.let { open ->
             graph.pendingOpen = null
             if (open == Notifier.OPEN_WARNINGS) overlay.value = HomeOverlay.Detail(CardRegistry.warnings.id)
@@ -130,6 +141,7 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
     }
 
     fun onResume() {
+        consumePendingOpen()
         tick.value = System.currentTimeMillis()
         viewModelScope.launch {
             val loc = repo.primaryLocation() ?: return@launch
@@ -151,22 +163,29 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
             refreshing.value = true
             freezeOrder.value = true
             val job = fetch?.takeIf { it.isActive } ?: viewModelScope.launch {
-                runCatching { repo.refresh(loc) }
+                refreshFailed.value = false
+                val ok = runCatching { repo.refresh(loc) }.isSuccess
+                refreshFailed.value = !ok
                 graph.onDataRefreshed()
+                _refreshCompleted.tryEmit(ok)
             }.also { fetch = it }
             try {
                 withTimeoutOrNull(REFRESH_SPINNER_MS) { job.join(); delay(300) }
             } finally {
                 freezeOrder.value = false
                 refreshing.value = false
-                _refreshCompleted.tryEmit(Unit)
             }
         }
     }
 
+    /** One-shot URIs for cards whose action is a deep link (opened by the screen). */
+    private val _openUri = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val openUri: SharedFlow<String> = _openUri
+
     fun openCard(cardId: String) {
         viewModelScope.launch { repo.recordTap(cardId) }
-        overlay.value = HomeOverlay.Detail(cardId)
+        val action = CardRegistry.all.firstOrNull { it.id == cardId }?.action
+        if (action is CardAction.DeepLink) _openUri.tryEmit(action.uri) else overlay.value = HomeOverlay.Detail(cardId)
     }
 
     fun openWarnings() { overlay.value = HomeOverlay.Detail(CardRegistry.warnings.id) }

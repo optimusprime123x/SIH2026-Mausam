@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dev.mausam.home.MausamApp
 import dev.mausam.home.domain.briefs.AlertPolicy
+import dev.mausam.home.domain.model.DataKind
 import java.time.Instant
 
 /**
@@ -26,7 +27,9 @@ class RefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorke
 
         val primary = repo.primaryLocation() ?: locations.first()
         val bundle = repo.cachedBundle(primary)?.data
-        if (bundle != null) {
+        // Bundled sample warnings are for offline demos only; they are never pushed as real alerts.
+        val fromSnapshot = bundle?.sources?.get(DataKind.WARNINGS)?.fromSnapshot == true
+        if (bundle != null && !fromSnapshot) {
             val active = bundle.activeWarnings(Instant.now())
             val toPush = AlertPolicy.toPush(active, repo.notifiedWarningIds())
             if (toPush.isNotEmpty()) {

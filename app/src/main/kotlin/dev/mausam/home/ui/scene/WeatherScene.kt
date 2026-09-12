@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
@@ -194,8 +195,9 @@ class SceneRenderer internal constructor(
                 }
             } else if (kind == SceneKind.CLEAR_NIGHT || p !in 0f..1f) {
                 val moonSize = 92f * d
-                val cx = w * 0.78f
-                val cy = h * 0.20f + sin(t * 0.3f) * 3f * d - collapse * h * 0.15f
+                // High and left of the condition icon so the two never overlap on short screens.
+                val cx = w * 0.62f
+                val cy = h * 0.11f + sin(t * 0.3f) * 3f * d - collapse * h * 0.15f
                 val glow = Color(0xFFF4F1E1)
                 drawCircle(Brush.radialGradient(0f to glow.copy(alpha = 0.35f), 1f to glow.copy(alpha = 0f), center = Offset(cx, cy), radius = moonSize * 1.5f), moonSize * 1.5f, Offset(cx, cy))
                 translate(cx - moonSize / 2, cy - moonSize / 2) { with(moon) { draw(Size(moonSize, moonSize)) } }
@@ -204,7 +206,8 @@ class SceneRenderer internal constructor(
         if (kind == SceneKind.CLEAR_NIGHT) drawStars(state, count, Color(0xFFF4F1E1), size)
 
         // Clouds: count and tint by condition; drift with the wind; far layers move less.
-        val cloudTint = palette.cloudTint
+        // Night clouds lift towards white and fade, so they read as cloud and never as a grey smudge.
+        val cloudTint = if (isNight) lerp(palette.cloudTint, Color.White, 0.30f) else palette.cloudTint
         val cloudAlpha = when (kind) {
             SceneKind.CLEAR_DAY, SceneKind.CLEAR_NIGHT -> 0.75f
             SceneKind.FOG -> 0.55f
@@ -220,14 +223,17 @@ class SceneRenderer internal constructor(
         }
         val drift = 4f + windX / (6f * d) * 2f
         when (kind) {
-            SceneKind.CLEAR_DAY -> { cloud(cloud3, 0.55f, 0.16f, 0.42f, drift * 0.6f, cloudAlpha * 0.8f, 0.10f); cloud(cloud2, -0.05f, 0.30f, 0.30f, drift, cloudAlpha, 0.16f) }
-            SceneKind.CLEAR_NIGHT -> cloud(cloud3, 0.20f, 0.30f, 0.38f, drift * 0.5f, 0.35f, 0.12f)
+            // Clouds frame the hero from the top edge and the lower right; the text column
+            // (left 60 %, 15–62 % down) stays clear so the temperature never sits on a blob.
+            SceneKind.CLEAR_DAY -> { cloud(cloud3, 0.50f, -0.02f, 0.42f, drift * 0.6f, cloudAlpha * 0.8f, 0.10f); cloud(cloud2, -0.12f, 0.02f, 0.34f, drift, cloudAlpha, 0.16f) }
+            SceneKind.CLEAR_NIGHT -> cloud(cloud3, 0.62f, 0.56f, 0.40f, drift * 0.5f, 0.30f, 0.12f)
             SceneKind.CLOUDY -> {
-                cloud(cloud3, 0.60f, 0.12f, 0.50f, drift * 0.5f, cloudAlpha * 0.8f, 0.08f)
-                cloud(cloud1, -0.10f, 0.16f, 0.62f, drift * 0.9f, cloudAlpha, 0.14f)
-                cloud(cloud2, 0.50f, 0.34f, 0.44f, drift * 1.3f, cloudAlpha, 0.20f)
+                cloud(cloud3, 0.55f, -0.03f, 0.52f, drift * 0.5f, cloudAlpha * 0.8f, 0.08f)
+                cloud(cloud1, -0.18f, 0.02f, 0.62f, drift * 0.9f, cloudAlpha, 0.14f)
+                cloud(cloud2, 0.58f, 0.56f, 0.42f, drift * 1.3f, cloudAlpha * 0.9f, 0.20f)
             }
-            SceneKind.FOG -> { cloud(cloud1, 0.10f, 0.42f, 0.70f, drift * 0.4f, cloudAlpha, 0.16f); cloud(cloud3, -0.20f, 0.30f, 0.60f, drift * 0.6f, cloudAlpha, 0.12f) }
+            // Haze is a veil, not weather: one faint high cloud, the mist itself is drawn last.
+            SceneKind.FOG -> cloud(cloud3, 0.30f, 0.02f, 0.40f, drift * 0.4f, cloudAlpha * 0.45f, 0.08f)
             SceneKind.DRIZZLE -> {
                 cloud(cloud1, -0.15f, 0.06f, 0.70f, drift * 0.8f, cloudAlpha, 0.10f)
                 cloud(cloud2, 0.45f, 0.14f, 0.50f, drift * 1.1f, cloudAlpha, 0.14f)
@@ -351,18 +357,29 @@ private fun DrawScope.drawStars(s: SceneState, count: Int, star: Color, size: Si
     }
 }
 
-/** Three soft horizontal bands drifting in alternate directions over the land. */
+/**
+ * Mist rather than bands: a ground haze rising from the horizon and four wide, soft ellipses that
+ * drift slowly in alternate directions. Every edge is a gradient, so nothing reads as a bar.
+ */
 private fun DrawScope.drawFog(s: SceneState, fog: Color, size: Size) {
-    for (i in 0 until 3) {
+    val w = size.width; val h = size.height
+    drawRect(
+        Brush.verticalGradient(0.50f to fog.copy(alpha = 0f), 0.85f to fog.copy(alpha = 0.14f), 1f to fog.copy(alpha = 0.20f), endY = h),
+        size = size,
+    )
+    for (i in 0 until 4) {
         val dir = if (i % 2 == 0) 1f else -1f
-        val bw = size.width * 1.4f
-        val off = ((s.t * 5f * density * dir) % (size.width * 0.4f) + size.width * 0.4f) % (size.width * 0.4f) - size.width * 0.2f
-        val bh = (36f + 10f * i) * density
-        val by = size.height * (0.62f + 0.11f * i)
-        drawRect(
-            Brush.horizontalGradient(0f to fog.copy(alpha = 0f), 0.3f to fog.copy(alpha = 0.32f), 0.7f to fog.copy(alpha = 0.32f), 1f to fog.copy(alpha = 0f), startX = off, endX = off + bw),
-            topLeft = Offset(off, by), size = Size(bw, bh),
-        )
+        val rx = w * (0.55f + 0.10f * i)
+        val ry = (26f + 8f * i) * density
+        val cx = w * (0.5f + 0.28f * sin(s.t * 0.05f * dir + i * 1.7f))
+        val cy = h * (0.46f + 0.13f * i) + sin(s.t * 0.2f + i) * 3f * density
+        val a = 0.10f + 0.03f * i
+        withTransform({ scale(1f, ry / rx, Offset(cx, cy)) }) {
+            drawCircle(
+                Brush.radialGradient(0f to fog.copy(alpha = a), 0.55f to fog.copy(alpha = a * 0.55f), 1f to fog.copy(alpha = 0f), center = Offset(cx, cy), radius = rx),
+                rx, Offset(cx, cy),
+            )
+        }
     }
 }
 

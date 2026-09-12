@@ -73,6 +73,13 @@ fun HomeRainPreview(@PreviewParameter(DarkProvider::class) dark: Boolean) {
 }
 
 @PreviewTest
+@Preview(name = "home_fog", widthDp = 412, heightDp = 915)
+@Composable
+fun HomeFogPreview(@PreviewParameter(DarkProvider::class) dark: Boolean) {
+    MausamTheme(settings = settings, dark = dark) { HomeScaffold(homeState(SceneKind.FOG, withBanner = false).let { it.copy(scene = it.scene.copy(sunProgress = 1.4f)) }, null, HomeActions()) }
+}
+
+@PreviewTest
 @Preview(name = "home_night", widthDp = 412, heightDp = 915)
 @Composable
 fun HomeNightPreview() {

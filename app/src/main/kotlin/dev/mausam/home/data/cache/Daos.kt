@@ -41,6 +41,8 @@ interface LocationDao {
 
     @Query("UPDATE locations SET sortOrder = :order WHERE id = :id") suspend fun setOrder(id: String, order: Int)
 
+    @Query("UPDATE locations SET district = :district WHERE id = :id") suspend fun setDistrict(id: String, district: String)
+
     @Query("SELECT COALESCE(MAX(sortOrder), -1) + 1 FROM locations") suspend fun nextOrder(): Int
 }
 

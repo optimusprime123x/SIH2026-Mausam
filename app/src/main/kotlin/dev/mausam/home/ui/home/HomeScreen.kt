@@ -36,7 +36,11 @@ import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.ui.zIndex
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -105,11 +109,20 @@ fun HomeScreen(vm: HomeViewModel, onOpenLocations: () -> Unit, onOpenSettings: (
 
     // Re-rank on every home open, and refresh if the cache is getting old.
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(lifecycleOwner) {
+    DisposableEffect(lifecycleOwner) {
         val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) vm.onResume() }
         lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
     }
-    LaunchedEffect(Unit) { vm.refreshCompleted.collectLatest { haptics.performHapticFeedback(HapticFeedbackType.Confirm) } }
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        vm.openUri.collectLatest { uri ->
+            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        }
+    }
+    LaunchedEffect(Unit) {
+        vm.refreshCompleted.collectLatest { ok -> haptics.performHapticFeedback(if (ok) HapticFeedbackType.Confirm else HapticFeedbackType.Reject) }
+    }
     val actions = remember(vm, onOpenLocations, onOpenSettings) {
         HomeActions(
             refresh = vm::refresh, openCard = vm::openCard, openWarnings = vm::openWarnings, dismissBanner = vm::dismissBanner,

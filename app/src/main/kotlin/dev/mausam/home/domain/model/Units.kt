@@ -10,7 +10,7 @@ enum class Units { METRIC, IMPERIAL }
 
 /** Pure formatting helpers shared by cards, briefs and the widget. */
 class Formatter(val units: Units = Units.METRIC, val zone: ZoneId = ZoneId.of("Asia/Kolkata")) {
-    private val timeFmt = DateTimeFormatter.ofPattern("HH:mm")
+    private val timeFmt = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH)
     private val hourFmt = DateTimeFormatter.ofPattern("h a", Locale.ENGLISH)
 
     fun temp(c: Double, withUnit: Boolean = false): String {
@@ -40,7 +40,7 @@ class Formatter(val units: Units = Units.METRIC, val zone: ZoneId = ZoneId.of("A
         val h = z.hour % 12
         val hh = if (h == 0) 12 else h
         val ampm = if (z.hour < 12) "am" else "pm"
-        return if (z.minute == 0) "$hh $ampm" else "$hh:${"%02d".format(z.minute)} $ampm"
+        return if (z.minute == 0) "$hh $ampm" else "$hh:${String.format(Locale.ENGLISH, "%02d", z.minute)} $ampm"
     }
 
     fun hourLabel(instant: Instant): String = hourFmt.format(instant.atZone(zone)).lowercase()

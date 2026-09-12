@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
 data class Freshness(val fetchedAt: Instant, val isStale: Boolean, val label: String) {
     companion object {
         val STALE_AFTER: Duration = Duration.ofHours(2)
-        private val fmt = DateTimeFormatter.ofPattern("HH:mm")
+        private val fmt = DateTimeFormatter.ofPattern("HH:mm", java.util.Locale.ENGLISH)
 
         fun of(fetchedAt: Instant, now: Instant, zone: ZoneId): Freshness {
             val stale = Duration.between(fetchedAt, now) > STALE_AFTER

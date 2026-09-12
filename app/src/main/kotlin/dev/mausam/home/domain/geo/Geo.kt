@@ -8,6 +8,32 @@ import kotlin.math.sqrt
 object Geo {
     private const val EARTH_RADIUS_KM = 6371.0088
 
+    /**
+     * Even-odd point-in-polygon over GeoJSON-style rings (each ring a list of lon/lat pairs, first
+     * ring the shell, the rest holes). Good enough for district polygons at the scale of a phone
+     * position; no geodesic correction.
+     */
+    fun pointInPolygon(lat: Double, lon: Double, rings: List<List<DoubleArray>>): Boolean {
+        if (rings.isEmpty()) return false
+        var inside = false
+        for (ring in rings) {
+            if (ringContains(lat, lon, ring)) inside = !inside
+        }
+        return inside
+    }
+
+    private fun ringContains(lat: Double, lon: Double, ring: List<DoubleArray>): Boolean {
+        var inside = false
+        var j = ring.size - 1
+        for (i in ring.indices) {
+            val xi = ring[i][0]; val yi = ring[i][1]
+            val xj = ring[j][0]; val yj = ring[j][1]
+            if ((yi > lat) != (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside
+            j = i
+        }
+        return inside
+    }
+
     fun haversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val dLat = Math.toRadians(lat2 - lat1)
         val dLon = Math.toRadians(lon2 - lon1)

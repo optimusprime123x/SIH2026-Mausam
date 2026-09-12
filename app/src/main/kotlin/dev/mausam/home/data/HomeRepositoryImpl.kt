@@ -8,6 +8,7 @@ import dev.mausam.home.data.cache.MausamDatabase
 import dev.mausam.home.data.cache.RawPayloadEntity
 import dev.mausam.home.data.cpcb.CpcbApi
 import dev.mausam.home.data.geo.Stations
+import dev.mausam.home.data.imd.DistrictResolver
 import dev.mausam.home.data.imd.ImdWfsApi
 import dev.mausam.home.data.ndma.SachetApi
 import dev.mausam.home.data.net.Http
@@ -30,6 +31,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -58,6 +60,7 @@ class HomeRepositoryImpl(
     private val assembler: WeatherAssembler = WeatherAssembler(),
     private val clock: () -> Instant = { Instant.now() },
 ) : HomeRepository {
+    private val districts = DistrictResolver(imd)
     private val refreshLocks = mutableMapOf<String, Mutex>()
     private fun lockFor(id: String) = synchronized(refreshLocks) { refreshLocks.getOrPut(id) { Mutex() } }
 
@@ -96,11 +99,15 @@ class HomeRepositoryImpl(
     }
 
     // ---------------------------------------------------------------- bundles
+    // Assembly decodes several hundred KB of JSON, so it never runs on the collector's (main) thread.
     override fun bundle(location: Location): Flow<CachedResult<WeatherBundle>?> =
-        db.rawPayloads().observeFor(location.id).map { rows -> rows.takeIf { it.isNotEmpty() }?.let { assembleRows(location, it) } }
+        db.rawPayloads().observeFor(location.id)
+            .map { rows -> rows.takeIf { it.isNotEmpty() }?.let { assembleRows(location, it) } }
+            .flowOn(Dispatchers.Default)
 
-    override suspend fun cachedBundle(location: Location): CachedResult<WeatherBundle>? =
+    override suspend fun cachedBundle(location: Location): CachedResult<WeatherBundle>? = withContext(Dispatchers.Default) {
         db.rawPayloads().getFor(location.id).takeIf { it.isNotEmpty() }?.let { assembleRows(location, it) }
+    }
 
     private fun assembleRows(location: Location, rows: List<RawPayloadEntity>): CachedResult<WeatherBundle> {
         val now = clock()
@@ -127,7 +134,7 @@ class HomeRepositoryImpl(
                         if (Coastline.isCoastal(loc.latitude, loc.longitude, 60.0)) {
                             val (lat, lon) = offshorePoint(loc)
                             fetch(SourceKey.OM_MARINE, loc) { Http.json.encodeToString(dev.mausam.home.data.openmeteo.OmMarine.serializer(), openMeteo.marine(lat, lon)) }
-                        }
+                        } else null
                     },
                     async {
                         loc.imdStationId?.let { id -> fetch(SourceKey.IMD_SYNOP, loc) { Http.json.encodeToString(JsonObject.serializer(), imd.getFeature(ImdWfsApi.LAYER_SYNOP, ImdWfsApi.synopFilter(id))) } }
@@ -138,8 +145,15 @@ class HomeRepositoryImpl(
                         }
                     },
                     async {
-                        loc.district?.let { d ->
-                            fetch(SourceKey.IMD_WARNINGS, loc) {
+                        fetch(SourceKey.IMD_WARNINGS, loc) {
+                            // By geography first (IMD's district names do not match ours everywhere), by name as a fallback.
+                            val resolved = districts.warningsFor(loc)
+                            if (resolved != null) {
+                                val name = resolved.districtName
+                                if (name != null && !name.equals(loc.district, ignoreCase = true)) db.locations().setDistrict(loc.id, name)
+                                Http.json.encodeToString(JsonObject.serializer(), resolved.collection)
+                            } else {
+                                val d = loc.district ?: error("no district")
                                 Http.json.encodeToString(JsonObject.serializer(), imd.getFeature(ImdWfsApi.LAYER_DISTRICT_WARNINGS, ImdWfsApi.districtFilter(d), ImdWfsApi.PROPS_DISTRICT_WARNINGS))
                             }
                         }
@@ -159,37 +173,48 @@ class HomeRepositoryImpl(
                         }
                     },
                 )
-                jobs.forEach { it.await() }
+                val outcomes: List<Boolean?> = jobs.map { it.await() }
+                // Every source failed: the caller learns it, whatever the cache still holds.
+                if (outcomes.none { it == true }) throw RefreshFailedException()
             }
             cachedBundle(loc) ?: CachedResult(WeatherBundle.empty(loc, clock()), clock(), true, CachedResult.Origin.CACHE)
         }
     }
 
-    /** Network first; on failure keep the existing cache, else seed from the bundled snapshot. */
-    private suspend fun fetch(key: SourceKey, loc: Location, call: suspend () -> String) {
+    /**
+     * Network first; on failure keep the existing cache, else seed from the bundled snapshot,
+     * stamped with the snapshot's capture time so "as of" never claims it is fresh. Returns
+     * whether the network call succeeded.
+     */
+    private suspend fun fetch(key: SourceKey, loc: Location, call: suspend () -> String): Boolean {
         val entityKey = RawPayloadEntity.key(key.id, loc.id)
         val result = runCatching { call() }
         if (result.isSuccess) {
             db.rawPayloads().upsert(RawPayloadEntity(entityKey, key.id, loc.id, result.getOrThrow(), clock().toEpochMilli(), false))
-            return
+            return true
         }
-        if (db.rawPayloads().get(entityKey) != null) return
+        if (db.rawPayloads().get(entityKey) != null) return false
         snapshotFor(key, loc)?.let { json ->
-            db.rawPayloads().upsert(RawPayloadEntity(entityKey, key.id, loc.id, json, clock().toEpochMilli(), true))
+            db.rawPayloads().upsert(RawPayloadEntity(entityKey, key.id, loc.id, json, snapshotStamp(), true))
         }
+        return false
     }
 
-    private suspend fun fetchNational(key: SourceKey, call: suspend () -> String) {
+    private suspend fun fetchNational(key: SourceKey, call: suspend () -> String): Boolean {
         val entityKey = RawPayloadEntity.key(key.id, "*")
         val result = runCatching { call() }
         if (result.isSuccess) {
             db.rawPayloads().upsert(RawPayloadEntity(entityKey, key.id, "*", result.getOrThrow(), clock().toEpochMilli(), false))
-            return
+            return true
         }
-        val existing = db.rawPayloads().get(entityKey)
-        if (existing != null && Duration.ofMillis(clock().toEpochMilli() - existing.fetchedAt) < Duration.ofDays(2)) return
-        snapshots.national(key.id)?.let { db.rawPayloads().upsert(RawPayloadEntity(entityKey, key.id, "*", it, clock().toEpochMilli(), true)) }
+        // Real data, however old, beats the bundled snapshot: seed only when there is nothing.
+        if (db.rawPayloads().get(entityKey) != null) return false
+        snapshots.national(key.id)?.let { db.rawPayloads().upsert(RawPayloadEntity(entityKey, key.id, "*", it, snapshotStamp(), true)) }
+        return false
     }
+
+    /** Snapshot rows carry the capture time, so freshness is honest about bundled data. */
+    private fun snapshotStamp(): Long = runCatching { Instant.parse(snapshots.capturedAt).toEpochMilli() }.getOrElse { clock().toEpochMilli() }
 
     private fun snapshotFor(key: SourceKey, loc: Location): String? = when (key) {
         SourceKey.IMD_WARNINGS, SourceKey.IMD_NOWCAST, SourceKey.IMD_SYNOP, SourceKey.IMD_METAR, SourceKey.SACHET -> snapshots.national(key.id)
@@ -262,3 +287,6 @@ class HomeRepositoryImpl(
         cardId, pinnedAt?.let(Instant::ofEpochMilli), hidden, boostUntil?.let(Instant::ofEpochMilli), added,
     )
 }
+
+/** Thrown by [HomeRepository.refresh] when no source could be reached; cached data stays in place. */
+class RefreshFailedException : java.io.IOException("No weather source could be reached")

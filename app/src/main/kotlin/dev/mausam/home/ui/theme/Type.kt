@@ -23,8 +23,11 @@ val RobotoFlex: FontFamily = FontFamily(
     flex(200, 64f), flex(300), flex(400), flex(500), flex(600), flex(700),
 )
 
-/** A weight-specific family for animated weight (quantised to 25-unit steps by the caller). */
-fun robotoFlexAt(weight: Int, opsz: Float = 14f): FontFamily = FontFamily(flex(weight, opsz))
+private val flexFamilies = java.util.concurrent.ConcurrentHashMap<Long, FontFamily>()
+
+/** A weight-specific family for animated weight (quantised to 25-unit steps by the caller), built once per step. */
+fun robotoFlexAt(weight: Int, opsz: Float = 14f): FontFamily =
+    flexFamilies.getOrPut((weight.toLong() shl 32) or (opsz.toBits().toLong() and 0xFFFF_FFFFL)) { FontFamily(flex(weight, opsz)) }
 
 private fun TextStyle.flex() = copy(fontFamily = RobotoFlex)
 

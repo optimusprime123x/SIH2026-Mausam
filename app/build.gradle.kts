@@ -17,8 +17,8 @@ android {
         applicationId = "dev.mausam.home"
         minSdk = 26
         targetSdk = 37
-        versionCode = 7
-        versionName = "0.2.5"
+        versionCode = 10
+        versionName = "0.2.8"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
@@ -88,7 +88,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.splashscreen)
     implementation(libs.androidx.graphics.shapes)
 
@@ -113,7 +112,6 @@ dependencies {
     implementation(libs.glance.material3)
 
     implementation(libs.haze)
-    implementation(libs.haze.materials)
     implementation(libs.lottie.compose)
     implementation(libs.shimmer)
     implementation(libs.retrofit)

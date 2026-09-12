@@ -82,7 +82,7 @@ class WeatherAssembler {
         val synop = raw[SourceKey.IMD_SYNOP]?.let { p -> parse(p) { pickFeature(it, "station_id", location.imdStationId) } }
         val metar = raw[SourceKey.IMD_METAR]?.let { p -> parse(p) { nearestFeature(it, location, "lat", "lon", 120.0) } }
         val warningsRow = raw[SourceKey.IMD_WARNINGS]?.let { p -> parse(p) { pickFeature(it, "District", location.district) } }
-        val nowcastRow = raw[SourceKey.IMD_NOWCAST]?.let { p -> parse(p) { pickFeature(it, "District", location.district) } }
+        val nowcastRow = raw[SourceKey.IMD_NOWCAST]?.let { p -> parse(p) { pickFeature(it, "District", location.district, "State", location.state) } }
         val sachet = raw[SourceKey.SACHET]?.let { p -> parse(p) { json.decodeFromString(JsonArray.serializer(), it) } }
 
         // ---- current -------------------------------------------------------------------
@@ -330,11 +330,16 @@ class WeatherAssembler {
     // ------------------------------------------------------------------------------------ helpers
     private inline fun <T> parse(p: RawPayload, block: (String) -> T): T? = runCatching { block(p.json) }.getOrNull()
 
-    private fun pickFeature(jsonText: String, key: String, value: String?): JsonObject? {
+    /** The row for [value]; among same-name rows the one whose [tieKey] matches [tieValue] wins. */
+    private fun pickFeature(jsonText: String, key: String, value: String?, tieKey: String? = null, tieValue: String? = null): JsonObject? {
         val props = json.decodeFromString(JsonObject.serializer(), jsonText).featureProperties()
         if (props.isEmpty()) return null
         if (value == null) return props.singleOrNull()
-        return props.firstOrNull { it.str(key).equals(value, ignoreCase = true) } ?: props.singleOrNull()
+        val named = props.filter { it.str(key).equals(value, ignoreCase = true) }
+        if (named.size > 1 && tieKey != null && tieValue != null) {
+            named.firstOrNull { it.str(tieKey).equals(tieValue, ignoreCase = true) }?.let { return it }
+        }
+        return named.firstOrNull() ?: props.singleOrNull()
     }
 
     private fun nearestFeature(jsonText: String, location: Location, latKey: String, lonKey: String, maxKm: Double): JsonObject? {

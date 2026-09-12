@@ -34,6 +34,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -175,7 +180,16 @@ fun SharedTransitionScope.GlassCard(
                     onLongPress = { haptics.performHapticFeedback(HapticFeedbackType.LongPress); menu = true },
                 )
             }
-            .semantics { contentDescription = description },
+            .semantics {
+                contentDescription = description
+                role = Role.Button
+                onClick { onTap(); true }
+                customActions = listOf(
+                    CustomAccessibilityAction(if (card.pinned) "Unpin" else "Pin to top") { onPin(); true },
+                    CustomAccessibilityAction("Move to top") { onTop(); true },
+                    CustomAccessibilityAction("Hide") { onHide(); true },
+                )
+            },
     ) {
         if (wide) WideBody(card, value, icon, accent, toneCol, tone, stale, sourceInfo, freshness)
         else CompactBody(card, value, icon, accent, toneCol, tone, stale, sourceInfo, freshness)

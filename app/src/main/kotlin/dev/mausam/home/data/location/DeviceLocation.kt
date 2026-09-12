@@ -45,6 +45,7 @@ class DeviceLocation(private val context: Context, private val stations: Station
         if (providers.isEmpty()) return null
         val result = CompletableDeferred<android.location.Location?>()
         val signals = mutableListOf<CancellationSignal>()
+        val listeners = mutableListOf<android.location.LocationListener>()
         val executor = ContextCompat.getMainExecutor(context)
         var pending = providers.size
         for (p in providers) {
@@ -54,14 +55,17 @@ class DeviceLocation(private val context: Context, private val stations: Station
                     if (loc != null) result.complete(loc) else if (--pending == 0) result.complete(null)
                 }
             } else {
+                val listener = android.location.LocationListener { loc -> result.complete(loc) }.also(listeners::add)
                 @Suppress("DEPRECATION")
-                lm.requestSingleUpdate(p, { loc -> result.complete(loc) }, context.mainLooper)
+                lm.requestSingleUpdate(p, listener, context.mainLooper)
             }
         }
         return try {
             result.await()
         } finally {
             signals.forEach { runCatching { it.cancel() } }
+            // A single-update request stays armed past our timeout; GPS would otherwise run on.
+            listeners.forEach { runCatching { lm.removeUpdates(it) } }
         }
     }
 
