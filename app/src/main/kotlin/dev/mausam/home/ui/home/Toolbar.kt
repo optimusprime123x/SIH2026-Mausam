@@ -49,9 +49,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.HazeState
 import dev.mausam.home.ui.glass.GlassTier
-import dev.mausam.home.ui.glass.mausamGlass
+import dev.mausam.home.ui.glass.BackdropSampler
+import dev.mausam.home.ui.glass.mausamSoftGlass
 import dev.mausam.home.ui.theme.Space
 
 /**
@@ -63,7 +63,7 @@ import dev.mausam.home.ui.theme.Space
 fun HomeToolbar(
     expanded: Boolean,
     refreshing: Boolean,
-    haze: HazeState,
+    sampler: BackdropSampler,
     onRefresh: () -> Unit,
     onLocations: () -> Unit,
     onCatalogue: () -> Unit,
@@ -82,7 +82,7 @@ fun HomeToolbar(
             Row(
                 Modifier
                     .height(64.dp)
-                    .mausamGlass(haze, GlassTier.TOOLBAR, CircleShape)
+                    .mausamSoftGlass(sampler, GlassTier.TOOLBAR, CircleShape)
                     .padding(horizontal = Space.s2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

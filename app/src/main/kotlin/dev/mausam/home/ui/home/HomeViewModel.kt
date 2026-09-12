@@ -20,6 +20,7 @@ import dev.mausam.home.ui.scene.sunProgress
 import dev.mausam.home.domain.model.WeatherBundle
 import dev.mausam.home.domain.model.WeatherWarning
 import dev.mausam.home.work.Notifier
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Duration
 import java.time.Instant
 import java.time.ZonedDateTime
@@ -61,6 +63,7 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
     private val repo = graph.repository
     private val tick = MutableStateFlow(0L)
     private val refreshing = MutableStateFlow(false)
+    private var fetch: Job? = null
     private val freezeOrder = MutableStateFlow(false)
     private var lastOrder: List<String> = emptyList()
 
@@ -135,17 +138,25 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
         }
     }
 
+    /**
+     * Pull-to-refresh and the toolbar button both land here. The spinner is visual only: it shows
+     * for at least 300 ms and at most [REFRESH_SPINNER_MS], while the fetch itself keeps its own
+     * network timeouts and updates the page whenever it lands. A pull while an earlier fetch is
+     * still in flight spins again and waits on that same fetch rather than starting a second one.
+     */
     fun refresh() {
         if (refreshing.value) return
         viewModelScope.launch {
             val loc = repo.primaryLocation() ?: return@launch
             refreshing.value = true
             freezeOrder.value = true
-            try {
+            val job = fetch?.takeIf { it.isActive } ?: viewModelScope.launch {
                 runCatching { repo.refresh(loc) }
                 graph.onDataRefreshed()
+            }.also { fetch = it }
+            try {
+                withTimeoutOrNull(REFRESH_SPINNER_MS) { job.join(); delay(300) }
             } finally {
-                delay(300)
                 freezeOrder.value = false
                 refreshing.value = false
                 _refreshCompleted.tryEmit(Unit)
@@ -178,3 +189,6 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
         repo.updatePref(cardId) { it.copy(hidden = !shown, added = shown) }
     }
 }
+
+/** Longest the refresh indicator stays on screen, whatever the network does. */
+private const val REFRESH_SPINNER_MS = 5_000L

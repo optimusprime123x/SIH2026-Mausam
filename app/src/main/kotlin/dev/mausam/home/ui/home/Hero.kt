@@ -46,7 +46,9 @@ import dev.mausam.home.domain.model.Formatter
 import dev.mausam.home.ui.common.MeteoconIcon
 import dev.mausam.home.ui.common.RollingValue
 import dev.mausam.home.ui.glass.GlassTier
+import dev.mausam.home.ui.glass.BackdropSampler
 import dev.mausam.home.ui.glass.mausamGlass
+import dev.mausam.home.ui.glass.mausamSoftGlass
 import dev.mausam.home.ui.theme.LocalMausamA11y
 import dev.mausam.home.ui.theme.Space
 import dev.mausam.home.ui.theme.robotoFlexAt
@@ -58,7 +60,7 @@ import kotlin.math.roundToInt
  * the temperature shrinks from 96 sp/200 to 28 sp/500 and slides to the leading edge.
  */
 @Composable
-fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState) {
+fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, sampler: BackdropSampler) {
     val density = LocalDensity.current
     val heightDp = with(density) { heightPx.toDp() }
     val cs = MaterialTheme.colorScheme
@@ -86,7 +88,7 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState) 
         Modifier
             .fillMaxWidth()
             .height(heightDp)
-            .then(if (collapsed) Modifier.mausamGlass(haze, GlassTier.TOOLBAR, barShape, shadow = collapse > 0.9f) else Modifier)
+            .then(if (collapsed) Modifier.mausamSoftGlass(sampler, GlassTier.TOOLBAR, barShape, shadow = collapse > 0.9f) else Modifier)
             .graphicsLayer { scaleX = entryScale; scaleY = entryScale }
             .semantics {
                 contentDescription = buildString {

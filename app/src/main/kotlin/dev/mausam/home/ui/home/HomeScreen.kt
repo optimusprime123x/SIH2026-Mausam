@@ -46,6 +46,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -66,8 +72,11 @@ import dev.mausam.home.domain.model.CachedResult
 import dev.mausam.home.ui.common.CardSkeletons
 import dev.mausam.home.ui.detail.CardCatalogue
 import dev.mausam.home.ui.detail.DetailSheet
+import dev.mausam.home.ui.glass.BackdropSampler
 import dev.mausam.home.ui.scene.AuroraBackdrop
 import dev.mausam.home.ui.scene.WeatherScene
+import dev.mausam.home.ui.scene.rememberAuroraRenderer
+import dev.mausam.home.ui.scene.rememberSceneRenderer
 import dev.mausam.home.ui.theme.LocalMausamA11y
 import dev.mausam.home.ui.theme.Space
 import kotlinx.coroutines.flow.collectLatest
@@ -159,13 +168,39 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
     }
     val heroExpanded = heroPx >= heroMaxPx - 0.5f
 
-    Box(Modifier.fillMaxSize()) {
+    // The backdrop is drawn by two renderers so the hero bar and the toolbar can paint the same
+    // picture into their own software blur, independent of the platform RenderEffect path.
+    val aurora = rememberAuroraRenderer(a11y.sceneAnimated)
+    val scene = rememberSceneRenderer(state.scene, a11y.sceneAnimated)
+    var rootSize by remember { mutableStateOf(IntSize.Zero) }
+    val sceneHeightPx = with(density) { 440.dp.toPx() }
+    val sampler = remember(aurora, scene, sceneHeightPx, heroMaxPx, heroMinPx) {
+        BackdropSampler(
+            // Throttled to every other frame; the hero height rides in the low bits so a collapse
+            // under reduce-motion still refreshes the sample.
+            frame = { ((aurora.frame + scene.frame) / 2) * 4096 + heroPx.toInt().coerceIn(0, 4095) + rootSize.height * 7 },
+            draw = {
+                val full = Size(rootSize.width.toFloat(), rootSize.height.toFloat())
+                with(aurora) { drawAurora(full) }
+                val hp = heroPx
+                val c = (1f - (hp - heroMinPx) / (heroMaxPx - heroMinPx)).coerceIn(0f, 1f)
+                translate(top = -0.45f * (heroMaxPx - hp)) {
+                    val sceneSize = Size(full.width, sceneHeightPx)
+                    val paint = Paint().apply { alpha = 1f - 0.4f * c }
+                    drawContext.canvas.saveLayer(Rect(Offset.Zero, sceneSize), paint)
+                    with(scene) { drawScene(sceneSize, c) }
+                    drawContext.canvas.restore()
+                }
+            },
+        )
+    }
+
+    Box(Modifier.fillMaxSize().onSizeChanged { rootSize = it }) {
         // Everything the glass samples lives in this one source layer.
         Box(Modifier.fillMaxSize().hazeSource(haze)) {
-            AuroraBackdrop(animated = a11y.sceneAnimated, modifier = Modifier.fillMaxSize())
+            AuroraBackdrop(renderer = aurora, modifier = Modifier.fillMaxSize())
             WeatherScene(
-                spec = state.scene,
-                animated = a11y.sceneAnimated,
+                renderer = scene,
                 collapse = collapse,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -186,7 +221,7 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
             ) { current ->
                 when (current) {
                     null -> HomeContent(
-                        state = state, actions = actions, haze = haze, connection = connection, listState = listState,
+                        state = state, actions = actions, haze = haze, sampler = sampler, connection = connection, listState = listState,
                         heroPx = heroPx, collapse = collapse, toolbarExpanded = toolbarExpanded, refreshEnabled = heroExpanded,
                         animatedVisibilityScope = this@AnimatedContent,
                     )
@@ -206,6 +241,7 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
     state: HomeUiState,
     actions: HomeActions,
     haze: HazeState,
+    sampler: BackdropSampler,
     connection: NestedScrollConnection,
     listState: androidx.compose.foundation.lazy.LazyListState,
     heroPx: Float,
@@ -232,7 +268,7 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
             ) {
                 state.banner?.let { AlertBanner(it, haze, onClick = actions.openWarnings, onDismiss = actions.dismissBanner) }
             }
-            Hero(state = state, heightPx = heroPx, collapse = collapse, haze = haze)
+            Hero(state = state, heightPx = heroPx, collapse = collapse, haze = haze, sampler = sampler)
             // Pull-to-refresh arms only once the hero is fully open, so a drag never fights the expansion.
             Box(
                 Modifier
@@ -302,7 +338,7 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
         HomeToolbar(
             expanded = toolbarExpanded,
             refreshing = state.isRefreshing,
-            haze = haze,
+            sampler = sampler,
             onRefresh = actions.refresh,
             onLocations = actions.openLocations,
             onCatalogue = actions.openCatalogue,

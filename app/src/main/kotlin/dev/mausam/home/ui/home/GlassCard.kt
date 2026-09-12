@@ -165,13 +165,13 @@ fun SharedTransitionScope.GlassCard(
             .lensEdge(MausamRadius.Card, enabled = refract)
             .pointerInput(card.spec.id) {
                 detectTapGestures(
+                    // No haptic on press: a finger landing on a card to scroll is not a tap.
                     onPress = {
                         pressed = true
-                        haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                         tryAwaitRelease()
                         pressed = false
                     },
-                    onTap = { onTap() },
+                    onTap = { haptics.performHapticFeedback(HapticFeedbackType.ContextClick); onTap() },
                     onLongPress = { haptics.performHapticFeedback(HapticFeedbackType.LongPress); menu = true },
                 )
             }
