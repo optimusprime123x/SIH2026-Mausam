@@ -8,6 +8,7 @@ import dev.mausam.home.domain.model.Location
 import dev.mausam.home.domain.model.WeatherBundle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import dev.mausam.home.domain.model.Units
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -23,6 +24,7 @@ class LocationsViewModel(private val graph: AppGraph) : ViewModel() {
     val query = MutableStateFlow("")
     val results = MutableStateFlow<List<Location>>(emptyList())
     val locating = MutableStateFlow(false)
+    val units: StateFlow<Units> = repo.settings.map { it.units }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Units.METRIC)
 
     val rows: StateFlow<List<LocationRow>> = repo.locations.flatMapLatest { list ->
         if (list.isEmpty()) flowOf(emptyList())

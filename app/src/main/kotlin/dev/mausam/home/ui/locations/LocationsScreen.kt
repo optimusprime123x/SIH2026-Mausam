@@ -49,6 +49,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.mausam.home.R
 import dev.mausam.home.domain.cards.WeatherIcon
+import androidx.compose.material3.minimumInteractiveComponentSize
 import dev.mausam.home.domain.model.Formatter
 import dev.mausam.home.domain.model.SceneKind
 import dev.mausam.home.ui.common.GlassGroup
@@ -70,8 +71,9 @@ fun LocationsScreen(vm: LocationsViewModel, onBack: () -> Unit) {
     val query by vm.query.collectAsStateWithLifecycle()
     val results by vm.results.collectAsStateWithLifecycle()
     val locating by vm.locating.collectAsStateWithLifecycle()
+    val units by vm.units.collectAsStateWithLifecycle()
     LocationsContent(
-        rows = rows, query = query, results = results, locating = locating, onBack = onBack,
+        rows = rows, query = query, results = results, locating = locating, units = units, onBack = onBack,
         onQuery = vm::onQuery, onAdd = { vm.add(it) }, onDeviceLocation = { vm.addDeviceLocation() },
         onSetPrimary = { vm.setPrimary(it) }, onMove = { id, d -> vm.move(id, d) }, onRemove = { vm.remove(it) },
     )
@@ -79,14 +81,15 @@ fun LocationsScreen(vm: LocationsViewModel, onBack: () -> Unit) {
 
 @Composable
 fun LocationsContent(
-    rows: List<LocationRow>, query: String, results: List<dev.mausam.home.domain.model.Location>, locating: Boolean, onBack: () -> Unit,
+    rows: List<LocationRow>, query: String, results: List<dev.mausam.home.domain.model.Location>, locating: Boolean,
+    units: dev.mausam.home.domain.model.Units = dev.mausam.home.domain.model.Units.METRIC, onBack: () -> Unit,
     onQuery: (String) -> Unit, onAdd: (dev.mausam.home.domain.model.Location) -> Unit, onDeviceLocation: () -> Unit,
     onSetPrimary: (String) -> Unit, onMove: (String, Int) -> Unit, onRemove: (String) -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
     val a11y = LocalMausamA11y.current
     val dark = LocalIsDark.current
-    val fmt = Formatter()
+    val fmt = remember(units) { Formatter(units) }
     val haze = remember { HazeState() }
     haze.blurEnabled = a11y.glassBlur
 
@@ -192,6 +195,7 @@ fun LocationsContent(
 private fun SmallAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
+            .minimumInteractiveComponentSize()
             .size(32.dp)
             .clip(CircleShape)
             .background(Color.White.copy(alpha = if (enabled) 0.18f else 0.08f))

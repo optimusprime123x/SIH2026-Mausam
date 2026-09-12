@@ -34,6 +34,7 @@ object Ranker {
     const val PERSONA_MATCH = 10.0
     const val GENERAL_BASE = 6.0
     const val TOP_BOOST = 100.0
+    const val PLACEHOLDER_PENALTY = 4.0
 
     fun decay(score: Double, from: Instant, to: Instant): Double {
         val days = (to.epochSecond - from.epochSecond).coerceAtLeast(0) / 86400.0
@@ -78,6 +79,8 @@ object Ranker {
             score += usage[spec.id]?.decayedAt(now) ?: 0.0
             score += timeBoost(spec.persona, ctx.now)
             score += urgency(value)
+            // A card with nothing to show never outranks one with data.
+            if (value !is CardValue.Ready) score -= PLACEHOLDER_PENALTY
             if (pref?.boostUntil?.isAfter(now) == true) score += TOP_BOOST
             val pinned = pref?.pinnedAt != null
             Triple(RenderedCard(spec, value, score, pinned), pref?.pinnedAt, index)

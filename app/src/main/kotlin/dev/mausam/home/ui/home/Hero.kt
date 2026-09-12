@@ -11,6 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,6 +63,7 @@ import kotlin.math.roundToInt
  * directly on the illustrated scene with a scrim; collapses from 240 dp to a 76 dp glass bar where
  * the temperature shrinks from 96 sp/200 to 28 sp/500 and slides to the leading edge.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, sampler: BackdropSampler) {
     val density = LocalDensity.current
@@ -142,16 +145,21 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                     }
                 }
                 Spacer(Modifier.height(Space.s2))
-                Row(horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s2), verticalArrangement = Arrangement.spacedBy(Space.s1), maxLines = 1) {
                     cur?.feelsLikeC?.let { HeroChip("Feels ${fmt.temp(it)}", haze) }
-                    cur?.windKph?.let { HeroChip("Wind ${it.roundToInt()} km/h", haze) }
+                    cur?.windKph?.let { HeroChip("Wind ${fmt.speed(it)}", haze) }
                     cur?.humidityPct?.let { HeroChip("$it% humidity", haze) }
                 }
                 Spacer(Modifier.height(Space.s2))
+                val stale = state.freshness?.isStale == true || state.refreshFailed
                 Text(
-                    state.freshness?.label ?: "loading…",
+                    when {
+                        state.freshness == null -> "loading…"
+                        state.refreshFailed -> "couldn't refresh · ${state.freshness.label}"
+                        else -> state.freshness.label
+                    },
                     style = MaterialTheme.typography.labelMedium.copy(shadow = lift),
-                    color = if (state.freshness?.isStale == true) Color(0xFFFFD27A) else inkSoft,
+                    color = if (stale) Color(0xFFFFD27A) else inkSoft,
                 )
             }
         }
