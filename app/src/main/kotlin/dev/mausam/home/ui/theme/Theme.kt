@@ -6,6 +6,7 @@ import android.provider.Settings
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
@@ -65,8 +66,15 @@ data class MausamA11y(
     val powerSave: Boolean,
 ) {
     val blurSupported: Boolean get() = Build.VERSION.SDK_INT >= 31
-    /** Glass blur is on only where it is cheap and wanted. */
-    val glassBlur: Boolean get() = blurSupported && !reduceTransparency && !powerSave && !largeText
+    /** Glass blur needs RenderEffect (API 31+) and is off for reduce-transparency and large text. */
+    val glassBlur: Boolean get() = blurSupported && !reduceTransparency && !largeText
+    /** Why the glass is opaque right now, for the Appearance section. */
+    val glassBlurReason: String? get() = when {
+        !blurSupported -> "needs Android 12 or newer"
+        reduceTransparency -> "reduce transparency is on"
+        largeText -> "off in large-text mode"
+        else -> null
+    }
     /** The ambient scene runs only when nothing asks it to stop. */
     val sceneAnimated: Boolean get() = effectsEnabled && !reduceMotion && !powerSave && !largeText
     val refraction: Boolean get() = Build.VERSION.SDK_INT >= 33 && sceneAnimated && glassBlur
@@ -129,7 +137,9 @@ fun MausamTheme(
             colorScheme = scheme,
             motionScheme = MotionScheme.expressive(),
             typography = typography,
-            content = content,
-        )
+        ) {
+            // No screen sits on a Surface, so icons and unstyled text would default to black.
+            CompositionLocalProvider(LocalContentColor provides scheme.onBackground, content = content)
+        }
     }
 }
