@@ -32,6 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import dev.mausam.home.ui.common.AccentIconDisc
+import dev.mausam.home.ui.theme.Fluent
+import dev.mausam.home.ui.theme.accentSet
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -86,8 +89,9 @@ fun SharedTransitionScope.DetailSheet(
 ) {
     val spec = CardRegistry.byId(cardId)
     val ctx = state.context
-    val value = if (spec != null && ctx != null) runCatching { spec.fetch(ctx) }.getOrNull() else null
+    val value = remember(cardId, ctx) { if (spec != null && ctx != null) runCatching { spec.fetch(ctx) }.getOrNull() else null }
     val cs = MaterialTheme.colorScheme
+    val accent = accentSet(Fluent.forCard(cardId))
     val scope = rememberCoroutineScope()
     val dragY = remember { Animatable(0f) }
     var backScale by remember { mutableFloatStateOf(1f) }
@@ -115,8 +119,12 @@ fun SharedTransitionScope.DetailSheet(
                 .fillMaxWidth()
                 .fillMaxHeight(0.88f)
                 .graphicsLayer { translationY = dragY.value; scaleX = backScale; scaleY = backScale }
-                .sharedBounds(rememberSharedContentState(key = "card-$cardId"), animatedVisibilityScope = animatedVisibilityScope)
-                .mausamGlass(haze, GlassTier.SHEET, MausamRadius.sheetShape)
+                .sharedBounds(
+                    rememberSharedContentState(key = "card-$cardId"),
+                    animatedVisibilityScope = animatedVisibilityScope,
+                    resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(),
+                )
+                .mausamGlass(haze, GlassTier.SHEET, MausamRadius.sheetShape, wash = accent.wash)
                 .windowInsetsPadding(WindowInsets.navigationBars),
         ) {
             // Drag handle + header: the drag-to-dismiss surface.
@@ -136,18 +144,19 @@ fun SharedTransitionScope.DetailSheet(
                     .padding(horizontal = Space.s6),
             ) {
                 Box(Modifier.align(Alignment.CenterHorizontally).padding(top = Space.s3, bottom = Space.s2).width(32.dp).height(4.dp).clip(MausamRadius.chipShape).background(cs.outlineVariant))
-                Text(spec?.title ?: "Card", style = MaterialTheme.typography.titleLarge, color = cs.onSurface)
-                if (value is CardValue.Ready) {
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            value.primary, style = MaterialTheme.typography.displaySmall, color = cs.onSurface,
-                            modifier = Modifier.sharedElement(rememberSharedContentState(key = "value-$cardId"), animatedVisibilityScope = animatedVisibilityScope),
-                        )
-                        value.unit?.let { Spacer(Modifier.width(Space.s2)); Text(it, style = MaterialTheme.typography.titleMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp)) }
-                        Spacer(Modifier.weight(1f))
-                        value.icon?.let { MeteoconIcon(it, 56.dp) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(spec?.title ?: "Card", style = MaterialTheme.typography.titleLargeEmphasized, color = cs.onSurface)
+                        if (value is CardValue.Ready) {
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(value.primary, style = MaterialTheme.typography.displaySmall, color = cs.onSurface)
+                                value.unit?.let { Spacer(Modifier.width(Space.s2)); Text(it, style = MaterialTheme.typography.titleMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp)) }
+                            }
+                            value.secondary?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant) }
+                        }
                     }
-                    value.secondary?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant) }
+                    Spacer(Modifier.width(Space.s3))
+                    AccentIconDisc((value as? CardValue.Ready)?.icon, accent, 72.dp)
                 }
             }
             Column(
@@ -260,11 +269,22 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
         }
         DetailKind.Warnings -> {
             val list = state.activeWarnings
-            if (list.isEmpty()) Text("No active warnings for ${ctx.location.name}.", style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
+            if (list.isEmpty()) {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(dev.mausam.home.R.drawable.spot_all_clear), contentDescription = null, modifier = Modifier.width(220.dp).height(184.dp))
+                    Text("All clear", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+                    Text("No active IMD warnings for ${ctx.location.name}.", style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
+                }
+            }
             list.forEach { WarningRow(it) }
         }
         DetailKind.Destinations -> {
-            if (ctx.destinations.isEmpty()) Text("Add cities in Locations to see them here.", color = cs.onSurfaceVariant)
+            if (ctx.destinations.isEmpty()) {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(dev.mausam.home.R.drawable.spot_destinations), contentDescription = null, modifier = Modifier.width(220.dp).height(184.dp))
+                    Text("Add cities in Locations to see them here.", color = cs.onSurfaceVariant)
+                }
+            }
             ctx.destinations.forEach { b -> DestinationRow(b, ctx) }
         }
         DetailKind.Text -> Text(value.body ?: value.secondary ?: "", style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)

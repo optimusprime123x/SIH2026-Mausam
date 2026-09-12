@@ -2,6 +2,7 @@ package dev.mausam.home.ui.home
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,12 +23,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
@@ -38,32 +41,33 @@ import dev.mausam.home.ui.common.MeteoconIcon
 import dev.mausam.home.ui.common.RollingValue
 import dev.mausam.home.ui.glass.GlassTier
 import dev.mausam.home.ui.glass.mausamGlass
-import dev.mausam.home.ui.theme.LocalIsDark
 import dev.mausam.home.ui.theme.Space
 import dev.mausam.home.ui.theme.robotoFlexAt
+import kotlin.math.roundToInt
 
 /**
- * Location, temperature, condition, "as of HH:MM". No container of its own: it sits on the scene
- * with a scrim. Collapses from 220 dp to a 72 dp glass bar; the temperature shrinks from
- * displayLarge/200 to headlineMedium/400 and slides to the leading edge.
+ * Location, temperature, condition, "as of HH:MM", plus two glass chips (feels like, wind). It sits
+ * directly on the illustrated scene with a scrim; collapses from 240 dp to a 76 dp glass bar where
+ * the temperature shrinks from 96 sp/200 to 28 sp/500 and slides to the leading edge.
  */
 @Composable
 fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState) {
     val density = LocalDensity.current
     val heightDp = with(density) { heightPx.toDp() }
     val cs = MaterialTheme.colorScheme
-    val dark = LocalIsDark.current
     val cur = state.bundle?.current
     val fmt = state.context?.fmt ?: Formatter()
     var entered by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { entered = true }
     val entryScale by animateFloatAsState(if (entered) 1f else 0.95f, MaterialTheme.motionScheme.slowSpatialSpec(), label = "heroEntry")
 
-    val fontSize = lerp(57.sp, 28.sp, collapse)
-    val weight = (200 + (200 * collapse).toInt()).let { (it / 25) * 25 }
+    val fontSize = lerp(88.sp, 28.sp, collapse)
+    val weight = (200 + (300 * collapse).toInt()).let { (it / 25) * 25 }
     val family = remember(weight) { robotoFlexAt(weight, opsz = 64f) }
     val collapsed = collapse > 0.6f
-    val barShape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
+    val barShape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+    val ink = if (collapsed) cs.onSurface else Color.White
+    val inkSoft = if (collapsed) cs.onSurfaceVariant else Color.White.copy(alpha = 0.86f)
 
     Box(
         Modifier
@@ -79,53 +83,65 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState) 
                 }
             },
     ) {
-        if (!collapsed) {
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(0.55f to Color.Transparent, 1f to (if (dark) Color.Black else cs.scrim).copy(alpha = 0.28f)),
-                ),
-            )
-        }
-        val textColor = if (collapsed) cs.onSurface else if (dark) Color.White else cs.onSurface
-        Row(
-            Modifier.fillMaxSize().padding(horizontal = Space.screenMargin),
-            verticalAlignment = if (collapsed) Alignment.CenterVertically else Alignment.Bottom,
-        ) {
-            Column(Modifier.weight(1f).padding(bottom = if (collapsed) 0.dp else Space.s3)) {
-                if (!collapsed) {
-                    Text(state.location?.name ?: "—", style = MaterialTheme.typography.titleLarge, color = textColor)
+        if (collapsed) {
+            Row(Modifier.fillMaxSize().padding(horizontal = Space.screenMargin), verticalAlignment = Alignment.CenterVertically) {
+                RollingValue(
+                    text = cur?.let { fmt.temp(it.temperatureC) } ?: "—",
+                    numeric = cur?.temperatureC,
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = fontSize, fontFamily = family, lineHeight = fontSize * 1.05f),
+                    color = ink,
+                )
+                Spacer(Modifier.width(Space.s3))
+                Column(Modifier.weight(1f)) {
+                    Text(state.location?.name ?: "", style = MaterialTheme.typography.titleSmall, color = ink, maxLines = 1)
+                    Text(cur?.condition?.label() ?: "", style = MaterialTheme.typography.labelSmall, color = inkSoft, maxLines = 1)
                 }
+                if (cur != null) MeteoconIcon(WeatherIcon.forCondition(cur.condition, cur.isDay), size = 40.dp)
+            }
+        } else {
+            Column(Modifier.fillMaxSize().padding(horizontal = Space.screenMargin, vertical = Space.s4), verticalArrangement = Arrangement.Bottom) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    RollingValue(
-                        text = cur?.let { fmt.temp(it.temperatureC) } ?: "—",
-                        numeric = cur?.temperatureC,
-                        style = MaterialTheme.typography.displayLarge.copy(fontSize = fontSize, fontFamily = family, lineHeight = fontSize * 1.1f),
-                        color = textColor,
-                    )
-                    if (collapsed) {
-                        Spacer(Modifier.width(Space.s3))
-                        Column {
-                            Text(state.location?.name ?: "", style = MaterialTheme.typography.titleSmall, color = textColor, maxLines = 1)
-                            Text(cur?.condition?.label() ?: "", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1)
-                        }
+                    Column(Modifier.weight(1f)) {
+                        Text(state.location?.name ?: "—", style = MaterialTheme.typography.titleLargeEmphasized, color = ink)
+                        RollingValue(
+                            text = cur?.let { fmt.temp(it.temperatureC) } ?: "—",
+                            numeric = cur?.temperatureC,
+                            style = MaterialTheme.typography.displayLarge.copy(fontSize = fontSize, fontFamily = family, lineHeight = fontSize * 1.05f),
+                            color = ink,
+                        )
+                        val hiLo = state.bundle?.daily?.firstOrNull()?.let { "H ${fmt.temp(it.maxC)}  L ${fmt.temp(it.minC)}" }
+                        Text(
+                            listOfNotNull(cur?.condition?.label(), hiLo).joinToString("  ·  "),
+                            style = MaterialTheme.typography.titleMedium, color = ink, fontWeight = FontWeight.Medium,
+                        )
                     }
+                    if (cur != null) MeteoconIcon(WeatherIcon.forCondition(cur.condition, cur.isDay), size = 112.dp)
                 }
-                if (!collapsed) {
-                    val hiLo = state.bundle?.daily?.firstOrNull()?.let { "H ${fmt.temp(it.maxC)}  L ${fmt.temp(it.minC)}" }
-                    Text(
-                        listOfNotNull(cur?.condition?.label(), hiLo).joinToString(" · "),
-                        style = MaterialTheme.typography.bodyMedium, color = textColor,
-                    )
-                    Text(
-                        state.freshness?.label ?: "loading…",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (state.freshness?.isStale == true) cs.outline else textColor.copy(alpha = 0.92f),
-                    )
+                Spacer(Modifier.height(Space.s2))
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
+                    cur?.feelsLikeC?.let { HeroChip("Feels ${fmt.temp(it)}", haze) }
+                    cur?.windKph?.let { HeroChip("Wind ${it.roundToInt()} km/h", haze) }
+                    cur?.humidityPct?.let { HeroChip("$it% humidity", haze) }
                 }
-            }
-            if (!collapsed && cur != null) {
-                MeteoconIcon(WeatherIcon.forCondition(cur.condition, cur.isDay), size = 96.dp, modifier = Modifier.padding(bottom = Space.s3))
+                Spacer(Modifier.height(Space.s2))
+                Text(
+                    state.freshness?.label ?: "loading…",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (state.freshness?.isStale == true) Color(0xFFFFD27A) else inkSoft,
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun HeroChip(text: String, haze: HazeState) {
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(50))
+            .background(Color.White.copy(alpha = 0.16f))
+            .padding(horizontal = Space.s3, vertical = 5.dp),
+    ) {
+        Text(text, style = MaterialTheme.typography.labelLarge, color = Color.White, maxLines = 1, softWrap = false)
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import dev.mausam.home.domain.cards.UserSettings
 
@@ -49,7 +50,9 @@ object Space {
     val screenMargin = s4
     val cardGap = s3
     val cardPadding = s4
-    val listBottomPadding = 96.dp
+    val listBottomPadding = 112.dp
+    /** Leaves the skyline visible between the hero and the first card. */
+    val listTopPadding = 64.dp
 }
 
 /** Accessibility and effect switches resolved once per composition. */
@@ -71,6 +74,8 @@ data class MausamA11y(
 
 val LocalMausamA11y = compositionLocalOf { MausamA11y(false, false, false, true, false) }
 val LocalIsDark = compositionLocalOf { false }
+/** True when the running scheme came from the wallpaper rather than the IMD fallback. */
+val LocalIsDynamic = compositionLocalOf { false }
 
 @Composable
 fun rememberA11y(settings: UserSettings?): MausamA11y {
@@ -81,10 +86,12 @@ fun rememberA11y(settings: UserSettings?): MausamA11y {
     }
     val powerSave = remember { context.getSystemService(PowerManager::class.java)?.isPowerSaveMode == true }
     val large = (settings?.largeText == true) || fontScale >= 1.3f
+    // Preview and screenshot renderers have no RenderEffect: draw the opaque fallback there.
+    val inspecting = LocalInspectionMode.current
     return MausamA11y(
         largeText = large,
-        reduceMotion = reduceMotion,
-        reduceTransparency = false,
+        reduceMotion = reduceMotion || inspecting,
+        reduceTransparency = inspecting,
         effectsEnabled = settings?.effectsEnabled ?: true,
         powerSave = powerSave,
     )
@@ -95,8 +102,11 @@ fun rememberA11y(settings: UserSettings?): MausamA11y {
 fun micaBase(): Color {
     val cs = MaterialTheme.colorScheme
     val dark = LocalIsDark.current
-    return lerp(if (dark) cs.surfaceContainerLowest else cs.surfaceBright, cs.primary, 0.12f)
+    return if (dark) lerp(cs.surfaceContainerLowest, cs.primaryContainer, 0.22f)
+    else lerp(cs.surfaceBright, cs.primaryContainer, 0.30f)
 }
+
+fun supportsDynamicColour(): Boolean = Build.VERSION.SDK_INT >= 31
 
 @Composable
 fun MausamTheme(
@@ -105,14 +115,16 @@ fun MausamTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
+    val wantDynamic = settings?.wallpaperColours ?: true
+    val dynamic = wantDynamic && supportsDynamicColour()
     val scheme: ColorScheme = when {
-        Build.VERSION.SDK_INT >= 31 -> if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        dynamic -> if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         dark -> ImdDarkScheme
         else -> ImdLightScheme
     }
     val a11y = rememberA11y(settings)
     val typography = remember { robotoFlexTypography() }
-    CompositionLocalProvider(LocalMausamA11y provides a11y, LocalIsDark provides dark) {
+    CompositionLocalProvider(LocalMausamA11y provides a11y, LocalIsDark provides dark, LocalIsDynamic provides dynamic) {
         MaterialExpressiveTheme(
             colorScheme = scheme,
             motionScheme = MotionScheme.expressive(),

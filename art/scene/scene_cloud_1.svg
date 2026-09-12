@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="150" viewBox="0 0 320 150">
+  <defs>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="0" y2="140"><stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="0.42" stop-color="#F5F8FC" stop-opacity="1"/><stop offset="1" stop-color="#DCE6F2" stop-opacity="1"/></linearGradient>
+    <radialGradient id="hi" gradientUnits="userSpaceOnUse" cx="122" cy="74" r="40"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/><stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.4"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#body)" d="M286 140L46 140C31.64 140 19.61 129.13 18.15 114.85C16.68 100.56 26.27 87.48 40.34 84.58C43.28 60.86 64.63 43.83 88.41 46.22C96.2 27.76 113.27 14.86 133.17 12.42C153.06 9.97 172.74 18.35 184.78 34.37C209.29 26.54 235.74 38.59 245.92 62.22C263.7 60.3 280.41 71.03 286.06 88C300.4 88.03 312.02 99.68 312 114.03C311.98 128.38 300.35 140 286 140Z"/>
+  <path fill="url(#hi)" d="M162 74C162 96.09 144.09 114 122 114C99.91 114 82 96.09 82 74C82 51.91 99.91 34 122 34C144.09 34 162 51.91 162 74Z"/>
+</svg>

@@ -105,6 +105,8 @@ data class UserSettings(
     val commuteEnd: LocalTime = LocalTime.of(10, 0),
     val schoolStart: LocalTime = LocalTime.of(7, 0),
     val schoolEnd: LocalTime = LocalTime.of(9, 0),
+    /** Material You: seed the palette from the wallpaper (API 31+); off uses the IMD blue scheme. */
+    val wallpaperColours: Boolean = true,
 ) {
     fun isQuiet(t: LocalTime): Boolean =
         if (quietStart <= quietEnd) t >= quietStart && t < quietEnd

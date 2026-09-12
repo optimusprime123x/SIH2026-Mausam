@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="120" viewBox="0 0 260 120">
+  <defs>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="0" y1="14" x2="0" y2="112"><stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="0.42" stop-color="#F5F8FC" stop-opacity="1"/><stop offset="1" stop-color="#DCE6F2" stop-opacity="1"/></linearGradient>
+    <radialGradient id="hi" gradientUnits="userSpaceOnUse" cx="104" cy="66" r="32"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/><stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.4"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#body)" d="M238 112L36 112C25.33 112 16.54 103.63 16.02 92.97C15.51 82.31 23.44 73.13 34.06 72.09C33.4 60.7 38.17 49.67 46.93 42.36C55.69 35.05 67.39 32.33 78.48 35.01C87.06 21.02 102.7 12.96 119.08 14.11C135.45 15.26 149.82 25.42 156.36 40.47C162.39 39.46 168.59 40.09 174.3 42.3C185.56 28.18 205.21 23.94 221.29 32.16C237.38 40.38 245.45 58.79 240.61 76.19C249.94 77.56 256.64 85.9 255.95 95.31C255.27 104.72 247.43 112 238 112Z"/>
+  <path fill="url(#hi)" d="M136 66C136 83.67 121.67 98 104 98C86.33 98 72 83.67 72 66C72 48.33 86.33 34 104 34C121.67 34 136 48.33 136 66Z"/>
+</svg>

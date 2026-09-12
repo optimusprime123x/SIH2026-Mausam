@@ -32,3 +32,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Layoutlib screenshot references are regenerated with :app:updateDebugScreenshotTest
+app/src/screenshotTestDebug/reference/

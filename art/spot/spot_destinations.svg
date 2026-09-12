@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <!-- "Add cities to see them here": coral paper plane flying along a dotted indigo arch between two cloud/sun clusters.
+       Arch is the cubic (46,142) (58,36) (184,36) (198,126); dots and the plane are pre-computed. Light from top-left. -->
+  <defs>
+    <linearGradient id="wing" gradientUnits="userSpaceOnUse" x1="116" y1="40" x2="160" y2="62">
+      <stop offset="0" stop-color="#FFB29E"/>
+      <stop offset="1" stop-color="#FF9E86"/>
+    </linearGradient>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="118" y1="60" x2="160" y2="76">
+      <stop offset="0" stop-color="#FF8D6E"/>
+      <stop offset="1" stop-color="#FF7A59"/>
+    </linearGradient>
+    <linearGradient id="sunA" gradientUnits="userSpaceOnUse" x1="48" y1="130" x2="66" y2="148">
+      <stop offset="0" stop-color="#FFDC7A"/>
+      <stop offset="1" stop-color="#FFC83D"/>
+    </linearGradient>
+    <linearGradient id="sunB" gradientUnits="userSpaceOnUse" x1="200" y1="116" x2="216" y2="132">
+      <stop offset="0" stop-color="#FFDC7A"/>
+      <stop offset="1" stop-color="#FFC83D"/>
+    </linearGradient>
+  </defs>
+
+  <!-- backdrop blobs -->
+  <path fill="#6B7BFF" fill-opacity="0.2" d="M26,108 C20,60 68,24 126,28 C186,32 226,68 218,118 C210,168 156,192 100,184 C50,177 32,154 26,108 Z"/>
+
+  <!-- dotted arch -->
+  <circle cx="48.32" cy="128.2" r="2.4" fill="#6B7BFF"/>
+  <circle cx="51.93" cy="115.71" r="2.4" fill="#6B7BFF"/>
+  <circle cx="56.7" cy="104.51" r="2.4" fill="#6B7BFF"/>
+  <circle cx="62.49" cy="94.6" r="2.4" fill="#6B7BFF"/>
+  <circle cx="69.19" cy="85.97" r="2.4" fill="#6B7BFF"/>
+  <circle cx="76.67" cy="78.6" r="2.4" fill="#6B7BFF"/>
+  <circle cx="84.8" cy="72.5" r="2.4" fill="#6B7BFF"/>
+  <circle cx="93.45" cy="67.64" r="2.4" fill="#6B7BFF"/>
+  <circle cx="102.49" cy="64.03" r="2.4" fill="#6B7BFF"/>
+  <circle cx="173.75" cy="78.77" r="2.4" fill="#6B7BFF"/>
+  <circle cx="180.61" cy="85.93" r="2.4" fill="#6B7BFF"/>
+  <circle cx="186.6" cy="94.24" r="2.4" fill="#6B7BFF"/>
+  <circle cx="191.57" cy="103.7" r="2.4" fill="#6B7BFF"/>
+  <circle cx="195.42" cy="114.29" r="2.4" fill="#6B7BFF"/>
+
+  <!-- bottom-left cluster: sun peeking behind a cloud -->
+  <circle cx="58" cy="138" r="16" fill="#FFC83D" fill-opacity="0.25"/>
+  <circle cx="58" cy="138" r="11" fill="url(#sunA)"/>
+  <circle cx="54" cy="134" r="3" fill="#FFFFFF" fill-opacity="0.45"/>
+  <rect x="29" y="151" width="46" height="11" rx="5.5" fill="#DCE6F2"/>
+  <circle cx="41" cy="151" r="9" fill="#DCE6F2"/>
+  <circle cx="56" cy="145" r="13" fill="#DCE6F2"/>
+  <circle cx="69" cy="153" r="8" fill="#DCE6F2"/>
+  <rect x="26" y="148" width="46" height="11" rx="5.5" fill="#FFFFFF"/>
+  <circle cx="38" cy="148" r="9" fill="#FFFFFF"/>
+  <circle cx="53" cy="142" r="13" fill="#FFFFFF"/>
+  <circle cx="66" cy="150" r="8" fill="#FFFFFF"/>
+
+  <!-- right cluster -->
+  <circle cx="208" cy="124" r="14" fill="#FFC83D" fill-opacity="0.25"/>
+  <circle cx="208" cy="124" r="9.5" fill="url(#sunB)"/>
+  <circle cx="204.5" cy="120.5" r="2.6" fill="#FFFFFF" fill-opacity="0.45"/>
+  <rect x="179" y="137" width="40" height="10" rx="5" fill="#DCE6F2"/>
+  <circle cx="190" cy="137" r="8" fill="#DCE6F2"/>
+  <circle cx="203" cy="131" r="11.5" fill="#DCE6F2"/>
+  <circle cx="214" cy="138" r="7" fill="#DCE6F2"/>
+  <rect x="176" y="134" width="40" height="10" rx="5" fill="#FFFFFF"/>
+  <circle cx="187" cy="134" r="8" fill="#FFFFFF"/>
+  <circle cx="200" cy="128" r="11.5" fill="#FFFFFF"/>
+  <circle cx="211" cy="135" r="7" fill="#FFFFFF"/>
+
+  <!-- paper plane at the top of the arch, heading right -->
+  <!-- motion trail -->
+  <path fill="#4CC2FF" fill-opacity="0.8" d="M108.16,54.01 L94.16,52.51 A1.5,1.5 0 0 1 93.84,55.49 L107.84,56.99 A1.5,1.5 0 0 1 108.16,54.01 Z"/>
+  <path fill="#4CC2FF" fill-opacity="0.8" d="M106.15,62.01 L86.15,60.01 A1.5,1.5 0 0 1 85.85,62.99 L105.85,64.99 A1.5,1.5 0 0 1 106.15,62.01 Z"/>
+  <path fill="#4CC2FF" fill-opacity="0.8" d="M107.15,70.01 L97.15,69.01 A1.5,1.5 0 0 1 96.85,71.99 L106.85,72.99 A1.5,1.5 0 0 1 107.15,70.01 Z"/>
+  <path fill="url(#wing)" d="M166.8,64.67 L115.13,40.78 L124.89,61.49 Z"/>
+  <path fill="url(#body)" d="M166.8,64.67 L124.89,61.49 L114.28,75.4 Z"/>
+  <path fill="#1B2440" fill-opacity="0.16" d="M166.8,64.67 L124.89,61.49 L122.41,56.68 Z"/>
+
+  <!-- sparkles -->
+  <path fill="#FFC83D" d="M30,60 C31,66.5 33,68.5 39.5,69.5 C33,70.5 31,72.5 30,79 C29,72.5 27,70.5 20.5,69.5 C27,68.5 29,66.5 30,60 Z"/>
+  <path fill="#FF6B9A" d="M206,52 C206.7,56.5 208,57.6 212.5,58.3 C208,59 206.7,60.2 206,64.6 C205.3,60.2 204,59 199.5,58.3 C204,57.6 205.3,56.5 206,52 Z"/>
+  <circle cx="126" cy="164" r="3" fill="#29D3C3"/>
+  <circle cx="98" cy="30" r="2.6" fill="#A78BFA"/>
+  <circle cx="186" cy="30" r="2.2" fill="#4CC2FF"/>
+  <circle cx="24" cy="112" r="2.2" fill="#FF7A59"/>
+</svg>

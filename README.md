@@ -14,11 +14,23 @@ export ANDROID_HOME=<sdk with platforms;android-37.0 and build-tools;37.0.0>
 Release builds are signed with the standard Android debug keystore so the CI artifact installs
 anywhere. `.github/workflows/release-build.yml` builds and uploads the APK on every push to `main`.
 
+Screens can be rendered without a device through the Compose screenshot plugin (layoutlib):
+
+```
+./gradlew :app:updateDebugScreenshotTest
+# PNGs land in app/build/outputs/screenshotTest-results/preview/debug/rendered/
+```
+
+The previews live in `app/src/screenshotTest/`; they drive the real screens from fixture state,
+so the hero, cards, onboarding, settings and locations can be checked in light and dark.
+
 ## Layout
 
 * `docs/ARCHITECTURE.md` — layers, ranking, motion and glass decisions.
 * `docs/DATA_SOURCES.md` — why the spec's IMD endpoints are unusable and what replaces them.
 * `app/src/main/kotlin/dev/mausam/home/` — `domain` (pure Kotlin), `data`, `work`, `widget`, `ui`.
+* `art/` — SVG sources and the converter for the hero scene and spot illustrations shipped as
+  VectorDrawables in `app/src/main/res/drawable/`.
 
 ## Credits
 
