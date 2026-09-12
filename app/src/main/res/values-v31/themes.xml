@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Mausam.Splash" parent="Theme.SplashScreen">
+        <!-- Dynamic colour on Android 12+: system accent; IMD blue elsewhere. -->
+        <item name="windowSplashScreenBackground">@android:color/system_accent1_700</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="windowSplashScreenAnimationDuration">600</item>
+        <item name="postSplashScreenTheme">@style/Theme.Mausam</item>
+    </style>
+</resources>

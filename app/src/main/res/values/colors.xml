@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- IMD blue: fallback seed when dynamic colour is unavailable. -->
+    <color name="imd_blue">#FF1F5FA8</color>
+    <color name="splash_background">#FF0E2A4F</color>
+    <color name="ic_launcher_background">#FF1F5FA8</color>
+</resources>
