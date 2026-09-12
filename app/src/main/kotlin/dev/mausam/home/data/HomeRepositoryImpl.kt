@@ -8,6 +8,7 @@ import dev.mausam.home.data.cache.MausamDatabase
 import dev.mausam.home.data.cache.RawPayloadEntity
 import dev.mausam.home.data.cpcb.CpcbApi
 import dev.mausam.home.data.geo.Stations
+import dev.mausam.home.data.imd.DistrictResolver
 import dev.mausam.home.data.imd.ImdWfsApi
 import dev.mausam.home.data.ndma.SachetApi
 import dev.mausam.home.data.net.Http
@@ -59,6 +60,7 @@ class HomeRepositoryImpl(
     private val assembler: WeatherAssembler = WeatherAssembler(),
     private val clock: () -> Instant = { Instant.now() },
 ) : HomeRepository {
+    private val districts = DistrictResolver(imd)
     private val refreshLocks = mutableMapOf<String, Mutex>()
     private fun lockFor(id: String) = synchronized(refreshLocks) { refreshLocks.getOrPut(id) { Mutex() } }
 
@@ -143,8 +145,15 @@ class HomeRepositoryImpl(
                         }
                     },
                     async {
-                        loc.district?.let { d ->
-                            fetch(SourceKey.IMD_WARNINGS, loc) {
+                        fetch(SourceKey.IMD_WARNINGS, loc) {
+                            // By geography first (IMD's district names do not match ours everywhere), by name as a fallback.
+                            val resolved = districts.warningsFor(loc)
+                            if (resolved != null) {
+                                val name = resolved.districtName
+                                if (name != null && !name.equals(loc.district, ignoreCase = true)) db.locations().setDistrict(loc.id, name)
+                                Http.json.encodeToString(JsonObject.serializer(), resolved.collection)
+                            } else {
+                                val d = loc.district ?: error("no district")
                                 Http.json.encodeToString(JsonObject.serializer(), imd.getFeature(ImdWfsApi.LAYER_DISTRICT_WARNINGS, ImdWfsApi.districtFilter(d), ImdWfsApi.PROPS_DISTRICT_WARNINGS))
                             }
                         }

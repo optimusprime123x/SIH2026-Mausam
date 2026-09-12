@@ -16,6 +16,8 @@ interface ImdWfsApi {
         @Query("CQL_FILTER") cql: String? = null,
         @Query("propertyName") properties: String? = null,
         @Query("count") count: Int? = null,
+        /** `minLon,minLat,maxLon,maxLat,EPSG:4326`; matches feature envelopes, see [bboxAround]. */
+        @Query("bbox") bbox: String? = null,
     ): JsonObject
 
     companion object {
@@ -36,6 +38,15 @@ interface ImdWfsApi {
                 "cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9,cat10,cat11,cat12,cat13,cat14,cat15,cat16,cat17,cat18,cat19"
 
         fun districtFilter(district: String): String = "District='${district.uppercase().replace("'", "''")}'"
+        fun districtsFilter(districts: Collection<String>): String = districts.joinToString(" OR ") { "District='${it.replace("'", "''")}'" }
+
+        /**
+         * A tiny envelope around a point. IMD declares the warnings layer in the wrong CRS, so CQL
+         * spatial predicates (INTERSECTS, DWITHIN) fail server-side; the WFS bbox parameter still
+         * works and returns every district whose envelope covers the point.
+         */
+        fun bboxAround(lat: Double, lon: Double, halfDeg: Double = 0.002): String =
+            String.format(java.util.Locale.ENGLISH, "%.5f,%.5f,%.5f,%.5f,EPSG:4326", lon - halfDeg, lat - halfDeg, lon + halfDeg, lat + halfDeg)
         fun synopFilter(stationId: String): String = "station_id=$stationId"
         fun metarFilter(stationId: String): String = "station_id='${stationId.replace("'", "''")}'"
     }
