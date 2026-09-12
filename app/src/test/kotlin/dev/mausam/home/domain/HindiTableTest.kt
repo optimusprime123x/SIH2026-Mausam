@@ -18,7 +18,17 @@ class HindiTableTest {
     @Test fun everyEntryIsTranslatedAndKeepsPlaceholders() {
         for ((en, hi) in Hindi.table) {
             assertTrue("blank translation for '$en'", hi.isNotBlank())
-            assertEquals("placeholders differ for '$en'", placeholder.findAll(en).count(), placeholder.findAll(hi).count())
+            val enPh = placeholder.findAll(en).map { it.value }.toList()
+            val hiPh = placeholder.findAll(hi).map { it.value }.toList()
+            assertEquals("placeholder count differs for '$en'", enPh.size, hiPh.size)
+            val reindexed = hiPh.any { it.contains('$') }
+            if (reindexed) {
+                // %2$s style: every placeholder must carry an index and the conversion letters must match.
+                assertTrue("mixed indexed and plain placeholders in '$hi'", hiPh.all { it.contains('$') })
+                assertEquals("conversions differ for '$en'", enPh.map { it.last() }.sorted(), hiPh.map { it.last() }.sorted())
+            } else {
+                assertEquals("placeholder order differs for '$en'; use %2\$s style to reorder", enPh, hiPh)
+            }
             assertTrue("no Devanagari in '$en' -> '$hi'", hi.any { it in '\u0900'..'\u097F' } || hi == en)
         }
     }

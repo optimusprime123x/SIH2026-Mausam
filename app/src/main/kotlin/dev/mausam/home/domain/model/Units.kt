@@ -5,6 +5,8 @@ import dev.mausam.home.domain.i18n.trf
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import dev.mausam.home.domain.i18n.L10n
+import dev.mausam.home.domain.i18n.Lang
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -49,6 +51,29 @@ class Formatter(val units: Units = Units.METRIC, val zone: ZoneId = ZoneId.of("A
 
     private fun twelveHour(hour: Int): Int = (hour % 12).let { if (it == 0) 12 else it }
 
-    /** Template with the day-half word; Hindi swaps it for the IMD-style पूर्वाह्न / अपराह्न prefix. */
-    private fun meridiem(hour: Int): String = if (hour < 12) "%s am" else "%s pm"
+    /**
+     * "6 am – 10 am". Hindi reads the way people say it: "सुबह 6 से 10 बजे" within one part of
+     * the day, "सुबह 6 से दोपहर 2 बजे" across two.
+     */
+    fun clockRange(from: Instant, to: Instant): String {
+        if (L10n.lang != Lang.HI) return "${clock(from)} – ${clock(to)}"
+        val a = from.atZone(zone); val b = to.atZone(zone)
+        val ha = hm(a); val hb = hm(b)
+        return if (dayPart(a.hour) == dayPart(b.hour)) "${dayPart(a.hour)} $ha से $hb बजे" else "${dayPart(a.hour)} $ha से ${dayPart(b.hour)} $hb बजे"
+    }
+
+    private fun hm(z: java.time.ZonedDateTime): String =
+        if (z.minute == 0) "${twelveHour(z.hour)}" else "${twelveHour(z.hour)}:${String.format(Locale.ENGLISH, "%02d", z.minute)}"
+
+    /** सुबह / दोपहर / शाम / रात, the everyday words rather than the formal पूर्वाह्न / अपराह्न. */
+    private fun dayPart(hour: Int): String = when (hour) {
+        in 4..11 -> "सुबह"
+        in 12..15 -> "दोपहर"
+        in 16..19 -> "शाम"
+        else -> "रात"
+    }
+
+    /** Template with the day-half word; Hindi uses the part-of-day word instead. */
+    private fun meridiem(hour: Int): String =
+        if (L10n.lang == Lang.HI) "${dayPart(hour)} %s बजे" else if (hour < 12) "%s am" else "%s pm"
 }

@@ -23,7 +23,7 @@ interface OpenMeteoApi {
         const val BASE_URL = "https://api.open-meteo.com/"
         const val ATTRIBUTION = "Weather data by Open-Meteo.com"
         const val CURRENT = "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m"
-        const val HOURLY = "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day"
+        const val HOURLY = "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day,soil_moisture_0_to_1cm,soil_moisture_1_to_3cm,soil_moisture_3_to_9cm,soil_moisture_9_to_27cm,soil_temperature_6cm"
         const val DAILY = "weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max"
         const val AQ_CURRENT = "pm10,pm2_5,ozone,nitrogen_dioxide,us_aqi,european_aqi,uv_index"
         const val AQ_HOURLY = "pm10,pm2_5,us_aqi"
@@ -76,6 +76,12 @@ data class OmHourly(
     @SerialName("wind_gusts_10m") val windGusts: List<Double?> = emptyList(),
     @SerialName("uv_index") val uvIndex: List<Double?> = emptyList(),
     @SerialName("is_day") val isDay: List<Int?> = emptyList(),
+    // Volumetric water content, m³/m³, per soil layer; absent in older cached payloads.
+    @SerialName("soil_moisture_0_to_1cm") val soil0to1: List<Double?> = emptyList(),
+    @SerialName("soil_moisture_1_to_3cm") val soil1to3: List<Double?> = emptyList(),
+    @SerialName("soil_moisture_3_to_9cm") val soil3to9: List<Double?> = emptyList(),
+    @SerialName("soil_moisture_9_to_27cm") val soil9to27: List<Double?> = emptyList(),
+    @SerialName("soil_temperature_6cm") val soilTemperature6cm: List<Double?> = emptyList(),
 )
 
 @Serializable

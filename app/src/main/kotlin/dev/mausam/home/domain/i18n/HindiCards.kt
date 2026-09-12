@@ -187,7 +187,7 @@ object HindiCards {
         "%s · use low beams, keep distance" to "%s · लो बीम जलाएँ, दूरी रखें",
         "Expected around %s" to "%s के आसपास संभावित",
         "+%d min" to "+%d मिनट",
-        "%d%% rain chance %s – %s" to "%d%% बारिश की संभावना, %s – %s",
+        "%d%% rain chance %s" to "%2\$s %1\$d%% बारिश की संभावना",
         "Live traffic" to "लाइव ट्रैफ़िक",
         "Open Maps for %s" to "%s के लिए Maps खोलें",
         "Open in Maps" to "Maps में खोलें",

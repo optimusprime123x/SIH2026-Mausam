@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.DirectionsRun
 import androidx.compose.material.icons.rounded.AcUnit
+import androidx.compose.material.icons.rounded.Grass
 import androidx.compose.material.icons.rounded.Agriculture
 import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.Cloud
@@ -109,6 +110,7 @@ fun symbolFor(icon: WeatherIcon): ImageVector = when (icon) {
     WeatherIcon.FLIGHT -> Icons.Rounded.Flight
     WeatherIcon.SCHOOL -> Icons.Rounded.School
     WeatherIcon.AGRO -> Icons.Rounded.Agriculture
+    WeatherIcon.SOIL -> Icons.Rounded.Grass
     WeatherIcon.TRAFFIC -> Icons.Rounded.Traffic
     WeatherIcon.COMMUTE -> Icons.Rounded.DepartureBoard
     WeatherIcon.COMFORT -> Icons.Rounded.Spa

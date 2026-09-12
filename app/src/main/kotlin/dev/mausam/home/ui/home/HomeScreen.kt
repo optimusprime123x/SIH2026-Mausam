@@ -304,7 +304,7 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
                     itemsIndexedKeyed(state.cards) { index, card ->
                         GlassCard(
                             card = card, index = index, haze = haze, freshness = state.freshness,
-                            sourceInfo = card.spec.sourceLabel.takeIf { it.length >= 8 }?.let { l -> state.bundle?.sources?.values?.firstOrNull { it.label.contains(l.take(8), true) } },
+                            sourceInfo = card.spec.kind?.let { state.bundle?.sources?.get(it) },
                             animatedVisibilityScope = animatedVisibilityScope,
                             refract = index < 2 && a11y.refraction,
                             onTap = { actions.openCard(card.spec.id) },

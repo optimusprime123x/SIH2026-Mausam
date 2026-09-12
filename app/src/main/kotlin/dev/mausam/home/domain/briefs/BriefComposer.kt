@@ -46,7 +46,7 @@ object BriefComposer {
                     val t = b.hourly.firstOrNull { it.time == w.start }?.temperatureC
                     val aqi = b.airQuality?.aqi?.let { "AQI %d (%s)".trf(it, IndianAqi.category(it).label.lowercase()) }
                     Brief(
-                        "Best run window %s – %s".trf(f.clock(w.start), f.clock(w.end)),
+                        "Best run window %s".trf(f.clockRange(w.start, w.end)),
                         listOfNotNull(
                             listOfNotNull(t?.let { "%s at the start".trf(f.temp(it)) }, aqi).joinToString(" · "),
                             uvLine(ctx),
@@ -63,7 +63,7 @@ object BriefComposer {
             Persona.PARENTS -> {
                 val s = ctx.settings
                 val r = Commute.rainIn(b.hourly, ctx.now, s.schoolStart, s.schoolEnd, ctx.location.zoneId)
-                val window = "%s – %s".trf(f.clock(ctx.now.with(s.schoolStart).toInstant()), f.clock(ctx.now.with(s.schoolEnd).toInstant()))
+                val window = f.clockRange(ctx.now.with(s.schoolStart).toInstant(), ctx.now.with(s.schoolEnd).toInstant())
                 when {
                     evening -> Brief(
                         "Tomorrow's school run".tr(),
@@ -162,8 +162,8 @@ object BriefComposer {
                     )
                     r.likely -> Brief(
                         "Rain on your commute".tr(),
-                        "%d%% chance between %s and %s. Leave 20 minutes earlier."
-                            .trf(r.maxProbabilityPct, f.clock(r.hours.first().time), f.clock(r.hours.last().time.plusSeconds(3600))),
+                        "%d%% chance %s. Leave 20 minutes earlier."
+                            .trf(r.maxProbabilityPct, f.clockRange(r.hours.first().time, r.hours.last().time.plusSeconds(3600))),
                     )
                     r.possible -> Brief(
                         "Rain possible on your commute".tr(),
