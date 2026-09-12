@@ -1,5 +1,6 @@
 package dev.mausam.home.domain.model
 
+import dev.mausam.home.domain.i18n.trf
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -14,7 +15,7 @@ data class Freshness(val fetchedAt: Instant, val isStale: Boolean, val label: St
         fun of(fetchedAt: Instant, now: Instant, zone: ZoneId): Freshness {
             val stale = Duration.between(fetchedAt, now) > STALE_AFTER
             val time = fmt.format(fetchedAt.atZone(zone))
-            return Freshness(fetchedAt, stale, if (stale) "offline, last updated $time" else "as of $time")
+            return Freshness(fetchedAt, stale, if (stale) "offline, last updated %s".trf(time) else "as of %s".trf(time))
         }
     }
 }

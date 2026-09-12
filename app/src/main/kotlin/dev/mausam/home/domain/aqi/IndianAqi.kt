@@ -1,5 +1,6 @@
 package dev.mausam.home.domain.aqi
 
+import dev.mausam.home.domain.i18n.tr
 import kotlin.math.roundToInt
 
 /**
@@ -44,13 +45,17 @@ object IndianAqi {
         }
     }
 
-    enum class Category(val label: String, val maxAqi: Int, val advice: String) {
+    enum class Category(val rawLabel: String, val maxAqi: Int, val rawAdvice: String) {
         GOOD("Good", 50, "Minimal impact"),
         SATISFACTORY("Satisfactory", 100, "Minor breathing discomfort to sensitive people"),
         MODERATE("Moderate", 200, "Breathing discomfort to people with lung or heart disease"),
         POOR("Poor", 300, "Breathing discomfort to most people on prolonged exposure"),
         VERY_POOR("Very poor", 400, "Respiratory illness on prolonged exposure"),
         SEVERE("Severe", Int.MAX_VALUE, "Affects healthy people; serious for those with disease");
+
+        /** Translated for display; [rawLabel] / [rawAdvice] stay English and key the translation table. */
+        val label: String get() = rawLabel.tr()
+        val advice: String get() = rawAdvice.tr()
     }
 
     fun category(aqi: Int): Category = Category.entries.first { aqi <= it.maxAqi }

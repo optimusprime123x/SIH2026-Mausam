@@ -27,6 +27,9 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import dev.mausam.home.MainActivity
 import dev.mausam.home.MausamApp
+import dev.mausam.home.domain.i18n.L10n
+import dev.mausam.home.domain.i18n.Lang
+import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.domain.cards.CardContext
 import dev.mausam.home.domain.cards.CardRegistry
 import dev.mausam.home.domain.cards.CardValue
@@ -55,7 +58,7 @@ class MausamWidget : GlanceAppWidget() {
                     Column(GlanceModifier.padding(12.dp)) {
                         Text(snap?.place ?: "Mausam", style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp))
                         Text(snap?.temp ?: "—", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 32.sp, fontWeight = FontWeight.Medium))
-                        Text(snap?.condition ?: "Open Mausam to load", style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp))
+                        Text(snap?.condition ?: "Open Mausam to load".tr(), style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp))
                         Spacer(GlanceModifier.height(6.dp))
                         Text(snap?.top ?: "", style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp), maxLines = 2)
                         Text(snap?.asOf ?: "", style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp))
@@ -71,15 +74,16 @@ class MausamWidget : GlanceAppWidget() {
         val loc = repo.primaryLocation() ?: return null
         val cached = repo.cachedBundle(loc) ?: return null
         val settings = repo.currentSettings()
+        L10n.lang = Lang.of(settings.language)
         val now = ZonedDateTime.now(loc.zoneId)
         val ctx = CardContext(now, loc, cached.data, Coastline.distanceKm(loc.latitude, loc.longitude), settings)
         val ranked = Ranker.rank(CardRegistry.all, ctx, repo.cardUsage.first(), repo.cardPrefs.first())
         val top = ranked.firstOrNull()
         val topText = top?.let { c ->
             when (val v = c.value) {
-                is CardValue.Ready -> "${c.spec.title}: ${v.primary}${v.unit?.let { " $it" } ?: ""}"
-                is CardValue.Pending -> "${c.spec.title}: ${v.reason}"
-                is CardValue.Unavailable -> c.spec.title
+                is CardValue.Ready -> "${c.spec.title.tr()}: ${v.primary}${v.unit?.let { " $it" } ?: ""}"
+                is CardValue.Pending -> "${c.spec.title.tr()}: ${v.reason}"
+                is CardValue.Unavailable -> c.spec.title.tr()
             }
         } ?: ""
         val fmt = Formatter(settings.units, loc.zoneId)
@@ -87,9 +91,9 @@ class MausamWidget : GlanceAppWidget() {
         val warning = cached.data.activeWarnings(Instant.now()).firstOrNull()
         return Snapshot(
             temp = cur?.let { fmt.temp(it.temperatureC) } ?: "—",
-            condition = cur?.condition?.label() ?: "",
+            condition = cur?.condition?.label()?.tr() ?: "",
             top = topText,
-            asOf = Freshness.of(cached.fetchedAt, Instant.now(), loc.zoneId).label,
+            asOf = Freshness.of(cached.fetchedAt, Instant.now(), loc.zoneId).label.tr(),
             strip = warning?.let { ImdTiers.solid(it.severity) },
             place = loc.name,
         )

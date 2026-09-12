@@ -3,6 +3,8 @@ package dev.mausam.home.work
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import dev.mausam.home.domain.i18n.L10n
+import dev.mausam.home.domain.i18n.Lang
 import dev.mausam.home.MausamApp
 import dev.mausam.home.domain.briefs.AlertPolicy
 import dev.mausam.home.domain.model.DataKind
@@ -17,6 +19,7 @@ class RefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorke
     override suspend fun doWork(): Result {
         val graph = MausamApp.graph(applicationContext)
         val repo = graph.repository
+        L10n.lang = Lang.of(repo.currentSettings().language)
         val locations = repo.currentLocations()
         if (locations.isEmpty()) return Result.success()
 

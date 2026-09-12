@@ -73,6 +73,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.mausam.home.R
 import dev.mausam.home.domain.model.CachedResult
+import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.ui.common.CardSkeletons
 import dev.mausam.home.ui.detail.CardCatalogue
 import dev.mausam.home.ui.detail.DetailSheet
@@ -318,8 +319,8 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
                         item(key = "empty") {
                             Column(Modifier.fillMaxWidth().padding(top = Space.s8), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Image(painterResource(R.drawable.spot_empty_cards), contentDescription = null, modifier = Modifier.size(200.dp))
-                                Text("No cards yet", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
-                                Text("Add some from the catalogue.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                                Text("No cards yet".tr(), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+                                Text("Add some from the catalogue.".tr(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                             }
                         }
                     }
@@ -327,17 +328,17 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
                         TextButton(onClick = actions.openCatalogue, modifier = Modifier.fillMaxWidth().padding(top = Space.s2)) {
                             Icon(Icons.Rounded.Add, contentDescription = null)
                             Spacer(Modifier.width(Space.s1))
-                            Text("Add cards")
+                            Text("Add cards".tr())
                         }
                         if (state.origin == CachedResult.Origin.SNAPSHOT) {
                             Row(Modifier.fillMaxWidth().padding(top = Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
                                 Image(painterResource(R.drawable.spot_offline), contentDescription = null, modifier = Modifier.size(56.dp))
                                 Spacer(Modifier.width(Space.s2))
-                                Text("Showing bundled sample data until the network answers", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                                Text("Showing bundled sample data until the network answers".tr(), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
                             }
                         }
                         Text(
-                            "Weather data by Open-Meteo.com · IMD · NDMA SACHET · CPCB",
+                            "Weather data by Open-Meteo.com · IMD · NDMA SACHET · CPCB".tr(),
                             style = MaterialTheme.typography.labelSmall,
                             color = cs.onSurfaceVariant,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,

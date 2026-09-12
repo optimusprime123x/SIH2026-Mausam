@@ -30,6 +30,9 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material3.Icon
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import dev.mausam.home.domain.aqi.IndianAqi
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.briefs.SpokenBrief
 import dev.mausam.home.ui.common.rememberSpeaker
 import androidx.compose.material3.MaterialTheme
@@ -125,7 +128,7 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                 Spacer(Modifier.width(Space.s3))
                 Column(Modifier.weight(1f)) {
                     Text(state.location?.name ?: "", style = MaterialTheme.typography.titleSmall, color = ink, maxLines = 1)
-                    Text(cur?.condition?.label() ?: "", style = MaterialTheme.typography.labelSmall, color = inkSoft, maxLines = 1)
+                    Text(cur?.condition?.label()?.tr() ?: "", style = MaterialTheme.typography.labelSmall, color = inkSoft, maxLines = 1)
                 }
                 if (cur != null) MeteoconIcon(WeatherIcon.forCondition(cur.condition, cur.isDay), size = 40.dp, tint = ink)
             }
@@ -160,9 +163,9 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                             style = MaterialTheme.typography.displayLarge.copy(fontSize = fontSize, fontFamily = family, lineHeight = fontSize * 1.05f, shadow = lift),
                             color = ink,
                         )
-                        val hiLo = state.bundle?.daily?.firstOrNull()?.let { "H ${fmt.temp(it.maxC)}  L ${fmt.temp(it.minC)}" }
+                        val hiLo = state.bundle?.daily?.firstOrNull()?.let { "H %s  L %s".trf(fmt.temp(it.maxC), fmt.temp(it.minC)) }
                         Text(
-                            listOfNotNull(cur?.condition?.label(), hiLo).joinToString("  ·  "),
+                            listOfNotNull(cur?.condition?.label()?.tr(), hiLo).joinToString("  ·  "),
                             style = MaterialTheme.typography.titleMedium.copy(shadow = lift), color = ink, fontWeight = FontWeight.Medium,
                         )
                     }
@@ -174,17 +177,21 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                     }
                 }
                 Spacer(Modifier.height(Space.s2))
+                // AQI leads, tinted by its CPCB category, so it survives when a narrow screen drops the last chip.
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s2), verticalArrangement = Arrangement.spacedBy(Space.s1), maxLines = 1) {
-                    cur?.feelsLikeC?.let { HeroChip("Feels ${fmt.temp(it)}", haze) }
-                    cur?.windKph?.let { HeroChip("Wind ${fmt.speed(it)}", haze) }
-                    cur?.humidityPct?.let { HeroChip("$it% humidity", haze) }
+                    state.bundle?.airQuality?.let { air ->
+                        HeroChip("AQI %d".trf(air.aqi), haze, tint = aqiChipTint(air.aqi))
+                    }
+                    cur?.feelsLikeC?.let { HeroChip("Feels %s".trf(fmt.temp(it)), haze) }
+                    cur?.windKph?.let { HeroChip("Wind %s".trf(fmt.speed(it)), haze) }
+                    cur?.humidityPct?.let { HeroChip("%d%% humidity".trf(it), haze) }
                 }
                 Spacer(Modifier.height(Space.s2))
                 val stale = state.freshness?.isStale == true || state.refreshFailed
                 Text(
                     when {
-                        state.freshness == null -> "loading…"
-                        state.refreshFailed -> "couldn't refresh · ${state.freshness.label}"
+                        state.freshness == null -> "loading…".tr()
+                        state.refreshFailed -> "couldn't refresh · %s".trf(state.freshness.label)
                         else -> state.freshness.label
                     },
                     style = MaterialTheme.typography.labelMedium.copy(shadow = lift),
@@ -203,7 +210,7 @@ private fun SpeakButton(speaking: Boolean, haze: HazeState, enabled: Boolean, on
             .size(40.dp)
             .mausamGlass(haze, GlassTier.TOOLBAR, CircleShape, tint = Color(0xFF1B2A44), shadow = false)
             .clickable(enabled = enabled, onClick = onClick)
-            .semantics { role = Role.Button; contentDescription = if (speaking) "Stop reading" else "Read the weather aloud" },
+            .semantics { role = Role.Button; contentDescription = if (speaking) "Stop reading".tr() else "Read the weather aloud".tr() },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -217,12 +224,22 @@ private fun SpeakButton(speaking: Boolean, haze: HazeState, enabled: Boolean, on
 
 /** A small glass pill over the scene: toolbar-tier blur with a deep-blue tint so white text reads on any sky. */
 @Composable
-private fun HeroChip(text: String, haze: HazeState) {
+private fun HeroChip(text: String, haze: HazeState, tint: Color = Color(0xFF1B2A44)) {
     Box(
         Modifier
-            .mausamGlass(haze, GlassTier.TOOLBAR, RoundedCornerShape(50), tint = Color(0xFF1B2A44), shadow = false)
-            .padding(horizontal = Space.s3, vertical = 5.dp),
+            .mausamGlass(haze, GlassTier.TOOLBAR, RoundedCornerShape(50), tint = tint, shadow = false)
+            .padding(horizontal = 10.dp, vertical = 5.dp),
     ) {
-        Text(text, style = MaterialTheme.typography.labelLarge, color = Color.White, maxLines = 1, softWrap = false)
+        Text(text, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Medium, color = Color.White, maxLines = 1, softWrap = false)
     }
+}
+
+/** CPCB category colours, darkened so white text stays legible on the chip. */
+private fun aqiChipTint(aqi: Int): Color = when (IndianAqi.category(aqi)) {
+    IndianAqi.Category.GOOD -> Color(0xFF1F6B3A)
+    IndianAqi.Category.SATISFACTORY -> Color(0xFF4F6F1E)
+    IndianAqi.Category.MODERATE -> Color(0xFF8A6A12)
+    IndianAqi.Category.POOR -> Color(0xFF9A4E12)
+    IndianAqi.Category.VERY_POOR -> Color(0xFF8C2A2A)
+    IndianAqi.Category.SEVERE -> Color(0xFF5E1B3A)
 }

@@ -1,5 +1,7 @@
 package dev.mausam.home.domain.cards
 
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.model.DailyForecast
 import dev.mausam.home.domain.model.HourlyForecast
 import dev.mausam.home.domain.model.WeatherCondition
@@ -207,15 +209,15 @@ object Packing {
         val wetDays = week.count { (it.precipitationProbabilityPct ?: 0) >= 40 || it.precipitationMm >= 2 }
         val maxT = week.maxOf { it.maxC }
         val minT = week.minOf { it.minC }
-        if (wetDays >= 3) tips += "Umbrella and quick-dry layers, rain on $wetDays of 7 days"
-        else if (wetDays > 0) tips += "Pack a compact umbrella"
-        if (maxT >= 38) tips += "Light cottons, a cap and water: highs near ${maxT.roundToInt()}°"
-        else if (maxT >= 32) tips += "Light clothes, highs near ${maxT.roundToInt()}°"
-        if (minT <= 8) tips += "A warm jacket: nights fall to ${minT.roundToInt()}°"
-        else if (minT <= 15) tips += "A light jacket for evenings"
-        if (week.any { it.condition == WeatherCondition.THUNDERSTORM }) tips += "Storms expected, plan indoor backups"
-        if (week.any { (it.uvIndexMax ?: 0.0) >= 8 }) tips += "Sunscreen, UV runs high"
-        return tips.firstOrNull() ?: "Settled week, pack for ${minT.roundToInt()}–${maxT.roundToInt()}°"
+        if (wetDays >= 3) tips += "Umbrella and quick-dry layers, rain on %d of 7 days".trf(wetDays)
+        else if (wetDays > 0) tips += "Pack a compact umbrella".tr()
+        if (maxT >= 38) tips += "Light cottons, a cap and water: highs near %d°".trf(maxT.roundToInt())
+        else if (maxT >= 32) tips += "Light clothes, highs near %d°".trf(maxT.roundToInt())
+        if (minT <= 8) tips += "A warm jacket: nights fall to %d°".trf(minT.roundToInt())
+        else if (minT <= 15) tips += "A light jacket for evenings".tr()
+        if (week.any { it.condition == WeatherCondition.THUNDERSTORM }) tips += "Storms expected, plan indoor backups".tr()
+        if (week.any { (it.uvIndexMax ?: 0.0) >= 8 }) tips += "Sunscreen, UV runs high".tr()
+        return tips.firstOrNull() ?: "Settled week, pack for %d–%d°".trf(minT.roundToInt(), maxT.roundToInt())
     }
 }
 

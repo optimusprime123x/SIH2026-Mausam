@@ -13,6 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import dev.mausam.home.domain.i18n.L10n
+import dev.mausam.home.domain.i18n.Lang
 import java.util.Locale
 
 /**
@@ -32,7 +34,6 @@ class Speaker(context: Context) {
         main.post {
             if (status != TextToSpeech.SUCCESS) { available = false; pending = null; return@post }
             ready = true
-            pickLanguage()
             pending?.let { pending = null; speak(it) }
         }
     }
@@ -48,16 +49,21 @@ class Speaker(context: Context) {
         })
     }
 
-    /** Indian English when the engine has it, otherwise whatever it defaults to. */
-    private fun pickLanguage() {
-        val indian = Locale("en", "IN")
-        val r = tts.isLanguageAvailable(indian)
-        if (r == TextToSpeech.LANG_AVAILABLE || r == TextToSpeech.LANG_COUNTRY_AVAILABLE || r == TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE) tts.language = indian
+    private var current: Lang? = null
+
+    /** The app language when the engine has a voice for it (hi-IN, en-IN), otherwise the engine default. */
+    private fun pickLanguage(lang: Lang) {
+        if (current == lang) return
+        current = lang
+        val r = tts.isLanguageAvailable(lang.locale)
+        if (r == TextToSpeech.LANG_AVAILABLE || r == TextToSpeech.LANG_COUNTRY_AVAILABLE || r == TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE) tts.language = lang.locale
+        else if (lang == Lang.HI) tts.isLanguageAvailable(Locale("hi")).takeIf { it >= 0 }?.let { tts.language = Locale("hi") }
     }
 
-    fun speak(text: String) {
+    fun speak(text: String, lang: Lang = L10n.lang) {
         if (!available) return
         if (!ready) { pending = text; return }
+        pickLanguage(lang)
         speaking = true
         val r = tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "mausam-brief")
         if (r != TextToSpeech.SUCCESS) speaking = false

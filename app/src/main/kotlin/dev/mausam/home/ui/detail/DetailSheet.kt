@@ -60,6 +60,8 @@ import dev.mausam.home.domain.cards.DetailKind
 import dev.mausam.home.domain.cards.HourlyMetric
 import dev.mausam.home.domain.cards.RunScore
 import dev.mausam.home.domain.cards.WeatherIcon
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.model.WeatherBundle
 import dev.mausam.home.domain.model.WeatherWarning
 import dev.mausam.home.ui.common.MeteoconIcon
@@ -151,7 +153,7 @@ fun SharedTransitionScope.DetailSheet(
                 Box(Modifier.align(Alignment.CenterHorizontally).padding(top = Space.s3, bottom = Space.s2).width(32.dp).height(4.dp).clip(MausamRadius.chipShape).background(cs.outlineVariant))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(spec?.title ?: "Card", style = MaterialTheme.typography.titleLargeEmphasized, color = cs.onSurface)
+                        Text((spec?.title ?: "Card").tr(), style = MaterialTheme.typography.titleLargeEmphasized, color = cs.onSurface)
                         if (value is CardValue.Ready) {
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(value.primary, style = MaterialTheme.typography.displaySmall, color = cs.onSurface)
@@ -171,15 +173,15 @@ fun SharedTransitionScope.DetailSheet(
                     .padding(horizontal = Space.s6, vertical = Space.s4),
             ) {
                 when (value) {
-                    null -> Text("Nothing to show yet.", color = cs.onSurfaceVariant)
+                    null -> Text("Nothing to show yet.".tr(), color = cs.onSurfaceVariant)
                     is CardValue.Pending -> Text(value.reason, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
                     is CardValue.Unavailable -> Text(value.message, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
                     is CardValue.Ready -> if (spec != null && ctx != null) DetailBody(spec.detail, ctx, value, state, accent.accent)
                 }
                 Spacer(Modifier.height(Space.s6))
                 val src = spec?.sourceLabel?.takeIf { it.length >= 8 }?.let { l -> state.bundle?.sources?.values?.firstOrNull { it.label.contains(l.take(8), true) }?.label } ?: spec?.sourceLabel
-                if (!src.isNullOrBlank()) Text(src, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-                state.freshness?.let { Text("Last updated ${it.fetchedAt.let { t -> state.context?.fmt?.time(t) ?: "" }}", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant) }
+                if (!src.isNullOrBlank()) Text(src.tr(), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+                state.freshness?.let { Text("Last updated %s".trf(it.fetchedAt.let { t -> state.context?.fmt?.time(t) ?: "" }), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant) }
                 Spacer(Modifier.height(Space.s8))
             }
         }
@@ -196,7 +198,7 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
         is DetailKind.Hourly -> {
             val hours = ctx.bundle.hourlyFrom(ctx.nowInstant, 24)
             val aqi = ctx.bundle.airQuality?.aqi
-            Text("Next 24 hours", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+            Text("Next 24 hours".tr(), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
             Spacer(Modifier.height(Space.s2))
             LazyRow { items(hours.size) { i ->
                 val h = hours[i]
@@ -229,7 +231,7 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
             } }
         }
         DetailKind.SevenDay -> {
-            Text("7-day forecast", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+            Text("7-day forecast".tr(), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
             val week = ctx.bundle.daily.take(7)
             val lo = week.minOfOrNull { it.minC } ?: 0.0
             val hi = week.maxOfOrNull { it.maxC } ?: 1.0
@@ -253,7 +255,7 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
         }
         DetailKind.AqiTrend -> {
             val aq = ctx.bundle.airQuality
-            Text("Past 24 hours", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+            Text("Past 24 hours".tr(), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
             val pts = aq?.history24h ?: emptyList()
             if (pts.size >= 2) {
                 Canvas(Modifier.fillMaxWidth().height(96.dp).padding(vertical = Space.s2)) {
@@ -266,14 +268,14 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
                     }
                     drawPath(path, accentColor, style = Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
                 }
-                Text("${pts.minOf { it.aqi }} to ${pts.maxOf { it.aqi }} AQI over the last day", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-            } else Text("No trend history yet.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                Text("%d to %d AQI over the last day".trf(pts.minOf { it.aqi }, pts.maxOf { it.aqi }), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            } else Text("No trend history yet.".tr(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             aq?.let {
                 Spacer(Modifier.height(Space.s3))
                 val cat = IndianAqi.category(it.aqi)
-                Text("${cat.label}: ${cat.advice}", style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
+                Text("${cat.label.tr()}: ${cat.advice.tr()}", style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
                 Row { it.pm25?.let { v -> Text("PM2.5 ${v.roundToInt()} µg/m³   ", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant) }; it.pm10?.let { v -> Text("PM10 ${v.roundToInt()} µg/m³", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant) } }
-                it.stationName?.let { s -> Text("Station: $s", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant) }
+                it.stationName?.let { s -> Text("Station: %s".trf(s), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant) }
             }
         }
         DetailKind.Warnings -> {
@@ -281,8 +283,8 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
             if (list.isEmpty()) {
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(dev.mausam.home.R.drawable.spot_all_clear), contentDescription = null, modifier = Modifier.width(220.dp).height(184.dp))
-                    Text("All clear", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
-                    Text("No active IMD warnings for ${ctx.location.name}.", style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
+                    Text("All clear".tr(), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+                    Text("No active IMD warnings for %s.".trf(ctx.location.name), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
                 }
             }
             list.forEach { WarningRow(it) }
@@ -291,7 +293,7 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
             if (ctx.destinations.isEmpty()) {
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(dev.mausam.home.R.drawable.spot_destinations), contentDescription = null, modifier = Modifier.width(220.dp).height(184.dp))
-                    Text("Add cities in Locations to see them here.", color = cs.onSurfaceVariant)
+                    Text("Add cities in Locations to see them here.".tr(), color = cs.onSurfaceVariant)
                 }
             }
             ctx.destinations.forEach { b -> DestinationRow(b, ctx) }
@@ -308,14 +310,14 @@ private fun WarningRow(w: WeatherWarning) {
     Column(Modifier.fillMaxWidth().padding(vertical = Space.s2)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.clip(MausamRadius.chipShape).background(tier.container).padding(horizontal = Space.s2, vertical = 2.dp)) {
-                Text("${w.severity.label} · ${w.severity.advice}", style = MaterialTheme.typography.labelMedium, color = tier.onContainer, fontWeight = FontWeight.Bold)
+                Text("${w.severity.label.tr()} · ${w.severity.advice.tr()}", style = MaterialTheme.typography.labelMedium, color = tier.onContainer, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.width(Space.s2))
-            Text(w.event, style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
+            Text(w.event.tr(), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
         }
         Text(w.area, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-        Text(w.description.ifBlank { w.headline }, style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
-        Text(w.source, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+        Text(w.description.ifBlank { w.headline }.tr(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
+        Text(w.source.tr(), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
     }
 }
 
@@ -328,7 +330,7 @@ private fun DestinationRow(b: WeatherBundle, ctx: CardContext) {
         Spacer(Modifier.width(Space.s3))
         Column(Modifier.weight(1f)) {
             Text(b.location.name, style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
-            Text(d?.let { "${ctx.fmt.temp(it.minC)} – ${ctx.fmt.temp(it.maxC)} · ${it.condition.label()}" } ?: "No forecast cached", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            Text(d?.let { "${ctx.fmt.temp(it.minC)} – ${ctx.fmt.temp(it.maxC)} · ${it.condition.label().tr()}" } ?: "No forecast cached".tr(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         }
         val w = b.activeWarnings(ctx.nowInstant).firstOrNull()
         w?.let { toneColor(when (it.severity) { dev.mausam.home.domain.model.WarningSeverity.RED -> dev.mausam.home.domain.cards.Tone.DANGER; dev.mausam.home.domain.model.WarningSeverity.ORANGE -> dev.mausam.home.domain.cards.Tone.WARNING; else -> dev.mausam.home.domain.cards.Tone.CAUTION })?.let { c -> Box(Modifier.width(10.dp).height(10.dp).clip(MausamRadius.chipShape).background(c)) } }

@@ -22,6 +22,8 @@ import dev.mausam.home.AppGraph
 import dev.mausam.home.ui.home.HomeScreen
 import dev.mausam.home.ui.locations.LocationsScreen
 import dev.mausam.home.ui.onboarding.OnboardingScreen
+import dev.mausam.home.domain.i18n.L10n
+import dev.mausam.home.domain.i18n.Lang
 import dev.mausam.home.ui.settings.SettingsScreen
 import dev.mausam.home.ui.theme.MausamTheme
 import dev.mausam.home.ui.theme.micaBase
@@ -32,6 +34,7 @@ enum class Route { HOME, LOCATIONS, SETTINGS }
 fun AppRoot(graph: AppGraph) {
     val onboarded by graph.repository.onboarded.collectAsState(initial = null)
     val settings by graph.repository.settings.collectAsState(initial = null)
+    settings?.let { L10n.lang = Lang.of(it.language) }
     MausamTheme(settings = settings) {
         when (onboarded) {
             null -> Box(Modifier.fillMaxSize().background(micaBase()))

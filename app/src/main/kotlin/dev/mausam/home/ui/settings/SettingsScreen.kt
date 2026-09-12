@@ -63,6 +63,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.mausam.home.domain.cards.UserSettings
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.model.Units
 import dev.mausam.home.domain.personas.Persona
 import dev.mausam.home.ui.common.GlassGroup
@@ -99,11 +101,11 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
         AuroraBackdrop(animated = a11y.sceneAnimated, modifier = Modifier.fillMaxSize().hazeSource(haze))
         Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState())) {
             Row(Modifier.fillMaxWidth().padding(Space.s2), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back") }
-                Text("Settings", style = MaterialTheme.typography.headlineSmallEmphasized, color = cs.onSurface)
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back".tr()) }
+                Text("Settings".tr(), style = MaterialTheme.typography.headlineSmallEmphasized, color = cs.onSurface)
             }
             Column(Modifier.padding(horizontal = Space.s4)) {
-                SectionHeader("Personas", Icons.Rounded.Explore, Fluent.SkyBlue, "Cards on your home page come from these")
+                SectionHeader("Personas".tr(), Icons.Rounded.Explore, Fluent.SkyBlue, "Cards on your home page come from these".tr())
                 GlassGroup(haze, wash = Fluent.SkyBlue.copy(alpha = 0.16f)) {
                     FlowRow(Modifier.padding(horizontal = Space.s4, vertical = Space.s2), horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
                         Persona.pickable.forEach { p ->
@@ -116,19 +118,19 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
                                     update { it.copy(personas = (if (on) it.personas - p else it.personas + p) + Persona.GENERAL) }
                                 },
                                 leadingIcon = { Icon(personaIcon(p), contentDescription = null, tint = if (on) cs.onSecondaryContainer else accent, modifier = Modifier.size(18.dp)) },
-                                label = { Text(p.title) },
+                                label = { Text(p.title.tr()) },
                             )
                         }
                     }
                 }
 
-                SectionHeader("Appearance", Icons.Rounded.Palette, Fluent.Violet)
+                SectionHeader("Appearance".tr(), Icons.Rounded.Palette, Fluent.Violet)
                 GlassGroup(haze, wash = Fluent.Violet.copy(alpha = 0.16f)) {
                     val dynamicNow = LocalIsDynamic.current
                     SwitchRow(
-                        "Wallpaper colours",
-                        if (!supportsDynamicColour()) "Needs Android 12 or newer; using the IMD blue palette"
-                        else if (dynamicNow) "Material You palette from your wallpaper" else "Off: IMD blue palette",
+                        "Wallpaper colours".tr(),
+                        if (!supportsDynamicColour()) "Needs Android 12 or newer; using the IMD blue palette".tr()
+                        else if (dynamicNow) "Material You palette from your wallpaper".tr() else "Off: IMD blue palette".tr(),
                         s.wallpaperColours, enabled = supportsDynamicColour(),
                     ) { on -> update { it.copy(wallpaperColours = on) } }
                     Row(Modifier.padding(horizontal = Space.s4, vertical = Space.s2), horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
@@ -136,49 +138,49 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
                             Box(Modifier.size(24.dp).clip(CircleShape).background(c))
                         }
                         Spacer(Modifier.width(Space.s1))
-                        Text("Current palette", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.align(Alignment.CenterVertically))
+                        Text("Current palette".tr(), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.align(Alignment.CenterVertically))
                     }
                     HairlineDivider()
                     SwitchRow(
-                        "Weather effects",
-                        "Animated sky, clouds and rain · glass blur " + (a11y.glassBlurReason?.let { "off ($it)" } ?: "on"),
+                        "Weather effects".tr(),
+                        "Animated sky, clouds and rain · glass blur %s".trf(a11y.glassBlurReason?.let { "off (%s)".trf(it.tr()) } ?: "on".tr()),
                         s.effectsEnabled,
                     ) { on -> update { it.copy(effectsEnabled = on) } }
                     HairlineDivider()
-                    SwitchRow("Large text", "Single column, bigger values, denser glass", s.largeText) { on -> update { it.copy(largeText = on) } }
+                    SwitchRow("Large text".tr(), "Single column, bigger values, denser glass".tr(), s.largeText) { on -> update { it.copy(largeText = on) } }
                 }
 
-                SectionHeader("Daily briefs", Icons.Rounded.Notifications, Fluent.Amber, "A morning and evening note for your persona")
+                SectionHeader("Daily briefs".tr(), Icons.Rounded.Notifications, Fluent.Amber, "A morning and evening note for your persona".tr())
                 GlassGroup(haze, wash = Fluent.Amber.copy(alpha = 0.16f)) {
                     Image(painterResource(R.drawable.spot_brief), contentDescription = null, modifier = Modifier.fillMaxWidth().height(150.dp).padding(top = Space.s2))
-                    TimeRow("Morning brief", s.morningBrief, fmt) { picking = "morning" }
+                    TimeRow("Morning brief".tr(), s.morningBrief, fmt) { picking = "morning" }
                     HairlineDivider()
-                    TimeRow("Evening brief", s.eveningBrief, fmt) { picking = "evening" }
+                    TimeRow("Evening brief".tr(), s.eveningBrief, fmt) { picking = "evening" }
                     HairlineDivider()
                     Row(Modifier.padding(horizontal = Space.s4, vertical = Space.s2), horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
-                        FilledTonalButton(onClick = { previewBrief(false) }) { Text("Preview morning") }
-                        FilledTonalButton(onClick = { previewBrief(true) }) { Text("Preview evening") }
+                        FilledTonalButton(onClick = { previewBrief(false) }) { Text("Preview morning".tr()) }
+                        FilledTonalButton(onClick = { previewBrief(true) }) { Text("Preview evening".tr()) }
                     }
                     if (Build.VERSION.SDK_INT >= 33) {
-                        TextButton(onClick = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }, modifier = Modifier.padding(horizontal = Space.s2)) { Text("Allow notifications") }
+                        TextButton(onClick = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }, modifier = Modifier.padding(horizontal = Space.s2)) { Text("Allow notifications".tr()) }
                     }
                 }
 
-                SectionHeader("Quiet hours", Icons.Rounded.Bedtime, Fluent.Indigo, "Briefs stay silent; orange and red alerts still come through")
+                SectionHeader("Quiet hours".tr(), Icons.Rounded.Bedtime, Fluent.Indigo, "Briefs stay silent; orange and red alerts still come through".tr())
                 GlassGroup(haze, wash = Fluent.Indigo.copy(alpha = 0.16f)) {
-                    TimeRow("Start", s.quietStart, fmt) { picking = "quietStart" }
+                    TimeRow("Start".tr(), s.quietStart, fmt) { picking = "quietStart" }
                     HairlineDivider()
-                    TimeRow("End", s.quietEnd, fmt) { picking = "quietEnd" }
+                    TimeRow("End".tr(), s.quietEnd, fmt) { picking = "quietEnd" }
                 }
 
-                SectionHeader("Commute", Icons.Rounded.Commute, Fluent.Teal, "Leave-earlier nudges use this window")
+                SectionHeader("Commute".tr(), Icons.Rounded.Commute, Fluent.Teal, "Leave-earlier nudges use this window".tr())
                 GlassGroup(haze, wash = Fluent.Teal.copy(alpha = 0.16f)) {
-                    TimeRow("Commute starts", s.commuteStart, fmt) { picking = "commuteStart" }
+                    TimeRow("Commute starts".tr(), s.commuteStart, fmt) { picking = "commuteStart" }
                     HairlineDivider()
-                    TimeRow("Commute ends", s.commuteEnd, fmt) { picking = "commuteEnd" }
+                    TimeRow("Commute ends".tr(), s.commuteEnd, fmt) { picking = "commuteEnd" }
                 }
 
-                SectionHeader("Units", Icons.Rounded.Straighten, Fluent.Coral)
+                SectionHeader("Units".tr(), Icons.Rounded.Straighten, Fluent.Coral)
                 GlassGroup(haze, wash = Fluent.Coral.copy(alpha = 0.16f)) {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(Space.s4)) {
                         Units.entries.forEachIndexed { i, u ->
@@ -189,22 +191,21 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
                     }
                 }
 
-                SectionHeader("Language", Icons.Rounded.Language, Fluent.Mint)
+                SectionHeader("Language".tr(), Icons.Rounded.Language, Fluent.Mint)
                 GlassGroup(haze, wash = Fluent.Mint.copy(alpha = 0.16f)) {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.s4, vertical = Space.s3)) {
                         listOf("en" to "English", "hi" to "हिन्दी").forEachIndexed { i, (code, label) ->
                             SegmentedButton(selected = s.language == code, onClick = { update { it.copy(language = code) } }, shape = SegmentedButtonDefaults.itemShape(index = i, count = 2)) { Text(label) }
                         }
                     }
-                    Text("Hindi copy is on the way; the app stays in English for now.", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(horizontal = Space.s4, vertical = Space.s2))
                 }
 
-                SectionHeader("Privacy & credits", Icons.Rounded.Shield, Fluent.Green)
+                SectionHeader("Privacy & credits".tr(), Icons.Rounded.Shield, Fluent.Green)
                 GlassGroup(haze, wash = Fluent.Green.copy(alpha = 0.16f)) {
                     Column(Modifier.padding(Space.s4)) {
-                        Text("Your usage never leaves this phone. Card ranking, taps and preferences are stored only on this device.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
+                        Text("Your usage never leaves this phone. Card ranking, taps and preferences are stored only on this device.".tr(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
                         Spacer(Modifier.height(Space.s3))
-                        Text("Data: India Meteorological Department, NDMA SACHET, CPCB via data.gov.in, Weather data by Open-Meteo.com (CC BY 4.0). Icons: Meteocons by Bas Milius (MIT). Font: Roboto Flex (OFL).", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+                        Text("Data: India Meteorological Department, NDMA SACHET, CPCB via data.gov.in, Weather data by Open-Meteo.com (CC BY 4.0). Icons: Meteocons by Bas Milius (MIT). Font: Roboto Flex (OFL).".tr(), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                     }
                 }
                 Spacer(Modifier.height(Space.s12))
@@ -225,9 +226,9 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
                     val t = LocalTime.of(state.hour, state.minute)
                     update { it.apply(key, t) }
                     picking = null
-                }) { Text("Set") }
+                }) { Text("Set".tr()) }
             },
-            dismissButton = { TextButton(onClick = { picking = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { picking = null }) { Text("Cancel".tr()) } },
             text = { TimePicker(state = state) },
         )
     }

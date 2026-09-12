@@ -14,6 +14,8 @@ import androidx.core.content.ContextCompat
 import dev.mausam.home.MainActivity
 import dev.mausam.home.R
 import dev.mausam.home.domain.briefs.Brief
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.model.WarningSeverity
 import dev.mausam.home.domain.model.WeatherWarning
 
@@ -32,14 +34,14 @@ class Notifier(private val context: Context) {
     fun ensureChannels() {
         val nm = context.getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(
-            NotificationChannel(CHANNEL_ALERTS, "Weather alerts", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Orange and red warnings and severe nowcasts for your district"
+            NotificationChannel(CHANNEL_ALERTS, "Weather alerts".tr(), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "Orange and red warnings and severe nowcasts for your district".tr()
                 enableVibration(true)
             },
         )
         nm.createNotificationChannel(
-            NotificationChannel(CHANNEL_BRIEFS, "Daily briefs", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = "Morning and evening weather briefs shaped to your personas"
+            NotificationChannel(CHANNEL_BRIEFS, "Daily briefs".tr(), NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = "Morning and evening weather briefs shaped to your personas".tr()
             },
         )
     }
@@ -81,9 +83,9 @@ class Notifier(private val context: Context) {
         }
         val n = NotificationCompat.Builder(context, CHANNEL_ALERTS)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("${warning.severity.label} alert · $locationName")
-            .setContentText(warning.headline)
-            .setStyle(NotificationCompat.BigTextStyle().bigText("${warning.headline}\n\n${warning.description}".trim()))
+            .setContentTitle("%s alert · %s".trf(warning.severity.label.tr(), locationName))
+            .setContentText(warning.headline.tr())
+            .setStyle(NotificationCompat.BigTextStyle().bigText("${warning.headline.tr()}\n\n${warning.description}".trim()))
             .setColor(colour)
             .setColorized(warning.severity == WarningSeverity.RED)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

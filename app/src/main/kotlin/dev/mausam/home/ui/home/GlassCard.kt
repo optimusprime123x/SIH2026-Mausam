@@ -47,6 +47,8 @@ import dev.mausam.home.domain.cards.CardValue
 import dev.mausam.home.domain.cards.RenderedCard
 import dev.mausam.home.domain.cards.Tone
 import dev.mausam.home.domain.cards.WeatherIcon
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.model.Freshness
 import dev.mausam.home.domain.model.SourceInfo
 import dev.mausam.home.domain.model.WarningSeverity
@@ -95,7 +97,7 @@ fun placeholderIcon(cardId: String): WeatherIcon = when (cardId) {
 }
 
 private fun toneLabel(tone: Tone) = when (tone) {
-    Tone.GOOD -> "Good"; Tone.CAUTION -> "Caution"; Tone.WARNING -> "Watch"; Tone.DANGER -> "Danger"; Tone.NEUTRAL -> ""
+    Tone.GOOD -> "Good".tr(); Tone.CAUTION -> "Caution".tr(); Tone.WARNING -> "Watch".tr(); Tone.DANGER -> "Danger".tr(); Tone.NEUTRAL -> ""
 }
 
 /**
@@ -139,14 +141,14 @@ fun SharedTransitionScope.GlassCard(
     val toneCol = toneColor(tone)
     val accent = accentSet(toneCol?.takeIf { tone == Tone.DANGER || tone == Tone.WARNING } ?: Fluent.forCard(card.spec.id))
     val description = buildString {
-        append(card.spec.title); append(", ")
+        append(card.spec.title.tr()); append(", ")
         when (value) {
             is CardValue.Ready -> { append(value.primary); value.unit?.let { append(" $it") }; value.secondary?.let { append(", $it") } }
             is CardValue.Pending -> append(value.reason)
             is CardValue.Unavailable -> append(value.message)
         }
-        freshness?.let { append(", ${it.label}") }
-        append(", source ${card.spec.sourceLabel}")
+        freshness?.let { append(", ${it.label.tr()}") }
+        append(", "); append("source %s".trf(card.spec.sourceLabel.tr()))
     }
     val icon = when (value) {
         is CardValue.Ready -> value.icon
@@ -185,18 +187,18 @@ fun SharedTransitionScope.GlassCard(
                 role = Role.Button
                 onClick { onTap(); true }
                 customActions = listOf(
-                    CustomAccessibilityAction(if (card.pinned) "Unpin" else "Pin to top") { onPin(); true },
-                    CustomAccessibilityAction("Move to top") { onTop(); true },
-                    CustomAccessibilityAction("Hide") { onHide(); true },
+                    CustomAccessibilityAction(if (card.pinned) "Unpin".tr() else "Pin to top".tr()) { onPin(); true },
+                    CustomAccessibilityAction("Move to top".tr()) { onTop(); true },
+                    CustomAccessibilityAction("Hide".tr()) { onHide(); true },
                 )
             },
     ) {
         if (wide) WideBody(card, value, icon, accent, toneCol, tone, stale, sourceInfo, freshness)
         else CompactBody(card, value, icon, accent, toneCol, tone, stale, sourceInfo, freshness)
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(text = { Text(if (card.pinned) "Unpin" else "Pin to top") }, onClick = { menu = false; onPin() })
-            DropdownMenuItem(text = { Text("Move to top") }, onClick = { menu = false; onTop() })
-            DropdownMenuItem(text = { Text("Hide") }, onClick = { menu = false; haptics.performHapticFeedback(HapticFeedbackType.Reject); onHide() })
+            DropdownMenuItem(text = { Text(if (card.pinned) "Unpin".tr() else "Pin to top".tr()) }, onClick = { menu = false; onPin() })
+            DropdownMenuItem(text = { Text("Move to top".tr()) }, onClick = { menu = false; onTop() })
+            DropdownMenuItem(text = { Text("Hide".tr()) }, onClick = { menu = false; haptics.performHapticFeedback(HapticFeedbackType.Reject); onHide() })
         }
     }
 }
@@ -206,13 +208,13 @@ private fun CardTitle(card: RenderedCard, stale: Boolean) {
     val cs = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            card.spec.title,
+            card.spec.title.tr(),
             style = if (card.pinned) MaterialTheme.typography.titleMediumEmphasized else MaterialTheme.typography.titleMedium,
             color = if (stale) cs.onSurfaceVariant else cs.onSurface, maxLines = 1,
         )
         if (card.pinned) {
             Spacer(Modifier.width(Space.s1))
-            Icon(Icons.Rounded.PushPin, contentDescription = "Pinned", modifier = Modifier.width(16.dp), tint = cs.onSurfaceVariant)
+            Icon(Icons.Rounded.PushPin, contentDescription = "Pinned".tr(), modifier = Modifier.width(16.dp), tint = cs.onSurfaceVariant)
         }
     }
 }
@@ -220,7 +222,7 @@ private fun CardTitle(card: RenderedCard, stale: Boolean) {
 @Composable
 private fun SourceLine(card: RenderedCard, sourceInfo: SourceInfo?, freshness: Freshness?) {
     Text(
-        listOfNotNull((sourceInfo?.label ?: card.spec.sourceLabel).ifBlank { null }, freshness?.label).joinToString(" · "),
+        listOfNotNull((sourceInfo?.label ?: card.spec.sourceLabel).ifBlank { null }?.tr(), freshness?.label?.tr()).joinToString(" · "),
         style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
     )
 }

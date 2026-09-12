@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import dev.mausam.home.domain.i18n.L10n
+import dev.mausam.home.domain.i18n.Lang
 import dev.mausam.home.MausamApp
 import dev.mausam.home.domain.briefs.BriefComposer
 import dev.mausam.home.domain.personas.Persona
@@ -24,6 +26,7 @@ class BriefWorker(context: Context, params: WorkerParameters) : CoroutineWorker(
         val graph = MausamApp.graph(applicationContext)
         val repo = graph.repository
         val settings = repo.currentSettings()
+        L10n.lang = Lang.of(settings.language)
         try {
             val primary = repo.primaryLocation() ?: return Result.success()
             val ctx = repo.buildContext(primary, refresh = true) ?: return Result.success()
