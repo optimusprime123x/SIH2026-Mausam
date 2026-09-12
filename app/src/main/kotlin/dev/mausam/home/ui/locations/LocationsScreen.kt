@@ -49,6 +49,8 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.mausam.home.R
 import dev.mausam.home.domain.cards.WeatherIcon
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import androidx.compose.material3.minimumInteractiveComponentSize
 import dev.mausam.home.domain.model.Formatter
 import dev.mausam.home.domain.model.SceneKind
@@ -97,14 +99,14 @@ fun LocationsContent(
         AuroraBackdrop(animated = a11y.sceneAnimated, modifier = Modifier.fillMaxSize().hazeSource(haze))
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             Row(Modifier.fillMaxWidth().padding(Space.s2), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back") }
-                Text("Locations", style = MaterialTheme.typography.headlineSmallEmphasized, color = cs.onSurface, modifier = Modifier.weight(1f))
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back".tr()) }
+                Text("Locations".tr(), style = MaterialTheme.typography.headlineSmallEmphasized, color = cs.onSurface, modifier = Modifier.weight(1f))
                 FilledTonalIconButton(onClick = onDeviceLocation, enabled = !locating) {
-                    if (locating) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Icon(Icons.Rounded.MyLocation, contentDescription = "Use current location")
+                    if (locating) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Icon(Icons.Rounded.MyLocation, contentDescription = "Use current location".tr())
                 }
             }
             OutlinedTextField(
-                value = query, onValueChange = onQuery, singleLine = true, placeholder = { Text("Add a city or district") },
+                value = query, onValueChange = onQuery, singleLine = true, placeholder = { Text("Add a city or district".tr()) },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                 shape = MausamRadius.innerShape,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = Space.s4),
@@ -115,8 +117,8 @@ fun LocationsContent(
                         item {
                             Column(Modifier.fillMaxWidth().padding(top = Space.s8), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Image(painterResource(R.drawable.spot_search), contentDescription = null, modifier = Modifier.size(200.dp))
-                                Text("No place called \"$query\"", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
-                                Text("Try a district or a nearby city.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                                Text("No place called \"%s\"".trf(query), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+                                Text("Try a district or a nearby city.".tr(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                             }
                         }
                     } else {
@@ -141,7 +143,7 @@ fun LocationsContent(
                         item {
                             Column(Modifier.fillMaxWidth().padding(top = Space.s8), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Image(painterResource(R.drawable.spot_destinations), contentDescription = null, modifier = Modifier.size(220.dp))
-                                Text("No saved places yet", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+                                Text("No saved places yet".tr(), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
                             }
                         }
                     }
@@ -163,18 +165,18 @@ fun LocationsContent(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         if (row.isPrimary) {
                                             Box(Modifier.size(22.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
-                                                Icon(Icons.Rounded.Check, contentDescription = "Home location", tint = Color(0xFF0B1220), modifier = Modifier.size(16.dp))
+                                                Icon(Icons.Rounded.Check, contentDescription = "Home location".tr(), tint = Color(0xFF0B1220), modifier = Modifier.size(16.dp))
                                             }
                                             Spacer(Modifier.width(Space.s2))
                                         }
                                         Text(row.location.name, style = MaterialTheme.typography.titleLargeEmphasized, color = Color.White)
                                     }
-                                    Text(listOfNotNull(row.location.region, cur?.condition?.label()).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f))
+                                    Text(listOfNotNull(row.location.region, cur?.condition?.label()?.tr()).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f))
                                     Spacer(Modifier.height(Space.s2))
                                     Row(horizontalArrangement = Arrangement.spacedBy(Space.s1)) {
-                                        SmallAction(Icons.Rounded.KeyboardArrowUp, "Move up", enabled = i > 0) { onMove(row.location.id, -1) }
-                                        SmallAction(Icons.Rounded.KeyboardArrowDown, "Move down", enabled = i < rows.size - 1) { onMove(row.location.id, 1) }
-                                        SmallAction(Icons.Rounded.Delete, "Remove", enabled = rows.size > 1) { onRemove(row.location.id) }
+                                        SmallAction(Icons.Rounded.KeyboardArrowUp, "Move up".tr(), enabled = i > 0) { onMove(row.location.id, -1) }
+                                        SmallAction(Icons.Rounded.KeyboardArrowDown, "Move down".tr(), enabled = i < rows.size - 1) { onMove(row.location.id, 1) }
+                                        SmallAction(Icons.Rounded.Delete, "Remove".tr(), enabled = rows.size > 1) { onRemove(row.location.id) }
                                     }
                                 }
                                 cur?.let {

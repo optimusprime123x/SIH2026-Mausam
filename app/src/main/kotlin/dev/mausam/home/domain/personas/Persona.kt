@@ -1,13 +1,15 @@
 package dev.mausam.home.domain.personas
 
+import dev.mausam.home.domain.i18n.tr
+
 /**
  * Eight personas plus General. `shapeKey` names a Material expressive shape so the picker tiles
  * are distinguishable at a glance; the UI resolves the key to an actual MaterialShapes polygon.
  */
 enum class Persona(
     val key: String,
-    val title: String,
-    val tagline: String,
+    val rawTitle: String,
+    val rawTagline: String,
     val shapeKey: String,
 ) {
     HEALTH("health", "Health-conscious", "Air quality, humidity and UV", "cookie"),
@@ -19,6 +21,10 @@ enum class Persona(
     COMMUTERS("commuters", "Commuters", "Fog, storms and leave-early nudges", "gem"),
     EVENTS("events", "Event planners", "Comfort and the best day this week", "softBurst"),
     GENERAL("general", "General", "Hourly, 7-day and warnings", "circle");
+
+    /** Translated for display; [rawTitle] / [rawTagline] stay English and key the translation table. */
+    val title: String get() = rawTitle.tr()
+    val tagline: String get() = rawTagline.tr()
 
     val isPickable: Boolean get() = this != GENERAL
 

@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.chrisbanes.haze.HazeState
 import dev.mausam.home.domain.cards.WeatherIcon
+import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.domain.model.WarningSeverity
 import dev.mausam.home.domain.model.WeatherWarning
 import dev.mausam.home.ui.common.MeteoconIcon
@@ -73,13 +74,13 @@ fun AlertBanner(warning: WeatherWarning, haze: HazeState, onClick: () -> Unit, o
         Spacer(Modifier.width(Space.s3))
         Column(Modifier.weight(1f)) {
             Text(
-                "${warning.severity.label} · ${warning.severity.advice}",
+                "${warning.severity.label.tr()} · ${warning.severity.advice.tr()}",
                 style = MaterialTheme.typography.titleMediumEmphasized, color = tier.onContainer,
             )
-            Text(warning.headline, style = MaterialTheme.typography.bodyMedium, color = tier.onContainer, maxLines = 2)
+            Text(warning.headline.tr(), style = MaterialTheme.typography.bodyMedium, color = tier.onContainer, maxLines = 2)
         }
         IconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
-            Icon(Icons.Rounded.Close, contentDescription = "Close alert", tint = tier.onContainer)
+            Icon(Icons.Rounded.Close, contentDescription = "Close alert".tr(), tint = tier.onContainer)
         }
     }
 }

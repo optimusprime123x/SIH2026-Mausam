@@ -1,5 +1,6 @@
 package dev.mausam.home.domain.model
 
+import dev.mausam.home.domain.i18n.tr
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -40,7 +41,7 @@ enum class WeatherCondition {
         DUST -> "Dust"
         WINDY -> "Windy"
         UNKNOWN -> "—"
-    }
+    }.tr()
 
     companion object {
         /** WMO 4677 present-weather codes as used by Open-Meteo and MET Norway. */
@@ -143,10 +144,14 @@ data class DailyForecast(
     val windMaxKph: Double?,
 )
 
-enum class WarningSeverity(val rank: Int, val label: String, val advice: String) {
+enum class WarningSeverity(val rank: Int, val rawLabel: String, val rawAdvice: String) {
     YELLOW(1, "Yellow", "Be updated"),
     ORANGE(2, "Orange", "Be prepared"),
     RED(3, "Red", "Take action");
+
+    /** Translated for display; [rawLabel] / [rawAdvice] stay English and key the translation table. */
+    val label: String get() = rawLabel.tr()
+    val advice: String get() = rawAdvice.tr()
 
     /** Only orange and red may push a notification; yellow is banner-only. */
     val pushes: Boolean get() = this != YELLOW

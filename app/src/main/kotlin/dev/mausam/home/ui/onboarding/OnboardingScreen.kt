@@ -86,6 +86,7 @@ import androidx.graphics.shapes.RoundedPolygon
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.mausam.home.R
 import dev.mausam.home.domain.personas.Persona
+import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.ui.glass.GlassTier
 import dev.mausam.home.ui.glass.mausamGlass
 import dev.mausam.home.ui.scene.AuroraBackdrop
@@ -187,20 +188,20 @@ fun LocationStepContent(
         Spacer(Modifier.height(Space.s6))
         Image(painterResource(R.drawable.spot_location), contentDescription = null, modifier = Modifier.fillMaxWidth(0.7f).aspectRatio(1.2f).align(Alignment.CenterHorizontally))
         Text("Mausam", style = MaterialTheme.typography.displaySmallEmphasized, color = cs.onSurface)
-        Text("Weather for the way you live.", style = MaterialTheme.typography.titleMedium, color = cs.primary)
+        Text("Weather for the way you live.".tr(), style = MaterialTheme.typography.titleMedium, color = cs.primary)
         Spacer(Modifier.height(Space.s4))
-        Text("Mausam uses your location to show IMD warnings and nowcasts for your district.", style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
+        Text("Mausam uses your location to show IMD warnings and nowcasts for your district.".tr(), style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
         Spacer(Modifier.height(Space.s4))
         Button(onClick = onUseLocation, enabled = !locating, modifier = Modifier.fillMaxWidth().height(56.dp)) {
             if (locating) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = cs.onPrimary)
-            else { Icon(Icons.Rounded.MyLocation, contentDescription = null); Spacer(Modifier.width(Space.s2)); Text("Use my location", style = MaterialTheme.typography.titleMedium) }
+            else { Icon(Icons.Rounded.MyLocation, contentDescription = null); Spacer(Modifier.width(Space.s2)); Text("Use my location".tr(), style = MaterialTheme.typography.titleMedium) }
         }
-        error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.error, modifier = Modifier.padding(top = Space.s2)) }
+        error?.let { Text(it.tr(), style = MaterialTheme.typography.bodyMedium, color = cs.error, modifier = Modifier.padding(top = Space.s2)) }
         Spacer(Modifier.height(Space.s5))
-        Text("Or search for a city", style = MaterialTheme.typography.titleSmall, color = cs.onSurfaceVariant)
+        Text("Or search for a city".tr(), style = MaterialTheme.typography.titleSmall, color = cs.onSurfaceVariant)
         OutlinedTextField(
             value = query, onValueChange = onQuery, singleLine = true,
-            placeholder = { Text("City or district") }, modifier = Modifier.fillMaxWidth().padding(top = Space.s2),
+            placeholder = { Text("City or district".tr()) }, modifier = Modifier.fillMaxWidth().padding(top = Space.s2),
             shape = MausamRadius.innerShape,
         )
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = Space.s2)) {
@@ -212,7 +213,7 @@ fun LocationStepContent(
                 }
             }
         }
-        Text("Your usage never leaves this phone.", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(bottom = Space.s3))
+        Text("Your usage never leaves this phone.".tr(), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(bottom = Space.s3))
     }
 }
 
@@ -237,8 +238,8 @@ fun PersonaStepContent(selected: Set<Persona>, onToggle: (Persona) -> Unit, onSk
         Spacer(Modifier.height(Space.s4))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).padding(horizontal = Space.s2)) {
-                Text("What matters to you?", style = MaterialTheme.typography.headlineMediumEmphasized, color = cs.onSurface)
-                Text("Pick any. Your home page is built from these.", style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
+                Text("What matters to you?".tr(), style = MaterialTheme.typography.headlineMediumEmphasized, color = cs.onSurface)
+                Text("Pick any. Your home page is built from these.".tr(), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
             }
             Image(painterResource(R.drawable.spot_personas), contentDescription = null, modifier = Modifier.width(120.dp).height(100.dp))
         }
@@ -252,8 +253,8 @@ fun PersonaStepContent(selected: Set<Persona>, onToggle: (Persona) -> Unit, onSk
             itemsIndexed(Persona.pickable, key = { _, p -> p.key }) { i, p -> PersonaTile(p, p in selected, i, haze) { onToggle(p) } }
         }
         Row(Modifier.fillMaxWidth().padding(vertical = Space.s3), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onSkip) { Text("Skip") }
-            Button(onClick = onContinue, enabled = selected.isNotEmpty(), modifier = Modifier.height(52.dp)) { Text("Continue", style = MaterialTheme.typography.titleMedium) }
+            TextButton(onClick = onSkip) { Text("Skip".tr()) }
+            Button(onClick = onContinue, enabled = selected.isNotEmpty(), modifier = Modifier.height(52.dp)) { Text("Continue".tr(), style = MaterialTheme.typography.titleMedium) }
         }
     }
 }
@@ -296,7 +297,7 @@ private fun PersonaTile(persona: Persona, selected: Boolean, index: Int, haze: H
             Icon(personaIcon(persona), contentDescription = null, tint = onAccent(fill), modifier = Modifier.fillMaxWidth(0.42f).aspectRatio(1f).graphicsLayer { rotationZ = 8f * p })
         }
         Spacer(Modifier.height(Space.s3))
-        Text(persona.title, style = if (selected) MaterialTheme.typography.titleSmallEmphasized else MaterialTheme.typography.titleSmall, color = cs.onSurface, textAlign = TextAlign.Center)
-        Text(persona.tagline, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, maxLines = 2)
+        Text(persona.title.tr(), style = if (selected) MaterialTheme.typography.titleSmallEmphasized else MaterialTheme.typography.titleSmall, color = cs.onSurface, textAlign = TextAlign.Center)
+        Text(persona.tagline.tr(), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, maxLines = 2)
     }
 }

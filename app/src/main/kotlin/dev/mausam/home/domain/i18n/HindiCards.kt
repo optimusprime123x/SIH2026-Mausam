@@ -1,0 +1,227 @@
+package dev.mausam.home.domain.i18n
+
+/**
+ * Card copy from [dev.mausam.home.domain.cards.CardRegistry] and the rule engine, keyed by the
+ * exact English source string. Conditions, severities and AQI categories live in [HindiCommon].
+ */
+object HindiCards {
+    val table: Map<String, String> = mapOf(
+        // ---- Card titles
+        "Air quality" to "वायु गुणवत्ता",
+        "Humidity" to "आर्द्रता",
+        "UV index" to "UV सूचकांक",
+        "Pollen" to "पराग",
+        "Sunrise & sunset" to "सूर्योदय-सूर्यास्त",
+        "Best running hours" to "दौड़ने का सही समय",
+        "Wind" to "हवा",
+        "Heat alert" to "लू की चेतावनी",
+        "Sea state" to "समुद्र की स्थिति",
+        "Tides" to "ज्वार-भाटा",
+        "Saved destinations" to "सहेजे गंतव्य",
+        "Severe weather at destination" to "गंतव्य पर ख़राब मौसम",
+        "Packing tip" to "पैकिंग सुझाव",
+        "School commute" to "स्कूल का सफ़र",
+        "Rain next 3 hours" to "अगले 3 घंटे बारिश",
+        "Severe warnings" to "गंभीर चेतावनियाँ",
+        "Rainfall" to "वर्षा",
+        "7-day rain outlook" to "7 दिन का वर्षा अनुमान",
+        "Frost & cold wave" to "पाला और शीत लहर",
+        "Agromet advisory" to "कृषि मौसम सलाह",
+        "Visibility & fog" to "दृश्यता और कोहरा",
+        "Storm alert" to "तूफ़ान चेतावनी",
+        "Leave earlier" to "जल्दी निकलें",
+        "Traffic" to "यातायात",
+        "7-day outlook" to "7 दिन का अनुमान",
+        "Comfort index" to "आराम सूचकांक",
+        "Best day this week" to "हफ़्ते का बेहतरीन दिन",
+        "Next 24 hours" to "अगले 24 घंटे",
+        "7-day forecast" to "7 दिन का पूर्वानुमान",
+        "Warnings" to "चेतावनियाँ",
+
+        // ---- Source labels
+        "CPCB via data.gov.in" to "CPCB, data.gov.in से",
+        "Current observation" to "वर्तमान प्रेक्षण",
+        "Estimated from sun and cloud cover" to "सूर्य की स्थिति और बादलों से अनुमानित",
+        "Coming soon" to "जल्द आ रहा है",
+        "Based on temperature, humidity, UV and air quality" to "तापमान, आर्द्रता, UV और वायु गुणवत्ता के आधार पर",
+        "District warnings" to "ज़िला चेतावनियाँ",
+        "Ocean state forecast" to "समुद्री स्थिति पूर्वानुमान",
+        "7-day city forecast" to "7 दिन का शहर पूर्वानुमान",
+        "Based on the 7-day forecast" to "7 दिन के पूर्वानुमान के आधार पर",
+        "Hourly forecast, 7 to 9 am" to "घंटेवार पूर्वानुमान, सुबह 7 से 9 बजे",
+        "Hourly forecast" to "घंटेवार पूर्वानुमान",
+        "District rainfall" to "ज़िला वर्षा",
+        "City forecast" to "शहर का पूर्वानुमान",
+        "District warnings and forecast minimum" to "ज़िला चेतावनियाँ और न्यूनतम तापमान पूर्वानुमान",
+        "IMD agromet bulletin" to "IMD कृषि मौसम बुलेटिन",
+        "Current observation and warnings" to "वर्तमान प्रेक्षण और चेतावनियाँ",
+        "Nowcast and district warnings" to "नाउकास्ट और ज़िला चेतावनियाँ",
+        "Rain overlapping your commute" to "आपके सफ़र के समय बारिश",
+        "Opens Maps" to "Maps खोलता है",
+        "Heat index and humidex" to "ताप सूचकांक और ह्यूमिडेक्स",
+        "Based on rain, heat and wind" to "बारिश, गर्मी और हवा के आधार पर",
+
+        // ---- Pending / unavailable states
+        "Data source being added" to "डेटा स्रोत जोड़ा जा रहा है",
+        "Air quality data source being added" to "वायु गुणवत्ता डेटा स्रोत जोड़ा जा रहा है",
+        "Pollen data source being added" to "पराग डेटा स्रोत जोड़ा जा रहा है",
+        "Ocean state forecast being added" to "समुद्री स्थिति पूर्वानुमान जोड़ा जा रहा है",
+        "Wave height not available" to "लहर की ऊँचाई उपलब्ध नहीं",
+        "Tide predictions being added" to "ज्वार पूर्वानुमान जोड़ा जा रहा है",
+        "District rainfall source being added" to "ज़िला वर्षा स्रोत जोड़ा जा रहा है",
+        "Agromet advisory source being added" to "कृषि मौसम सलाह स्रोत जोड़ा जा रहा है",
+        "No current observation" to "वर्तमान प्रेक्षण उपलब्ध नहीं",
+        "Humidity not reported" to "आर्द्रता की जानकारी नहीं",
+        "Wind not reported" to "हवा की जानकारी नहीं",
+        "No more daylight hours today" to "आज दिन के उजाले के घंटे बीत चुके",
+        "No saved destinations yet, add a city in Locations!" to "अभी कोई गंतव्य सहेजा नहीं, स्थान में एक शहर जोड़ें!",
+        "No forecast cached" to "पूर्वानुमान सहेजा नहीं है",
+        "No hourly forecast cached" to "घंटेवार पूर्वानुमान सहेजा नहीं है",
+        "Window has passed for today" to "आज का समय बीत चुका",
+
+        // ---- Air quality
+        "24 h trend unavailable" to "24 घंटे का रुझान उपलब्ध नहीं",
+        "up %d since yesterday" to "कल से %d ऊपर",
+        "down %d since yesterday" to "कल से %d नीचे",
+        "unchanged since yesterday" to "कल जैसा ही",
+        "Minimal impact" to "न्यूनतम प्रभाव",
+        "Minor breathing discomfort to sensitive people" to "संवेदनशील लोगों को साँस लेने में हल्की तकलीफ़",
+        "Breathing discomfort to people with lung or heart disease" to "फेफड़े या हृदय रोगियों को साँस लेने में तकलीफ़",
+        "Breathing discomfort to most people on prolonged exposure" to "लंबे समय तक रहने पर अधिकांश लोगों को साँस लेने में तकलीफ़",
+        "Respiratory illness on prolonged exposure" to "लंबे समय तक रहने पर श्वसन रोग",
+        "Affects healthy people; serious for those with disease" to "स्वस्थ लोगों पर भी असर; रोगियों के लिए गंभीर",
+
+        // ---- Humidity
+        "Muggy" to "उमस भरा",
+        "Humid" to "नम",
+        "Comfortable" to "आरामदायक",
+        "Dry" to "शुष्क",
+        "%s · dew point %s" to "%s · ओसांक %s",
+
+        // ---- UV
+        "Low" to "कम",
+        "High" to "अधिक",
+        "Very high" to "बहुत अधिक",
+        "Extreme" to "अत्यधिक",
+        "%s · estimate" to "%s · अनुमान",
+        "Estimated from the sun's height and today's cloud cover, not measured at a station." to
+            "सूर्य की ऊँचाई और आज के बादलों से अनुमानित, किसी स्टेशन पर मापा नहीं गया।",
+
+        // ---- Sunrise & sunset
+        "Sunset %s" to "सूर्यास्त %s",
+        "Sunrise %s" to "सूर्योदय %s",
+        "%d h %d min of daylight" to "%d घंटे %d मिनट दिन का उजाला",
+        "Sunrise %s · Sunset %s. NOAA solar position algorithm, computed on device." to
+            "सूर्योदय %s · सूर्यास्त %s। NOAA सौर स्थिति एल्गोरिदम, डिवाइस पर गणना।",
+
+        // ---- Running window
+        "Great conditions" to "बेहतरीन स्थिति",
+        "Good conditions" to "अच्छी स्थिति",
+        "Fair conditions" to "ठीक-ठाक स्थिति",
+        "Poor conditions" to "ख़राब स्थिति",
+
+        // ---- Wind
+        "gusts %s" to "झोंके %s",
+        "from %s" to "%s से",
+        "N" to "उत्तर",
+        "NE" to "उत्तर-पूर्व",
+        "E" to "पूर्व",
+        "SE" to "दक्षिण-पूर्व",
+        "S" to "दक्षिण",
+        "SW" to "दक्षिण-पश्चिम",
+        "W" to "पश्चिम",
+        "NW" to "उत्तर-पश्चिम",
+
+        // ---- Heat
+        "Forecast high, avoid midday exertion" to "अनुमानित अधिकतम, दोपहर में मेहनत से बचें",
+
+        // ---- Sea state
+        "Calm" to "शांत",
+        "Slight" to "हल्की लहरें",
+        "Rough" to "अशांत",
+        "Very rough" to "बहुत अशांत",
+        "%d s period" to "%d सेकंड अंतराल",
+        "water %s" to "पानी %s",
+
+        // ---- Destinations and packing
+        "%s · +%d more saved destination" to "%s · +%d और सहेजा गंतव्य",
+        "%s · +%d more saved destinations" to "%s · +%d और सहेजे गंतव्य",
+        "For %s" to "%s के लिए",
+        "Umbrella and quick-dry layers, rain on %d of 7 days" to "छाता और जल्दी सूखने वाले कपड़े, 7 में से %d दिन बारिश",
+        "Pack a compact umbrella" to "छोटा छाता रख लें",
+        "Light cottons, a cap and water: highs near %d°" to "हल्के सूती कपड़े, टोपी और पानी: अधिकतम तापमान %d° के आसपास",
+        "Light clothes, highs near %d°" to "हल्के कपड़े, अधिकतम तापमान %d° के आसपास",
+        "A warm jacket: nights fall to %d°" to "गर्म जैकेट: रात में तापमान %d° तक",
+        "A light jacket for evenings" to "शाम के लिए हल्की जैकेट",
+        "Storms expected, plan indoor backups" to "तूफ़ान की संभावना, घर के अंदर का विकल्प रखें",
+        "Sunscreen, UV runs high" to "सनस्क्रीन, UV अधिक रहेगा",
+        "Settled week, pack for %d–%d°" to "मौसम स्थिर, %d–%d° के लिए तैयारी करें",
+
+        // ---- School run and rain
+        "Rain likely" to "बारिश की संभावना",
+        "Rain possible" to "बारिश हो सकती है",
+        "%d%% chance, %s · umbrellas" to "%d%% संभावना, %s · छाता रखें",
+        "%d%% chance · %s" to "%d%% संभावना · %s",
+        "%s at drop-off" to "छोड़ते समय %s",
+        "%s expected" to "%s संभावित",
+        "No rain expected" to "बारिश की संभावना नहीं",
+        "Rain likely from %s" to "%s से बारिश की संभावना",
+
+        // ---- Agriculture
+        "mm today" to "mm आज",
+        "%s past week" to "पिछले सप्ताह %s",
+        "%d%% vs normal" to "सामान्य से %d%%",
+        "skip watering" to "सिंचाई न करें",
+        "light watering only" to "हल्की सिंचाई ही करें",
+        "water as usual" to "सामान्य सिंचाई करें",
+        "%d wet day · %s" to "%d दिन बारिश · %s",
+        "%d wet days · %s" to "%d दिन बारिश · %s",
+        "Low on %s night · cover seedlings" to "%s रात न्यूनतम · पौध ढकें",
+
+        // ---- Commute
+        "Low visibility" to "कम दृश्यता",
+        "Very dense fog" to "बहुत घना कोहरा",
+        "Dense fog" to "घना कोहरा",
+        "Moderate fog" to "मध्यम कोहरा",
+        "Shallow fog or haze" to "हल्का कोहरा या धुंध",
+        "%s · use low beams, keep distance" to "%s · लो बीम जलाएँ, दूरी रखें",
+        "Expected around %s" to "%s के आसपास संभावित",
+        "+%d min" to "+%d मिनट",
+        "%d%% rain chance %s – %s" to "%d%% बारिश की संभावना, %s – %s",
+        "Live traffic" to "लाइव ट्रैफ़िक",
+        "Open Maps for %s" to "%s के लिए Maps खोलें",
+        "Open in Maps" to "Maps में खोलें",
+
+        // ---- Events
+        "Wettest %s %d%% · driest %s" to "सबसे नम %s %d%% · सबसे शुष्क %s",
+        "Cool" to "ठंडा",
+        "Warm" to "गर्म",
+        "Hot" to "तेज़ गर्मी",
+        "Very hot" to "भीषण गर्मी",
+        "Dangerous heat" to "ख़तरनाक गर्मी",
+        "Feels like %s" to "%s जैसा महसूस",
+        "%s · %d%% rain" to "%s · %d%% बारिश",
+        "Tomorrow · %s · %d%% rain" to "कल · %s · %d%% बारिश",
+
+        // ---- Day and month abbreviations (Locale.ENGLISH "EEE" / "MMM")
+        "Mon" to "सोम",
+        "Tue" to "मंगल",
+        "Wed" to "बुध",
+        "Thu" to "गुरु",
+        "Fri" to "शुक्र",
+        "Sat" to "शनि",
+        "Sun" to "रवि",
+        "Jan" to "जन",
+        "Feb" to "फ़र",
+        "Mar" to "मार्च",
+        "Apr" to "अप्रैल",
+        "May" to "मई",
+        "Jun" to "जून",
+        "Jul" to "जुलाई",
+        "Aug" to "अग",
+        "Sep" to "सित",
+        "Oct" to "अक्टू",
+        "Nov" to "नव",
+        "Dec" to "दिस",
+    )
+}

@@ -50,6 +50,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.mausam.home.ui.glass.GlassTier
+import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.ui.glass.BackdropSampler
 import dev.mausam.home.ui.glass.mausamSoftGlass
 import dev.mausam.home.ui.theme.Space
@@ -86,9 +87,9 @@ fun HomeToolbar(
                     .padding(horizontal = Space.s2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ToolIcon(Icons.Rounded.Place, "Locations", onLocations)
-                ToolIcon(Icons.Rounded.Add, "Add cards", onCatalogue)
-                ToolIcon(Icons.Rounded.Settings, "Settings", onSettings)
+                ToolIcon(Icons.Rounded.Place, "Locations".tr(), onLocations)
+                ToolIcon(Icons.Rounded.Add, "Add cards".tr(), onCatalogue)
+                ToolIcon(Icons.Rounded.Settings, "Settings".tr(), onSettings)
                 Spacer(Modifier.width(Space.s2))
             }
         }
@@ -104,7 +105,7 @@ fun HomeToolbar(
                 .clip(shape)
                 .background(Brush.linearGradient(listOf(cs.primary, cs.primaryContainer)))
                 .clickable(interactionSource = interaction, indication = null, onClick = onRefresh)
-                .semantics { role = Role.Button; contentDescription = if (refreshing) "Refreshing" else "Refresh" },
+                .semantics { role = Role.Button; contentDescription = if (refreshing) "Refreshing".tr() else "Refresh".tr() },
             contentAlignment = Alignment.Center,
         ) {
             AnimatedContent(refreshing, transitionSpec = { scaleIn() + fadeIn() togetherWith scaleOut() + fadeOut() }, label = "fabIcon") { busy ->

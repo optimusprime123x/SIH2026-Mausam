@@ -8,9 +8,12 @@ import dev.mausam.home.domain.cards.Packing
 import dev.mausam.home.domain.cards.RunScore
 import dev.mausam.home.domain.cards.Thermal
 import dev.mausam.home.domain.cards.UvEstimate
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.model.WarningSeverity
 import dev.mausam.home.domain.model.WeatherWarning
 import dev.mausam.home.domain.personas.Persona
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -23,6 +26,9 @@ data class Brief(val title: String, val body: String)
  */
 object BriefComposer {
     private val dayFmt = DateTimeFormatter.ofPattern("EEEE", Locale.ENGLISH)
+
+    /** English weekday name is the translation key, so "Monday" → "सोमवार". */
+    private fun dayName(date: LocalDate): String = dayFmt.format(date).tr()
 
     fun compose(persona: Persona, ctx: CardContext, evening: Boolean): Brief {
         val b = ctx.bundle
@@ -38,31 +44,46 @@ object BriefComposer {
                 val w = RunScore.bestWindow(b.hourly, b.airQuality?.aqi, ctx.now)
                 if (!evening && w != null) {
                     val t = b.hourly.firstOrNull { it.time == w.start }?.temperatureC
-                    val aqi = b.airQuality?.aqi?.let { " · AQI $it (${IndianAqi.category(it).label.lowercase()})" } ?: ""
+                    val aqi = b.airQuality?.aqi?.let { "AQI %d (%s)".trf(it, IndianAqi.category(it).label.lowercase()) }
                     Brief(
-                        "Best run window ${f.clock(w.start)} – ${f.clock(w.end)}",
-                        listOfNotNull(t?.let { "${f.temp(it)} at the start" }, aqi.trimStart(' ', '·').ifBlank { null })
-                            .joinToString(" · ") + uvLine(ctx),
+                        "Best run window %s – %s".trf(f.clock(w.start), f.clock(w.end)),
+                        listOfNotNull(
+                            listOfNotNull(t?.let { "%s at the start".trf(f.temp(it)) }, aqi).joinToString(" · "),
+                            uvLine(ctx),
+                        ).joinToString(" "),
                     )
                 } else Brief(
-                    "Tomorrow in $name",
-                    tomorrow?.let { "${f.temp(it.minC)} – ${f.temp(it.maxC)}, ${it.condition.label().lowercase()}. Lay out kit tonight; early hours will be the coolest." }
-                        ?: "Forecast not cached yet.",
+                    "Tomorrow in %s".trf(name),
+                    tomorrow?.let {
+                        "%s – %s, %s. Lay out kit tonight; early hours will be the coolest."
+                            .trf(f.temp(it.minC), f.temp(it.maxC), it.condition.label().lowercase())
+                    } ?: "Forecast not cached yet.".tr(),
                 )
             }
             Persona.PARENTS -> {
                 val s = ctx.settings
                 val r = Commute.rainIn(b.hourly, ctx.now, s.schoolStart, s.schoolEnd, ctx.location.zoneId)
-                val window = "${f.clock(ctx.now.with(s.schoolStart).toInstant())} – ${f.clock(ctx.now.with(s.schoolEnd).toInstant())}"
+                val window = "%s – %s".trf(f.clock(ctx.now.with(s.schoolStart).toInstant()), f.clock(ctx.now.with(s.schoolEnd).toInstant()))
                 when {
                     evening -> Brief(
-                        "Tomorrow's school run",
-                        tomorrow?.let { "${it.condition.label()} with a ${it.precipitationProbabilityPct ?: 0}% chance of rain. High ${f.temp(it.maxC)}." }
-                            ?: "Forecast not cached yet.",
+                        "Tomorrow's school run".tr(),
+                        tomorrow?.let {
+                            "%s with a %d%% chance of rain. High %s.".trf(it.condition.label(), it.precipitationProbabilityPct ?: 0, f.temp(it.maxC))
+                        } ?: "Forecast not cached yet.".tr(),
                     )
-                    r.likely -> Brief("Rain likely $window", "${r.maxProbabilityPct}% chance, ${f.mm(r.totalMm)}. Umbrellas and covered shoes for the school run.")
-                    r.possible -> Brief("Rain possible $window", "${r.maxProbabilityPct}% chance. A light rain jacket should do.")
-                    else -> Brief("Dry school run", cur?.let { "${f.temp(it.temperatureC)} and ${it.condition.label().lowercase()} now" } ?: "No rain expected $window.")
+                    r.likely -> Brief(
+                        "Rain likely %s".trf(window),
+                        "%d%% chance, %s. Umbrellas and covered shoes for the school run.".trf(r.maxProbabilityPct, f.mm(r.totalMm)),
+                    )
+                    r.possible -> Brief(
+                        "Rain possible %s".trf(window),
+                        "%d%% chance. A light rain jacket should do.".trf(r.maxProbabilityPct),
+                    )
+                    else -> Brief(
+                        "Dry school run".tr(),
+                        cur?.let { "%s and %s now".trf(f.temp(it.temperatureC), it.condition.label().lowercase()) }
+                            ?: "No rain expected %s.".trf(window),
+                    )
                 }
             }
             Persona.AGRICULTURE -> {
@@ -70,16 +91,16 @@ object BriefComposer {
                 val total = week.sumOf { it.precipitationMm }
                 val frost = week.firstOrNull { it.minC < 5 }
                 val watering = when {
-                    total >= 25 -> "skip watering"
-                    total >= 5 -> "water lightly"
-                    else -> "water as usual"
+                    total >= 25 -> "Skip watering."
+                    total >= 5 -> "Water lightly."
+                    else -> "Water as usual."
                 }
                 Brief(
-                    "${f.mm(total)} rain expected this week",
+                    "%s rain expected this week".trf(f.mm(total)),
                     listOfNotNull(
-                        "${watering.replaceFirstChar { it.uppercase() }}.",
-                        frost?.let { "Frost risk ${dayFmt.format(it.date)} night (${f.temp(it.minC)}), cover seedlings." },
-                        b.advisory?.let { "Advisory: ${it.title}." },
+                        watering.tr(),
+                        frost?.let { "Frost risk %s night (%s), cover seedlings.".trf(dayName(it.date), f.temp(it.minC)) },
+                        b.advisory?.let { "Advisory: %s.".trf(it.title) },
                     ).joinToString(" "),
                 )
             }
@@ -89,14 +110,14 @@ object BriefComposer {
                     .maxByOrNull { it.second.severity.rank }
                 when {
                     destWarning != null -> Brief(
-                        "${destWarning.second.severity.label} alert in ${destWarning.first.location.name}",
-                        "${destWarning.second.headline}. ${Packing.tip(destWarning.first.daily) ?: ""}".trim(),
+                        "%s alert in %s".trf(destWarning.second.severity.label, destWarning.first.location.name),
+                        "%s. %s".trf(destWarning.second.headline, Packing.tip(destWarning.first.daily) ?: "").trim(),
                     )
                     dest != null -> Brief(
-                        "${dest.location.name} ${if (evening) "tomorrow" else "today"}",
+                        (if (evening) "%s tomorrow" else "%s today").trf(dest.location.name),
                         (if (evening) dest.daily.getOrNull(1) else dest.daily.firstOrNull())?.let {
-                            "${f.temp(it.minC)} – ${f.temp(it.maxC)}, ${it.condition.label().lowercase()}. ${Packing.tip(dest.daily) ?: ""}".trim()
-                        } ?: "Forecast not cached yet.",
+                            "%s – %s, %s. %s".trf(f.temp(it.minC), f.temp(it.maxC), it.condition.label().lowercase(), Packing.tip(dest.daily) ?: "").trim()
+                        } ?: "Forecast not cached yet.".tr(),
                     )
                     else -> general(ctx, evening)
                 }
@@ -108,16 +129,19 @@ object BriefComposer {
                     val earlier = aq.history24h.firstOrNull()?.aqi
                     val trend = when {
                         earlier == null -> ""
-                        aq.aqi > earlier + 10 -> ", worse than yesterday"
-                        aq.aqi < earlier - 10 -> ", better than yesterday"
-                        else -> ", same as yesterday"
+                        aq.aqi > earlier + 10 -> ", worse than yesterday".tr()
+                        aq.aqi < earlier - 10 -> ", better than yesterday".tr()
+                        else -> ", same as yesterday".tr()
                     }
                     val advice = when (cat) {
                         IndianAqi.Category.GOOD, IndianAqi.Category.SATISFACTORY -> "Good time to air the house."
                         IndianAqi.Category.MODERATE -> "Sensitive groups should limit long outdoor effort."
                         else -> "Keep windows shut and wear a mask outdoors."
                     }
-                    Brief("AQI ${aq.aqi} (${cat.label.lowercase()})$trend", advice + (cur?.humidityPct?.let { " Humidity $it%." } ?: "") + uvLine(ctx))
+                    Brief(
+                        "AQI %d (%s)%s".trf(aq.aqi, cat.label.lowercase(), trend),
+                        listOfNotNull(advice.tr(), cur?.humidityPct?.let { "Humidity %d%%.".trf(it) }, uvLine(ctx)).joinToString(" "),
+                    )
                 } else general(ctx, evening)
             }
             Persona.COMMUTERS -> {
@@ -126,24 +150,40 @@ object BriefComposer {
                 val vis = cur?.visibilityKm
                 val r = Commute.rainIn(b.hourly, ctx.now, s.commuteStart, s.commuteEnd, ctx.location.zoneId)
                 when {
-                    evening -> Brief("Tomorrow's commute", tomorrow?.let { "${it.condition.label()}, ${it.precipitationProbabilityPct ?: 0}% chance of rain. High ${f.temp(it.maxC)}." } ?: "Forecast not cached yet.")
-                    fog != null || (vis != null && vis < 1.0) -> Brief(
-                        "Fog on the roads",
-                        (vis?.let { "Visibility ${f.distance(it)}. " } ?: "") + "Leave 15 minutes earlier, low beams on.",
+                    evening -> Brief(
+                        "Tomorrow's commute".tr(),
+                        tomorrow?.let {
+                            "%s, %d%% chance of rain. High %s.".trf(it.condition.label(), it.precipitationProbabilityPct ?: 0, f.temp(it.maxC))
+                        } ?: "Forecast not cached yet.".tr(),
                     )
-                    r.likely -> Brief("Rain on your commute", "${r.maxProbabilityPct}% chance between ${f.clock(r.hours.first().time)} and ${f.clock(r.hours.last().time.plusSeconds(3600))}. Leave 20 minutes earlier.")
-                    r.possible -> Brief("Rain possible on your commute", "${r.maxProbabilityPct}% chance. Leave 10 minutes earlier to be safe.")
-                    else -> Brief("Clear commute", cur?.let { "${f.temp(it.temperatureC)} and ${it.condition.label().lowercase()}. No rain in your window." } ?: "No rain in your window.")
+                    fog != null || (vis != null && vis < 1.0) -> Brief(
+                        "Fog on the roads".tr(),
+                        listOfNotNull(vis?.let { "Visibility %s.".trf(f.distance(it)) }, "Leave 15 minutes earlier, low beams on.".tr()).joinToString(" "),
+                    )
+                    r.likely -> Brief(
+                        "Rain on your commute".tr(),
+                        "%d%% chance between %s and %s. Leave 20 minutes earlier."
+                            .trf(r.maxProbabilityPct, f.clock(r.hours.first().time), f.clock(r.hours.last().time.plusSeconds(3600))),
+                    )
+                    r.possible -> Brief(
+                        "Rain possible on your commute".tr(),
+                        "%d%% chance. Leave 10 minutes earlier to be safe.".trf(r.maxProbabilityPct),
+                    )
+                    else -> Brief(
+                        "Clear commute".tr(),
+                        cur?.let { "%s and %s. No rain in your window.".trf(f.temp(it.temperatureC), it.condition.label().lowercase()) }
+                            ?: "No rain in your window.".tr(),
+                    )
                 }
             }
             Persona.EVENTS -> {
                 val best = DayScore.best(b.daily)
                 val comfort = cur?.humidityPct?.let { Thermal.comfort(cur.temperatureC, it.toDouble()) }
                 Brief(
-                    best?.let { "Best day this week: ${dayFmt.format(it.first.date)}" } ?: "This week in $name",
+                    best?.let { "Best day this week: %s".trf(dayName(it.first.date)) } ?: "This week in %s".trf(name),
                     listOfNotNull(
-                        best?.let { "${f.temp(it.first.maxC)} and ${it.first.precipitationProbabilityPct ?: 0}% rain." },
-                        comfort?.let { "Right now feels ${it.label.lowercase()}." },
+                        best?.let { "%s and %d%% rain.".trf(f.temp(it.first.maxC), it.first.precipitationProbabilityPct ?: 0) },
+                        comfort?.let { "Right now feels %s.".trf(it.label.lowercase()) },
                     ).joinToString(" "),
                 )
             }
@@ -152,14 +192,17 @@ object BriefComposer {
                 if (m?.waveHeightM != null) {
                     val h = m.waveHeightM
                     val state = when {
-                        h < 0.5 -> "Calm"
-                        h < 1.25 -> "Slight"
-                        h < 2.5 -> "Moderate"
-                        else -> "Rough"
+                        h < 0.5 -> "Calm seas"
+                        h < 1.25 -> "Slight seas"
+                        h < 2.5 -> "Moderate seas"
+                        else -> "Rough seas"
                     }
                     Brief(
-                        "$state seas, ${String.format(Locale.ENGLISH, "%.1f", h)} m waves",
-                        listOfNotNull(m.seaSurfaceTempC?.let { "Water ${f.temp(it)}." }, if (h >= 2.5) "Stay out of the water." else null).joinToString(" "),
+                        "%s, %.1f m waves".trf(state.tr(), h),
+                        listOfNotNull(
+                            m.seaSurfaceTempC?.let { "Water %s.".trf(f.temp(it)) },
+                            if (h >= 2.5) "Stay out of the water.".tr() else null,
+                        ).joinToString(" "),
                     )
                 } else general(ctx, evening)
             }
@@ -167,12 +210,13 @@ object BriefComposer {
         }
     }
 
-    private fun uvLine(ctx: CardContext): String {
+    /** One sentence when today's UV peak is high, else null. */
+    private fun uvLine(ctx: CardContext): String? {
         val b = ctx.bundle
         val peak = b.hourly.filter { it.time.atZone(ctx.location.zoneId).toLocalDate() == ctx.now.toLocalDate() }
             .mapNotNull { h -> (h.uvIndex ?: UvEstimate.estimate(ctx.location.latitude, ctx.location.longitude, h.time, h.cloudCoverPct)).let { h to it } }
-            .maxByOrNull { it.second } ?: return ""
-        return if (peak.second >= 6) " UV peaks at ${peak.second.roundToInt()} around ${ctx.fmt.clock(peak.first.time)}." else ""
+            .maxByOrNull { it.second } ?: return null
+        return if (peak.second >= 6) "UV peaks at %d around %s.".trf(peak.second.roundToInt(), ctx.fmt.clock(peak.first.time)) else null
     }
 
     fun general(ctx: CardContext, evening: Boolean): Brief {
@@ -183,16 +227,17 @@ object BriefComposer {
         val rainAt = b.hourlyFrom(ctx.nowInstant, 18).firstOrNull { (it.precipitationProbabilityPct ?: 0) >= 50 }
         val warning = b.activeWarnings(ctx.nowInstant).firstOrNull()
         val title = when {
-            warning != null -> "${warning.severity.label} alert: ${warning.event}"
-            evening -> d?.let { "Tomorrow ${f.temp(it.minC)} – ${f.temp(it.maxC)}, ${it.condition.label().lowercase()}" } ?: "Tomorrow in ${ctx.location.name}"
-            cur != null -> "${f.temp(cur.temperatureC)} and ${cur.condition.label().lowercase()} in ${ctx.location.name}"
-            else -> "Weather in ${ctx.location.name}"
+            warning != null -> "%s alert: %s".trf(warning.severity.label, warning.event)
+            evening -> d?.let { "Tomorrow %s – %s, %s".trf(f.temp(it.minC), f.temp(it.maxC), it.condition.label().lowercase()) }
+                ?: "Tomorrow in %s".trf(ctx.location.name)
+            cur != null -> "%s and %s in %s".trf(f.temp(cur.temperatureC), cur.condition.label().lowercase(), ctx.location.name)
+            else -> "Weather in %s".trf(ctx.location.name)
         }
         val body = listOfNotNull(
             warning?.headline,
-            if (!evening) d?.let { "High ${f.temp(it.maxC)}, low ${f.temp(it.minC)}." } else null,
-            rainAt?.let { "Rain likely from ${f.clock(it.time)}." },
-        ).joinToString(" ").ifBlank { "No rain expected." }
+            if (!evening) d?.let { "High %s, low %s.".trf(f.temp(it.maxC), f.temp(it.minC)) } else null,
+            rainAt?.let { "Rain likely from %s.".trf(f.clock(it.time)) },
+        ).joinToString(" ").ifBlank { "No rain expected.".tr() }
         return Brief(title, body)
     }
 }

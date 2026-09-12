@@ -1,5 +1,6 @@
 package dev.mausam.home.domain.cards
 
+import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.domain.model.Formatter
 import dev.mausam.home.domain.model.Location
 import dev.mausam.home.domain.model.WeatherBundle
@@ -70,7 +71,7 @@ sealed interface CardValue {
         val body: String? = null,
     ) : CardValue
 
-    data class Pending(val reason: String = "Data source being added") : CardValue
+    data class Pending(val reason: String = "Data source being added".tr()) : CardValue
 
     data class Unavailable(val message: String) : CardValue
 }
@@ -91,7 +92,10 @@ sealed interface DetailKind {
 /** The single action attached to a card. */
 sealed interface CardAction {
     data object OpenDetail : CardAction
-    data class DeepLink(val uri: String, val label: String) : CardAction
+    /** [labelEn] is the English source copy; [label] is what the button shows, in the app language. */
+    data class DeepLink(val uri: String, val labelEn: String) : CardAction {
+        val label: String get() = labelEn.tr()
+    }
 }
 
 /** User-configurable knobs the rule engine needs. */
@@ -138,14 +142,18 @@ data class CardContext(
 data class CardSpec(
     val id: String,
     val persona: Persona,
-    val title: String,
-    val sourceLabel: String,
+    /** English source copy; [title] and [sourceLabel] return it in the app language on every read. */
+    val titleEn: String,
+    val sourceLabelEn: String,
     val detail: DetailKind,
     val action: CardAction = CardAction.OpenDetail,
     /** Wide cards span the full grid width; compact ones sit two per row. */
     val wide: Boolean = false,
     val gate: (CardContext) -> Boolean = { true },
     val fetch: (CardContext) -> CardValue,
-)
+) {
+    val title: String get() = titleEn.tr()
+    val sourceLabel: String get() = sourceLabelEn.tr()
+}
 
 data class RenderedCard(val spec: CardSpec, val value: CardValue, val score: Double, val pinned: Boolean)

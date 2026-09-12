@@ -14,6 +14,8 @@ import dev.mausam.home.data.openmeteo.OmMarine
 import dev.mausam.home.data.openmeteo.OpenMeteoApi
 import dev.mausam.home.domain.aqi.IndianAqi
 import dev.mausam.home.domain.geo.Geo
+import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.model.AgroAdvisory
 import dev.mausam.home.domain.model.AirQuality
 import dev.mausam.home.domain.model.AqiPoint
@@ -123,8 +125,8 @@ class WeatherAssembler {
         } ?: emptyList()
         val daily = allDaily.filter { !it.date.isBefore(today) }
         raw[SourceKey.OM_FORECAST]?.let {
-            sources[DataKind.HOURLY] = SourceInfo(OpenMeteoApi.ATTRIBUTION, it.fetchedAt, it.fromSnapshot)
-            sources[DataKind.DAILY] = SourceInfo(OpenMeteoApi.ATTRIBUTION, it.fetchedAt, it.fromSnapshot)
+            sources[DataKind.HOURLY] = SourceInfo(OpenMeteoApi.ATTRIBUTION.tr(), it.fetchedAt, it.fromSnapshot)
+            sources[DataKind.DAILY] = SourceInfo(OpenMeteoApi.ATTRIBUTION.tr(), it.fetchedAt, it.fromSnapshot)
         }
 
         // ---- warnings ------------------------------------------------------------------
@@ -133,7 +135,7 @@ class WeatherAssembler {
         nowcastRow?.let { nowcastWarning(it, location)?.let(warnings::add) }
         sachet?.let { warnings += sachetWarnings(it, location) }
         listOfNotNull(raw[SourceKey.IMD_WARNINGS], raw[SourceKey.IMD_NOWCAST], raw[SourceKey.SACHET]).minByOrNull { it.fetchedAt }?.let {
-            sources[DataKind.WARNINGS] = SourceInfo("IMD district warnings, IMD nowcast, NDMA SACHET", it.fetchedAt, it.fromSnapshot)
+            sources[DataKind.WARNINGS] = SourceInfo("IMD district warnings, IMD nowcast, NDMA SACHET".tr(), it.fetchedAt, it.fromSnapshot)
         }
 
         // ---- air quality ---------------------------------------------------------------
@@ -141,7 +143,7 @@ class WeatherAssembler {
 
         // ---- marine --------------------------------------------------------------------
         val marine = marineOm?.current?.let { c ->
-            raw[SourceKey.OM_MARINE]?.let { sources[DataKind.MARINE] = SourceInfo("Open-Meteo marine model", it.fetchedAt, it.fromSnapshot) }
+            raw[SourceKey.OM_MARINE]?.let { sources[DataKind.MARINE] = SourceInfo("Open-Meteo marine model".tr(), it.fetchedAt, it.fromSnapshot) }
             MarineState(
                 time = localToInstant(c.time, zone) ?: now, waveHeightM = c.waveHeight, wavePeriodS = c.wavePeriod,
                 waveDirectionDeg = c.waveDirection, swellHeightM = c.swellWaveHeight, seaSurfaceTempC = c.seaSurfaceTemperature,
@@ -192,10 +194,10 @@ class WeatherAssembler {
         val feels = om?.apparentTemperature
 
         val label = buildString {
-            if (synopFresh) append("IMD ${synop!!.str("station") ?: "station"} observation")
-            else if (metarFresh) append("IMD ${metar!!.str("station_name") ?: "airport"} METAR")
+            if (synopFresh) append("IMD %s observation".trf(synop!!.str("station") ?: "station".tr()))
+            else if (metarFresh) append("IMD %s METAR".trf(metar!!.str("station_name") ?: "airport".tr()))
             if (isNotEmpty() && om != null) append(" + ")
-            if (om != null) append(OpenMeteoApi.ATTRIBUTION)
+            if (om != null) append(OpenMeteoApi.ATTRIBUTION.tr())
         }
         val payload = (if (synopFresh) raw[SourceKey.IMD_SYNOP] else null) ?: (if (metarFresh) raw[SourceKey.IMD_METAR] else null) ?: raw[SourceKey.OM_FORECAST]
         payload?.let { sources[DataKind.CURRENT] = SourceInfo(label, it.fetchedAt, it.fromSnapshot) }
@@ -237,12 +239,12 @@ class WeatherAssembler {
             val (name, _, v) = station
             val (pm25, pm10, updated) = v
             val aqi = IndianAqi.compute(pm25, pm10)!!
-            raw[SourceKey.CPCB]?.let { sources[DataKind.AIR_QUALITY] = SourceInfo("${CpcbApi.ATTRIBUTION} ($name)", it.fetchedAt, it.fromSnapshot) }
+            raw[SourceKey.CPCB]?.let { sources[DataKind.AIR_QUALITY] = SourceInfo("${CpcbApi.ATTRIBUTION.tr()} ($name)", it.fetchedAt, it.fromSnapshot) }
             return AirQuality(updated ?: now, aqi, pm25, pm10, IndianAqi.dominant(pm25, pm10), history, name)
         }
         val c = om?.current ?: return null
         val aqi = IndianAqi.compute(c.pm25, c.pm10) ?: return null
-        raw[SourceKey.OM_AQI]?.let { sources[DataKind.AIR_QUALITY] = SourceInfo("Open-Meteo air-quality model (CAMS)", it.fetchedAt, it.fromSnapshot) }
+        raw[SourceKey.OM_AQI]?.let { sources[DataKind.AIR_QUALITY] = SourceInfo("Open-Meteo air-quality model (CAMS)".tr(), it.fetchedAt, it.fromSnapshot) }
         return AirQuality(localToInstant(c.time, zone) ?: now, aqi, c.pm25, c.pm10, IndianAqi.dominant(c.pm25, c.pm10), history, null)
     }
 
@@ -257,8 +259,8 @@ class WeatherAssembler {
         val todayMm = obs24h ?: todayModel
         if (todayMm == null && past7 == null) return null
         val label = listOfNotNull(
-            if (obs24h != null) "IMD station 24 h rainfall" else null,
-            if (past7 != null || obs24h == null) OpenMeteoApi.ATTRIBUTION else null,
+            if (obs24h != null) "IMD station 24 h rainfall".tr() else null,
+            if (past7 != null || obs24h == null) OpenMeteoApi.ATTRIBUTION.tr() else null,
         ).joinToString(" + ")
         val payload = (if (obs24h != null) raw[SourceKey.IMD_SYNOP] else null) ?: raw[SourceKey.OM_FORECAST]
         payload?.let { sources[DataKind.RAINFALL] = SourceInfo(label, it.fetchedAt, it.fromSnapshot) }
@@ -272,16 +274,16 @@ class WeatherAssembler {
         return (1..5).mapNotNull { day ->
             val severity = ImdCodes.warningSeverity(row.int("Day${day}_Color")) ?: return@mapNotNull null
             val codes = row.str("Day_$day")
-            val event = ImdCodes.eventFromCodes(codes) ?: "Weather warning"
+            val event = ImdCodes.eventFromCodes(codes) ?: "Weather warning".tr()
             val text = row.str("Day${day}_text")?.replace("\\r\\n", " ")?.replace("\r\n", " ")?.replace("\n", " ")?.replace(Regex("\\s+"), " ")?.trim()
             val date = issued.plusDays((day - 1).toLong())
             WeatherWarning(
                 id = "imd-warn-${district.lowercase().replace(' ', '-')}-$date",
                 severity = severity, event = event,
-                headline = if (day == 1) event else "$event on ${date.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                headline = if (day == 1) event else "%s on %s".trf(event, date.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }.tr()),
                 description = sentenceCase(text ?: event),
                 area = titleCase(district), onset = date.atStartOfDay(ist).toInstant(), expires = date.plusDays(1).atStartOfDay(ist).toInstant(),
-                source = "IMD district warning",
+                source = "IMD district warning".tr(),
             )
         }
     }
@@ -295,13 +297,13 @@ class WeatherAssembler {
             val d = if (onset != null && date.atTime(t).atZone(ist).toInstant().isBefore(onset)) date.plusDays(1) else date
             d.atTime(t).atZone(ist).toInstant()
         }
-        val cats = (1..19).filter { it != 16 && (row.int("cat$it") ?: 0) > 0 }.mapNotNull { ImdCodes.nowcastCategories[it] }
+        val cats = (1..19).filter { it != 16 && (row.int("cat$it") ?: 0) > 0 }.mapNotNull { ImdCodes.nowcastCategory(it) }
         val district = row.str("District") ?: location.district ?: ""
         return WeatherWarning(
             id = "imd-nowcast-${district.lowercase().replace(' ', '-')}-${row.str("update_time") ?: date}",
-            severity = severity, event = cats.firstOrNull() ?: "Nowcast",
+            severity = severity, event = cats.firstOrNull() ?: "Nowcast".tr(),
             headline = sentenceCase(message), description = listOfNotNull(sentenceCase(message), row.str("impact"), row.str("action")).joinToString("\n\n"),
-            area = titleCase(district), onset = onset, expires = expires, source = "IMD nowcast",
+            area = titleCase(district), onset = onset, expires = expires, source = "IMD nowcast".tr(),
         )
     }
 
@@ -318,11 +320,11 @@ class WeatherAssembler {
             val severity = WarningSeverity.fromText(a.str("severity_color")) ?: return@mapNotNull null
             val id = a.str("identifier") ?: return@mapNotNull null
             WeatherWarning(
-                id = "sachet-$id", severity = severity, event = a.str("disaster_type") ?: "Alert",
-                headline = a.str("warning_message")?.let(::firstSentence) ?: a.str("disaster_type") ?: "Alert",
+                id = "sachet-$id", severity = severity, event = a.str("disaster_type") ?: "Alert".tr(),
+                headline = a.str("warning_message")?.let(::firstSentence) ?: a.str("disaster_type") ?: "Alert".tr(),
                 description = a.str("warning_message") ?: "", area = area,
                 onset = a.str("effective_start_time")?.let(::parseSachetTime), expires = a.str("effective_end_time")?.let(::parseSachetTime),
-                source = a.str("alert_source")?.let { "NDMA SACHET · $it" } ?: "NDMA SACHET",
+                source = a.str("alert_source")?.let { "NDMA SACHET · %s".trf(it) } ?: "NDMA SACHET".tr(),
             )
         }
     }

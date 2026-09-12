@@ -1,5 +1,6 @@
 package dev.mausam.home.data.imd
 
+import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.domain.model.WarningSeverity
 
 /**
@@ -7,7 +8,11 @@ import dev.mausam.home.domain.model.WarningSeverity
  * districtWiseNowcastGIS.php) and cross-checked against the live layer data.
  */
 object ImdCodes {
-    /** `Day_N` warning codes on `district_warnings_india`. */
+    /**
+     * `Day_N` warning codes on `district_warnings_india`. Values are the English source phrases;
+     * translate at lookup ([eventFromCodes], [nowcastCategory]), never here, so a language change
+     * is picked up on the next assemble instead of being frozen at class init.
+     */
     val warningCategories: Map<Int, String> = mapOf(
         1 to "No warning", 2 to "Heavy rain", 3 to "Heavy snow", 4 to "Thunderstorm & lightning, squall",
         5 to "Hailstorm", 6 to "Dust storm", 7 to "Dust raising winds", 8 to "Strong surface winds",
@@ -50,10 +55,17 @@ object ImdCodes {
     fun eventFromCodes(dayCodes: String?): String? {
         val names = dayCodes?.split(',')?.mapNotNull { it.trim().toIntOrNull() }?.filter { it > 1 }
             ?.mapNotNull { warningCategories[it] } ?: emptyList()
-        return names.takeIf { it.isNotEmpty() }?.joinToString(", ")
+        return names.takeIf { it.isNotEmpty() }?.joinToString(", ") { it.tr() }
     }
 
-    /** SYNOP `weather` present-weather code (WMO 4677 ww) → coarse condition. */
+    /** The `catN` phrase for [index], translated for display. */
+    fun nowcastCategory(index: Int): String? = nowcastCategories[index]?.tr()
+
+    /**
+     * SYNOP `weather` present-weather code (WMO 4677 ww) → coarse condition. Deliberately NOT
+     * translated: the result feeds [dev.mausam.home.domain.model.WeatherCondition.fromText], an
+     * English keyword parser, and never reaches the screen.
+     */
     fun synopWeatherText(ww: Int?): String? = when (ww) {
         null -> null
         in 0..3 -> "Clear"

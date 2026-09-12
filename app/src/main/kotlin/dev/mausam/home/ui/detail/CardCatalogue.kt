@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.chrisbanes.haze.HazeState
 import dev.mausam.home.domain.cards.CardRegistry
+import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.domain.personas.Persona
 import dev.mausam.home.ui.common.AccentIconDisc
 import dev.mausam.home.ui.common.SectionHeader
@@ -58,12 +59,12 @@ fun CardCatalogue(state: HomeUiState, haze: HazeState, onToggle: (String, Boolea
                 .windowInsetsPadding(WindowInsets.navigationBars),
         ) {
             Box(Modifier.align(Alignment.CenterHorizontally).padding(top = Space.s3).height(4.dp).width(32.dp).background(cs.outlineVariant, MausamRadius.chipShape))
-            Text("Add cards", style = MaterialTheme.typography.titleLargeEmphasized, color = cs.onSurface, modifier = Modifier.padding(horizontal = Space.s6, vertical = Space.s4))
+            Text("Add cards".tr(), style = MaterialTheme.typography.titleLargeEmphasized, color = cs.onSurface, modifier = Modifier.padding(horizontal = Space.s6, vertical = Space.s4))
             LazyColumn(contentPadding = PaddingValues(horizontal = Space.s5, vertical = Space.s2)) {
                 Persona.entries.forEach { persona ->
                     val cards = CardRegistry.forPersona(persona)
                     item(key = "h-${persona.key}") {
-                        SectionHeader(persona.title, personaIcon(persona), Fluent.forPersona(persona), persona.tagline)
+                        SectionHeader(persona.title.tr(), personaIcon(persona), Fluent.forPersona(persona), persona.tagline.tr())
                     }
                     cards.forEach { spec ->
                         item(key = spec.id) {
@@ -74,8 +75,8 @@ fun CardCatalogue(state: HomeUiState, haze: HazeState, onToggle: (String, Boolea
                                 AccentIconDisc(placeholderIcon(spec.id), accent, 36.dp, animated = false)
                                 Spacer(Modifier.width(Space.s3))
                                 Column(Modifier.weight(1f)) {
-                                    Text(spec.title, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
-                                    Text(spec.sourceLabel, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+                                    Text(spec.title.tr(), style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
+                                    Text(spec.sourceLabel.tr(), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                                 }
                                 Spacer(Modifier.padding(Space.s1))
                                 Switch(checked = shown, onCheckedChange = { onToggle(spec.id, it) })
