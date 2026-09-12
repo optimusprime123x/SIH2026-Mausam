@@ -1,0 +1,117 @@
+{
+ "capturedAt": "2026-09-12T11:30:00Z",
+ "cities": [
+  {
+   "key": "delhi",
+   "name": "New Delhi",
+   "lat": 28.61,
+   "lon": 77.21,
+   "marine": false
+  },
+  {
+   "key": "mumbai",
+   "name": "Mumbai",
+   "lat": 19.08,
+   "lon": 72.88,
+   "marine": true
+  },
+  {
+   "key": "chennai",
+   "name": "Chennai",
+   "lat": 13.08,
+   "lon": 80.27,
+   "marine": true
+  },
+  {
+   "key": "kolkata",
+   "name": "Kolkata",
+   "lat": 22.57,
+   "lon": 88.36,
+   "marine": true
+  },
+  {
+   "key": "guwahati",
+   "name": "Guwahati",
+   "lat": 26.14,
+   "lon": 91.74,
+   "marine": false
+  },
+  {
+   "key": "bengaluru",
+   "name": "Bengaluru",
+   "lat": 12.97,
+   "lon": 77.59,
+   "marine": false
+  },
+  {
+   "key": "hyderabad",
+   "name": "Hyderabad",
+   "lat": 17.39,
+   "lon": 78.49,
+   "marine": false
+  },
+  {
+   "key": "ahmedabad",
+   "name": "Ahmedabad",
+   "lat": 23.02,
+   "lon": 72.57,
+   "marine": false
+  },
+  {
+   "key": "pune",
+   "name": "Pune",
+   "lat": 18.52,
+   "lon": 73.86,
+   "marine": false
+  },
+  {
+   "key": "jaipur",
+   "name": "Jaipur",
+   "lat": 26.91,
+   "lon": 75.79,
+   "marine": false
+  },
+  {
+   "key": "lucknow",
+   "name": "Lucknow",
+   "lat": 26.85,
+   "lon": 80.95,
+   "marine": false
+  },
+  {
+   "key": "bhopal",
+   "name": "Bhopal",
+   "lat": 23.26,
+   "lon": 77.41,
+   "marine": false
+  },
+  {
+   "key": "kochi",
+   "name": "Kochi",
+   "lat": 9.93,
+   "lon": 76.27,
+   "marine": true
+  },
+  {
+   "key": "visakhapatnam",
+   "name": "Visakhapatnam",
+   "lat": 17.69,
+   "lon": 83.22,
+   "marine": true
+  },
+  {
+   "key": "srinagar",
+   "name": "Srinagar",
+   "lat": 34.08,
+   "lon": 74.8,
+   "marine": false
+  },
+  {
+   "key": "shimla",
+   "name": "Shimla",
+   "lat": 31.1,
+   "lon": 77.17,
+   "marine": false
+  }
+ ]
+}
