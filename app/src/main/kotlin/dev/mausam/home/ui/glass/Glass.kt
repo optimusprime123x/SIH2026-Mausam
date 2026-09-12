@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
@@ -94,6 +95,7 @@ fun Modifier.specularRim(shape: Shape, pressed: Boolean): Modifier {
  * same geometry so nothing else in the layout changes. [wash] adds an accent gradient over the
  * top-left corner so each card carries its own colour.
  */
+@OptIn(ExperimentalHazeApi::class)
 @Composable
 fun Modifier.mausamGlass(
     state: HazeState?,
@@ -142,6 +144,11 @@ fun Modifier.mausamGlass(
                 backgroundColor = base
                 tints = listOf(HazeTint(base.copy(alpha = alpha)))
                 fallbackTint = HazeTint(base.copy(alpha = 0.82f))
+                // The backdrop animates every frame. On API 32+ Haze trusts the renderer to repaint
+                // an effect whose source RenderNode changed; some OEM builds (seen on Xiaomi HyperOS)
+                // never do, so the glass keeps its first, empty capture and looks opaque. Re-record on
+                // every source pre-draw instead, as Haze itself does below API 32.
+                forceInvalidateOnPreDraw = true
             }
             .washed()
             .specularRim(shape, pressed)

@@ -35,7 +35,7 @@ fun AuroraBackdrop(animated: Boolean, modifier: Modifier = Modifier) {
     val a = if (dark) lerp(cs.primaryContainer, cs.primary, 0.35f) else lerp(cs.primaryContainer, cs.primary, 0.15f)
     val b = if (dark) lerp(cs.tertiaryContainer, cs.tertiary, 0.35f) else lerp(cs.tertiaryContainer, cs.tertiary, 0.15f)
     val c = if (dark) lerp(cs.secondaryContainer, cs.secondary, 0.25f) else lerp(cs.secondaryContainer, cs.secondary, 0.10f)
-    val strength = if (dark) 0.55f else 0.62f
+    val strength = if (dark) 0.70f else 0.62f
     var t by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(animated) {
         if (!animated) return@LaunchedEffect
