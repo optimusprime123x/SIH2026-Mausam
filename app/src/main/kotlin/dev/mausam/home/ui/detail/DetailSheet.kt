@@ -179,7 +179,7 @@ fun SharedTransitionScope.DetailSheet(
                     is CardValue.Ready -> if (spec != null && ctx != null) DetailBody(spec.detail, ctx, value, state, accent.accent)
                 }
                 Spacer(Modifier.height(Space.s6))
-                val src = spec?.sourceLabel?.takeIf { it.length >= 8 }?.let { l -> state.bundle?.sources?.values?.firstOrNull { it.label.contains(l.take(8), true) }?.label } ?: spec?.sourceLabel
+                val src = spec?.kind?.let { state.bundle?.sources?.get(it)?.label } ?: spec?.sourceLabel
                 if (!src.isNullOrBlank()) Text(src.tr(), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                 state.freshness?.let { Text("Last updated %s".trf(it.fetchedAt.let { t -> state.context?.fmt?.time(t) ?: "" }), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant) }
                 Spacer(Modifier.height(Space.s8))

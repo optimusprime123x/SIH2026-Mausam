@@ -32,7 +32,7 @@ object HindiCommon {
         "Be updated" to "जानकारी रखें",
         "Be prepared" to "तैयार रहें",
         "Take action" to "कार्रवाई करें",
-        "as of %s" to "%s तक",
+        "as of %s" to "अपडेट %s",
         "offline, last updated %s" to "ऑफ़लाइन, आख़िरी अपडेट %s",
         "loading…" to "लोड हो रहा है…",
         "Good" to "अच्छा",
@@ -42,7 +42,7 @@ object HindiCommon {
         "Very poor" to "बहुत ख़राब",
         "Severe" to "गंभीर",
         // Hero
-        "H %s  L %s" to "उच्च %s  निम्न %s",
+        "H %s  L %s" to "अधिकतम %s  न्यूनतम %s",
         "AQI %d" to "AQI %d",
         "Feels %s" to "महसूस %s",
         "Wind %s" to "हवा %s",

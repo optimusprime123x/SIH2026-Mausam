@@ -8,8 +8,6 @@ package dev.mausam.home.domain.i18n
 object HindiBriefs {
     val table: Map<String, String> = mapOf(
         // Formatter: IMD-style day halves, "6 am" → "पूर्वाह्न 6 बजे"
-        "%s am" to "पूर्वाह्न %s बजे",
-        "%s pm" to "अपराह्न %s बजे",
 
         // Weekdays (BriefComposer.dayName)
         "Monday" to "सोमवार",
@@ -45,12 +43,11 @@ object HindiBriefs {
         // Shared brief fragments
         "Forecast not cached yet." to "पूर्वानुमान अभी सहेजा नहीं गया है।",
         "Tomorrow in %s" to "कल %s में",
-        "%s – %s" to "%s – %s",
         "AQI %d (%s)" to "AQI %d (%s)",
         "UV peaks at %d around %s." to "पराबैंगनी सूचकांक अधिकतम %d रहेगा, लगभग %s पर।",
 
         // Fitness
-        "Best run window %s – %s" to "दौड़ने का सबसे अच्छा समय %s – %s",
+        "Best run window %s" to "दौड़ने का सबसे अच्छा समय %s",
         "%s at the start" to "शुरुआत में %s",
         "%s – %s, %s. Lay out kit tonight; early hours will be the coolest." to "%s – %s, %s। किट आज रात ही तैयार रखें; सुबह के शुरुआती घंटे सबसे ठंडे रहेंगे।",
 
@@ -97,7 +94,7 @@ object HindiBriefs {
         "Visibility %s." to "दृश्यता %s।",
         "Leave 15 minutes earlier, low beams on." to "15 मिनट पहले निकलें, गाड़ी की लो बीम जलाएँ।",
         "Rain on your commute" to "सफ़र के दौरान बारिश",
-        "%d%% chance between %s and %s. Leave 20 minutes earlier." to "%d%% संभावना, %s और %s के बीच। 20 मिनट पहले निकलें।",
+        "%d%% chance %s. Leave 20 minutes earlier." to "%2\$s %1\$d%% संभावना। 20 मिनट पहले निकलें।",
         "Rain possible on your commute" to "सफ़र के दौरान बारिश हो सकती है",
         "%d%% chance. Leave 10 minutes earlier to be safe." to "%d%% संभावना। सुरक्षित रहने के लिए 10 मिनट पहले निकलें।",
         "Clear commute" to "सफ़र साफ़ रहेगा",

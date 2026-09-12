@@ -2,6 +2,8 @@ package dev.mausam.home.domain.cards
 
 import dev.mausam.home.domain.aqi.IndianAqi
 import dev.mausam.home.domain.i18n.tr
+import dev.mausam.home.domain.model.DataKind
+import dev.mausam.home.domain.model.SoilCategory
 import dev.mausam.home.domain.i18n.trf
 import dev.mausam.home.domain.model.WarningSeverity
 import dev.mausam.home.domain.model.WeatherCondition
@@ -51,7 +53,7 @@ object CardRegistry {
     // ---------------------------------------------------------------- Health-conscious
     val aqi: CardSpec = CardSpec(
         id = "health.aqi", persona = Persona.GENERAL, titleEn = "Air quality",
-        sourceLabelEn = "CPCB via data.gov.in", detail = DetailKind.AqiTrend, wide = true,
+        sourceLabelEn = "CPCB via data.gov.in", detail = DetailKind.AqiTrend, kind = DataKind.AIR_QUALITY, wide = true,
     ) { ctx ->
         val aq = ctx.bundle.airQuality ?: return@CardSpec CardValue.Pending("Air quality data source being added".tr())
         val cat = IndianAqi.category(aq.aqi)
@@ -85,7 +87,7 @@ object CardRegistry {
 
     val humidity: CardSpec = CardSpec(
         id = "health.humidity", persona = Persona.HEALTH, titleEn = "Humidity",
-        sourceLabelEn = "Current observation", detail = DetailKind.Hourly(HourlyMetric.HUMIDITY),
+        sourceLabelEn = "Current observation", detail = DetailKind.Hourly(HourlyMetric.HUMIDITY), kind = DataKind.CURRENT,
     ) { ctx ->
         val cur = ctx.bundle.current ?: return@CardSpec CardValue.Unavailable("No current observation".tr())
         val h = cur.humidityPct ?: return@CardSpec CardValue.Unavailable("Humidity not reported".tr())
@@ -104,7 +106,7 @@ object CardRegistry {
 
     val uv: CardSpec = CardSpec(
         id = "health.uv", persona = Persona.HEALTH, titleEn = "UV index",
-        sourceLabelEn = "Estimated from sun and cloud cover", detail = DetailKind.Hourly(HourlyMetric.UV),
+        sourceLabelEn = "Estimated from sun and cloud cover", detail = DetailKind.Hourly(HourlyMetric.UV), kind = DataKind.HOURLY,
     ) { ctx ->
         val reported = ctx.bundle.current?.uvIndex
         val cloud = ctx.bundle.current?.cloudCoverPct
@@ -125,7 +127,7 @@ object CardRegistry {
     // ---------------------------------------------------------------- Outdoor fitness
     val sun: CardSpec = CardSpec(
         id = "fitness.sun", persona = Persona.FITNESS, titleEn = "Sunrise & sunset",
-        sourceLabelEn = "", detail = DetailKind.Text,
+        sourceLabelEn = "", detail = DetailKind.Text, kind = DataKind.DAILY,
     ) { ctx ->
         val times = Solar.sunTimes(ctx.location.latitude, ctx.location.longitude, ctx.now.toLocalDate(), ctx.location.zoneId)
         val rise = times.sunrise?.let(ctx.fmt::time) ?: "—"
@@ -145,7 +147,7 @@ object CardRegistry {
 
     val runWindow: CardSpec = CardSpec(
         id = "fitness.run", persona = Persona.FITNESS, titleEn = "Best running hours",
-        sourceLabelEn = "Based on temperature, humidity, UV and air quality", detail = DetailKind.Hourly(HourlyMetric.RUN_SCORE), wide = true,
+        sourceLabelEn = "Based on temperature, humidity, UV and air quality", detail = DetailKind.Hourly(HourlyMetric.RUN_SCORE), kind = DataKind.HOURLY, wide = true,
     ) { ctx ->
         val w = RunScore.bestWindow(ctx.bundle.hourly, ctx.aqiNow(), ctx.now)
             ?: return@CardSpec CardValue.Unavailable("No more daylight hours today".tr())
@@ -161,7 +163,7 @@ object CardRegistry {
             else -> "Poor conditions"
         }
         CardValue.Ready(
-            primary = "${ctx.fmt.clock(w.start)} – ${ctx.fmt.clock(w.end)}",
+            primary = ctx.fmt.clockRange(w.start, w.end),
             secondary = quality.tr(),
             tone = tone, icon = WeatherIcon.RUN, numeric = w.score.toDouble(),
         )
@@ -169,7 +171,7 @@ object CardRegistry {
 
     val wind: CardSpec = CardSpec(
         id = "fitness.wind", persona = Persona.FITNESS, titleEn = "Wind",
-        sourceLabelEn = "Current observation", detail = DetailKind.Hourly(HourlyMetric.WIND),
+        sourceLabelEn = "Current observation", detail = DetailKind.Hourly(HourlyMetric.WIND), kind = DataKind.CURRENT,
     ) { ctx ->
         val cur = ctx.bundle.current ?: return@CardSpec CardValue.Unavailable("No current observation".tr())
         val kph = cur.windKph ?: return@CardSpec CardValue.Unavailable("Wind not reported".tr())
@@ -184,7 +186,7 @@ object CardRegistry {
 
     val heatAlert: CardSpec = CardSpec(
         id = "fitness.heat", persona = Persona.FITNESS, titleEn = "Heat alert",
-        sourceLabelEn = "District warnings", detail = DetailKind.Warnings,
+        sourceLabelEn = "District warnings", detail = DetailKind.Warnings, kind = DataKind.HOURLY,
         gate = { ctx -> warningsMatching(ctx, "heat").isNotEmpty() || (ctx.bundle.daily.firstOrNull()?.maxC ?: 0.0) >= 40 },
     ) { ctx ->
         val w = warningsMatching(ctx, "heat").firstOrNull()
@@ -201,7 +203,7 @@ object CardRegistry {
     // ---------------------------------------------------------------- Beach
     val seaState: CardSpec = CardSpec(
         id = "beach.sea", persona = Persona.BEACH, titleEn = "Sea state",
-        sourceLabelEn = "Ocean state forecast", detail = DetailKind.Text, wide = true,
+        sourceLabelEn = "Ocean state forecast", detail = DetailKind.Text, kind = DataKind.MARINE, wide = true,
         gate = { it.distanceToCoastKm <= 30.0 },
     ) { ctx ->
         val m = ctx.bundle.marine ?: return@CardSpec CardValue.Pending("Ocean state forecast being added".tr())
@@ -237,7 +239,7 @@ object CardRegistry {
     // ---------------------------------------------------------------- Travellers
     val destinations: CardSpec = CardSpec(
         id = "travel.destinations", persona = Persona.TRAVEL, titleEn = "Saved destinations",
-        sourceLabelEn = "7-day city forecast", detail = DetailKind.Destinations, wide = true,
+        sourceLabelEn = "7-day city forecast", detail = DetailKind.Destinations, kind = DataKind.DAILY, wide = true,
     ) { ctx ->
         if (ctx.destinations.isEmpty()) return@CardSpec CardValue.Unavailable("No saved destinations yet, add a city in Locations!".tr())
         val first = ctx.destinations.first()
@@ -261,7 +263,7 @@ object CardRegistry {
 
     val destinationSevere: CardSpec = CardSpec(
         id = "travel.severe", persona = Persona.TRAVEL, titleEn = "Severe weather at destination",
-        sourceLabelEn = "District warnings", detail = DetailKind.Warnings,
+        sourceLabelEn = "District warnings", detail = DetailKind.Warnings, kind = DataKind.WARNINGS,
         gate = { ctx -> ctx.destinations.any { it.activeWarnings(ctx.nowInstant).isNotEmpty() } },
     ) { ctx ->
         val (bundle, w) = ctx.destinations.flatMap { b -> b.activeWarnings(ctx.nowInstant).map { b to it } }
@@ -274,7 +276,7 @@ object CardRegistry {
 
     val packing: CardSpec = CardSpec(
         id = "travel.packing", persona = Persona.TRAVEL, titleEn = "Packing tip",
-        sourceLabelEn = "Based on the 7-day forecast", detail = DetailKind.SevenDay,
+        sourceLabelEn = "Based on the 7-day forecast", detail = DetailKind.SevenDay, kind = DataKind.DAILY,
     ) { ctx ->
         val target = ctx.destinations.firstOrNull() ?: ctx.bundle
         val tip = Packing.tip(target.daily) ?: return@CardSpec CardValue.Unavailable("No forecast cached".tr())
@@ -284,7 +286,7 @@ object CardRegistry {
     // ---------------------------------------------------------------- Parents
     val schoolRun: CardSpec = CardSpec(
         id = "parents.school", persona = Persona.PARENTS, titleEn = "School commute",
-        sourceLabelEn = "Hourly forecast, 7 to 9 am", detail = DetailKind.Hourly(HourlyMetric.PRECIPITATION),
+        sourceLabelEn = "Hourly forecast, 7 to 9 am", detail = DetailKind.Hourly(HourlyMetric.PRECIPITATION), kind = DataKind.HOURLY,
     ) { ctx ->
         val s = ctx.settings
         val r = Commute.rainIn(ctx.bundle.hourly, ctx.now, s.schoolStart, s.schoolEnd, ctx.location.zoneId)
@@ -299,7 +301,7 @@ object CardRegistry {
 
     val rainNext3h: CardSpec = CardSpec(
         id = "parents.rain3h", persona = Persona.PARENTS, titleEn = "Rain next 3 hours",
-        sourceLabelEn = "Hourly forecast", detail = DetailKind.Hourly(HourlyMetric.PRECIPITATION),
+        sourceLabelEn = "Hourly forecast", detail = DetailKind.Hourly(HourlyMetric.PRECIPITATION), kind = DataKind.HOURLY,
     ) { ctx ->
         val r = Commute.nextHours(ctx.bundle.hourly, ctx.nowInstant, 3)
         if (r.hours.isEmpty()) return@CardSpec CardValue.Unavailable("No hourly forecast cached".tr())
@@ -317,14 +319,14 @@ object CardRegistry {
 
     val severeWarnings: CardSpec = CardSpec(
         id = "parents.severe", persona = Persona.PARENTS, titleEn = "Severe warnings",
-        sourceLabelEn = "District warnings", detail = DetailKind.Warnings, wide = true,
+        sourceLabelEn = "District warnings", detail = DetailKind.Warnings, kind = DataKind.WARNINGS, wide = true,
         gate = { it.bundle.activeWarnings(it.nowInstant).isNotEmpty() },
     ) { ctx -> warningCard(ctx.bundle.activeWarnings(ctx.nowInstant).first(), ctx) }
 
     // ---------------------------------------------------------------- Agriculture
     val rainfall: CardSpec = CardSpec(
         id = "agri.rainfall", persona = Persona.AGRICULTURE, titleEn = "Rainfall",
-        sourceLabelEn = "District rainfall", detail = DetailKind.Text,
+        sourceLabelEn = "District rainfall", detail = DetailKind.Text, kind = DataKind.RAINFALL,
     ) { ctx ->
         val r = ctx.bundle.rainfall ?: return@CardSpec CardValue.Pending("District rainfall source being added".tr())
         val today = r.todayMm ?: return@CardSpec CardValue.Pending("District rainfall source being added".tr())
@@ -337,9 +339,48 @@ object CardRegistry {
         )
     }
 
+    val soil: CardSpec = CardSpec(
+        id = "agri.soil", persona = Persona.AGRICULTURE, titleEn = "Soil moisture",
+        sourceLabelEn = "Open-Meteo soil model", detail = DetailKind.Text, kind = DataKind.SOIL,
+    ) { ctx ->
+        val s = ctx.bundle.soil ?: return@CardSpec CardValue.Unavailable("Soil moisture needs a fresh forecast".tr())
+        val label = when (s.category) {
+            SoilCategory.VERY_DRY -> "Very dry".tr()
+            SoilCategory.DRY -> "Dry".tr()
+            SoilCategory.ADEQUATE -> "Adequate".tr()
+            SoilCategory.WET -> "Wet".tr()
+            SoilCategory.SATURATED -> "Saturated".tr()
+        }
+        val tone = when (s.category) {
+            SoilCategory.VERY_DRY -> Tone.WARNING
+            SoilCategory.DRY -> Tone.CAUTION
+            SoilCategory.ADEQUATE -> Tone.GOOD
+            SoilCategory.WET -> Tone.NEUTRAL
+            SoilCategory.SATURATED -> Tone.CAUTION
+        }
+        val trend = s.trend?.let { d -> when { d >= 3 -> "rising".tr(); d <= -3 -> "drying".tr(); else -> "steady".tr() } }
+        val root = s.rootPct?.let { "root zone %d%%".trf(it.roundToInt()) }
+        val advice = when (s.category) {
+            SoilCategory.VERY_DRY, SoilCategory.DRY -> "Top soil is drying out; irrigate unless rain is due in the next day.".tr()
+            SoilCategory.ADEQUATE -> "Soil water in the top 9 cm is in a comfortable range for most crops.".tr()
+            SoilCategory.WET -> "Top soil is wet; hold irrigation and check drainage in low fields.".tr()
+            SoilCategory.SATURATED -> "Soil is saturated; avoid field traffic and watch for waterlogging.".tr()
+        }
+        CardValue.Ready(
+            primary = s.topPct.roundToInt().toString(), unit = "% top 9 cm".tr(),
+            secondary = listOfNotNull(label, root, trend).joinToString(" · "),
+            tone = tone, icon = WeatherIcon.SOIL, numeric = s.topPct,
+            body = listOfNotNull(
+                advice,
+                s.temperatureC?.let { "Soil temperature at 6 cm: %s.".trf(ctx.fmt.temp(it, true)) },
+                "Volumetric water content from the Open-Meteo soil model; field capacity varies with soil type, so treat thresholds as a guide.".tr(),
+            ).joinToString(" "),
+        )
+    }
+
     val rainOutlook: CardSpec = CardSpec(
         id = "agri.outlook", persona = Persona.AGRICULTURE, titleEn = "7-day rain outlook",
-        sourceLabelEn = "City forecast", detail = DetailKind.SevenDay, wide = true,
+        sourceLabelEn = "City forecast", detail = DetailKind.SevenDay, kind = DataKind.DAILY, wide = true,
     ) { ctx ->
         val week = ctx.bundle.daily.take(7)
         if (week.isEmpty()) return@CardSpec CardValue.Unavailable("No forecast cached".tr())
@@ -359,7 +400,7 @@ object CardRegistry {
 
     val frost: CardSpec = CardSpec(
         id = "agri.frost", persona = Persona.AGRICULTURE, titleEn = "Frost & cold wave",
-        sourceLabelEn = "District warnings and forecast minimum", detail = DetailKind.Warnings,
+        sourceLabelEn = "District warnings and forecast minimum", detail = DetailKind.Warnings, kind = DataKind.DAILY,
         gate = { ctx -> warningsMatching(ctx, "cold", "frost").isNotEmpty() || ctx.bundle.daily.take(3).any { it.minC < 5 } },
     ) { ctx ->
         val w = warningsMatching(ctx, "cold", "frost").firstOrNull()
@@ -375,7 +416,7 @@ object CardRegistry {
 
     val agromet: CardSpec = CardSpec(
         id = "agri.advisory", persona = Persona.AGRICULTURE, titleEn = "Agromet advisory",
-        sourceLabelEn = "IMD agromet bulletin", detail = DetailKind.Text, wide = true,
+        sourceLabelEn = "IMD agromet bulletin", detail = DetailKind.Text, kind = DataKind.ADVISORY, wide = true,
     ) { ctx ->
         val a = ctx.bundle.advisory ?: return@CardSpec CardValue.Pending("Agromet advisory source being added".tr())
         CardValue.Ready(primary = a.title, secondary = a.body.take(120), icon = WeatherIcon.AGRO, body = a.body)
@@ -384,7 +425,7 @@ object CardRegistry {
     // ---------------------------------------------------------------- Commuters
     val visibility: CardSpec = CardSpec(
         id = "commute.visibility", persona = Persona.COMMUTERS, titleEn = "Visibility & fog",
-        sourceLabelEn = "Current observation and warnings", detail = DetailKind.Hourly(HourlyMetric.VISIBILITY),
+        sourceLabelEn = "Current observation and warnings", detail = DetailKind.Hourly(HourlyMetric.VISIBILITY), kind = DataKind.CURRENT,
         gate = { ctx ->
             val cur = ctx.bundle.current
             (cur?.visibilityKm ?: 99.0) < 4.0 || cur?.condition?.isLowVisibility == true || warningsMatching(ctx, "fog").isNotEmpty()
@@ -411,7 +452,7 @@ object CardRegistry {
 
     val stormAlert: CardSpec = CardSpec(
         id = "commute.storm", persona = Persona.COMMUTERS, titleEn = "Storm alert",
-        sourceLabelEn = "Nowcast and district warnings", detail = DetailKind.Warnings,
+        sourceLabelEn = "Nowcast and district warnings", detail = DetailKind.Warnings, kind = DataKind.WARNINGS,
         gate = { ctx ->
             warningsMatching(ctx, "thunder", "storm", "squall", "lightning").isNotEmpty() ||
                 Commute.nextHours(ctx.bundle.hourly, ctx.nowInstant, 3).hours.any { it.condition == WeatherCondition.THUNDERSTORM }
@@ -427,7 +468,7 @@ object CardRegistry {
 
     val leaveEarlier: CardSpec = CardSpec(
         id = "commute.leave", persona = Persona.COMMUTERS, titleEn = "Leave earlier",
-        sourceLabelEn = "Rain overlapping your commute", detail = DetailKind.Hourly(HourlyMetric.PRECIPITATION),
+        sourceLabelEn = "Rain overlapping your commute", detail = DetailKind.Hourly(HourlyMetric.PRECIPITATION), kind = DataKind.HOURLY,
         gate = { ctx ->
             !ctx.isWeekend && Commute.rainIn(ctx.bundle.hourly, ctx.now, ctx.settings.commuteStart, ctx.settings.commuteEnd, ctx.location.zoneId).possible
         },
@@ -436,7 +477,7 @@ object CardRegistry {
         val minutes = if (r.likely) 20 else 10
         CardValue.Ready(
             primary = "+%d min".trf(minutes),
-            secondary = "%d%% rain chance %s – %s".trf(r.maxProbabilityPct, ctx.fmt.clock(r.hours.first().time), ctx.fmt.clock(r.hours.last().time.plusSeconds(3600))),
+            secondary = "%d%% rain chance %s".trf(r.maxProbabilityPct, ctx.fmt.clockRange(r.hours.first().time, r.hours.last().time.plusSeconds(3600))),
             tone = if (r.likely) Tone.WARNING else Tone.CAUTION, icon = WeatherIcon.COMMUTE, numeric = minutes.toDouble(),
         )
     }
@@ -452,7 +493,7 @@ object CardRegistry {
     // ---------------------------------------------------------------- Event planners
     val outlook7d: CardSpec = CardSpec(
         id = "events.outlook", persona = Persona.EVENTS, titleEn = "7-day outlook",
-        sourceLabelEn = "City forecast", detail = DetailKind.SevenDay, wide = true,
+        sourceLabelEn = "City forecast", detail = DetailKind.SevenDay, kind = DataKind.DAILY, wide = true,
     ) { ctx ->
         val week = ctx.bundle.daily.take(7)
         if (week.isEmpty()) return@CardSpec CardValue.Unavailable("No forecast cached".tr())
@@ -467,7 +508,7 @@ object CardRegistry {
 
     val comfort: CardSpec = CardSpec(
         id = "events.comfort", persona = Persona.EVENTS, titleEn = "Comfort index",
-        sourceLabelEn = "Heat index and humidex", detail = DetailKind.Hourly(HourlyMetric.TEMPERATURE),
+        sourceLabelEn = "Heat index and humidex", detail = DetailKind.Hourly(HourlyMetric.TEMPERATURE), kind = DataKind.CURRENT,
     ) { ctx ->
         val cur = ctx.bundle.current ?: return@CardSpec CardValue.Unavailable("No current observation".tr())
         val h = cur.humidityPct ?: return@CardSpec CardValue.Unavailable("Humidity not reported".tr())
@@ -481,7 +522,7 @@ object CardRegistry {
 
     val bestDay: CardSpec = CardSpec(
         id = "events.bestday", persona = Persona.EVENTS, titleEn = "Best day this week",
-        sourceLabelEn = "Based on rain, heat and wind", detail = DetailKind.SevenDay,
+        sourceLabelEn = "Based on rain, heat and wind", detail = DetailKind.SevenDay, kind = DataKind.DAILY,
     ) { ctx ->
         val (d, s) = DayScore.best(ctx.bundle.daily) ?: return@CardSpec CardValue.Unavailable("No forecast cached".tr())
         CardValue.Ready(
@@ -494,7 +535,7 @@ object CardRegistry {
     // ---------------------------------------------------------------- General
     val hourly: CardSpec = CardSpec(
         id = "general.hourly", persona = Persona.GENERAL, titleEn = "Next 24 hours",
-        sourceLabelEn = "Hourly forecast", detail = DetailKind.Hourly(HourlyMetric.TEMPERATURE), wide = true,
+        sourceLabelEn = "Hourly forecast", detail = DetailKind.Hourly(HourlyMetric.TEMPERATURE), kind = DataKind.HOURLY, wide = true,
     ) { ctx ->
         val next = ctx.bundle.hourlyFrom(ctx.nowInstant, 24)
         if (next.isEmpty()) return@CardSpec CardValue.Unavailable("No hourly forecast cached".tr())
@@ -510,7 +551,7 @@ object CardRegistry {
 
     val sevenDay: CardSpec = CardSpec(
         id = "general.week", persona = Persona.GENERAL, titleEn = "7-day forecast",
-        sourceLabelEn = "City forecast", detail = DetailKind.SevenDay, wide = true,
+        sourceLabelEn = "City forecast", detail = DetailKind.SevenDay, kind = DataKind.DAILY, wide = true,
     ) { ctx ->
         val week = ctx.bundle.daily.take(7)
         if (week.isEmpty()) return@CardSpec CardValue.Unavailable("No forecast cached".tr())
@@ -524,7 +565,7 @@ object CardRegistry {
 
     val warnings: CardSpec = CardSpec(
         id = "general.warnings", persona = Persona.GENERAL, titleEn = "Warnings",
-        sourceLabelEn = "District warnings", detail = DetailKind.Warnings, wide = true,
+        sourceLabelEn = "District warnings", detail = DetailKind.Warnings, kind = DataKind.WARNINGS, wide = true,
         gate = { it.bundle.activeWarnings(it.nowInstant).isNotEmpty() },
     ) { ctx -> warningCard(ctx.bundle.activeWarnings(ctx.nowInstant).first(), ctx) }
 
@@ -535,7 +576,7 @@ object CardRegistry {
         seaState, tides,
         destinations, destinationSevere, packing,
         schoolRun, rainNext3h,
-        rainfall, rainOutlook, frost, agromet,
+        rainfall, soil, rainOutlook, frost, agromet,
         visibility, stormAlert, leaveEarlier, traffic,
         outlook7d, comfort, bestDay,
         hourly, sevenDay,

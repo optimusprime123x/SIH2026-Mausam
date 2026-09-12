@@ -214,8 +214,35 @@ data class RainfallSummary(
 
 data class AgroAdvisory(val title: String, val body: String, val issuedAt: Instant?, val source: String)
 
+/**
+ * Model soil water, as volumetric percent (m³ water per m³ soil × 100). [topPct] is the
+ * depth-weighted 0–9 cm layer, [rootPct] the 9–27 cm layer, [trend] the change in [topPct]
+ * over the next 24 hours. Thresholds are indicative; field capacity depends on soil type.
+ */
+data class SoilState(
+    val topPct: Double,
+    val rootPct: Double?,
+    val temperatureC: Double?,
+    val trend: Double?,
+    val asOf: Instant,
+) {
+    val category: SoilCategory get() = SoilCategory.of(topPct)
+}
+
+enum class SoilCategory { VERY_DRY, DRY, ADEQUATE, WET, SATURATED;
+    companion object {
+        fun of(pct: Double): SoilCategory = when {
+            pct < 10 -> VERY_DRY
+            pct < 18 -> DRY
+            pct < 32 -> ADEQUATE
+            pct < 42 -> WET
+            else -> SATURATED
+        }
+    }
+}
+
 /** Which upstream provided each kind of data, so cards can label their source honestly. */
-enum class DataKind { CURRENT, HOURLY, DAILY, WARNINGS, AIR_QUALITY, MARINE, RAINFALL, ADVISORY }
+enum class DataKind { CURRENT, HOURLY, DAILY, WARNINGS, AIR_QUALITY, MARINE, RAINFALL, ADVISORY, SOIL }
 
 data class SourceInfo(val label: String, val fetchedAt: Instant, val fromSnapshot: Boolean)
 
@@ -231,6 +258,7 @@ data class WeatherBundle(
     val advisory: AgroAdvisory?,
     val fetchedAt: Instant,
     val sources: Map<DataKind, SourceInfo>,
+    val soil: SoilState? = null,
 ) {
     fun activeWarnings(now: Instant): List<WeatherWarning> =
         warnings.filter { it.isActive(now) }.sortedByDescending { it.severity.rank }

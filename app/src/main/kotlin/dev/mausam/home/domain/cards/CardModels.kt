@@ -1,5 +1,6 @@
 package dev.mausam.home.domain.cards
 
+import dev.mausam.home.domain.model.DataKind
 import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.domain.model.Formatter
 import dev.mausam.home.domain.model.Location
@@ -32,7 +33,7 @@ enum class WeatherIcon(val assetName: String, val symbol: Boolean = false) {
     // Symbols (no Lottie file): activities and services that Meteocons has no picture for.
     RUN("", true), POLLEN("", true), TIDES("", true), SHIELD("", true), FLIGHT("", true), SCHOOL("", true),
     AGRO("", true), TRAFFIC("", true), COMMUTE("", true), COMFORT("", true), LUGGAGE("", true), AIR("", true), PENDING("", true),
-    HEART_BROKEN("", true);
+    HEART_BROKEN("", true), SOIL("", true);
 
     companion object {
         fun forCondition(c: dev.mausam.home.domain.model.WeatherCondition, isDay: Boolean): WeatherIcon = when (c) {
@@ -146,6 +147,8 @@ data class CardSpec(
     val titleEn: String,
     val sourceLabelEn: String,
     val detail: DetailKind,
+    /** Which bundle source feeds the card, so the source line names the real upstream. */
+    val kind: DataKind? = null,
     val action: CardAction = CardAction.OpenDetail,
     /** Wide cards span the full grid width; compact ones sit two per row. */
     val wide: Boolean = false,

@@ -90,6 +90,7 @@ fun placeholderIcon(cardId: String): WeatherIcon = when (cardId) {
     "parents.school" -> WeatherIcon.SCHOOL
     "agri.rainfall" -> WeatherIcon.RAINDROP
     "agri.advisory" -> WeatherIcon.AGRO
+    "agri.soil" -> WeatherIcon.SOIL
     "fitness.run" -> WeatherIcon.RUN
     "events.comfort" -> WeatherIcon.COMFORT
     "general.warnings", "parents.severe", "travel.severe" -> WeatherIcon.SHIELD

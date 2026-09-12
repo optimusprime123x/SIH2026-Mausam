@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.geometry.Offset
@@ -164,9 +165,12 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                             color = ink,
                         )
                         val hiLo = state.bundle?.daily?.firstOrNull()?.let { "H %s  L %s".trf(fmt.temp(it.maxC), fmt.temp(it.minC)) }
+                        // One line whatever the language: Hindi "अधिकतम / न्यूनतम" is long, so the type steps down to fit.
                         Text(
                             listOfNotNull(cur?.condition?.label()?.tr(), hiLo).joinToString("  ·  "),
                             style = MaterialTheme.typography.titleMedium.copy(shadow = lift), color = ink, fontWeight = FontWeight.Medium,
+                            maxLines = 1, softWrap = false,
+                            autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = 16.sp, stepSize = 0.5.sp),
                         )
                     }
                     if (cur != null) {

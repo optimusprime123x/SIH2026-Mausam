@@ -10,9 +10,11 @@ import dev.mausam.home.data.net.int
 import dev.mausam.home.data.net.str
 import dev.mausam.home.data.openmeteo.OmAirQuality
 import dev.mausam.home.data.openmeteo.OmForecast
+import dev.mausam.home.data.openmeteo.OmHourly
 import dev.mausam.home.data.openmeteo.OmMarine
 import dev.mausam.home.data.openmeteo.OpenMeteoApi
 import dev.mausam.home.domain.aqi.IndianAqi
+import dev.mausam.home.domain.geo.PlaceMatch
 import dev.mausam.home.domain.geo.Geo
 import dev.mausam.home.domain.i18n.tr
 import dev.mausam.home.domain.i18n.trf
@@ -25,6 +27,7 @@ import dev.mausam.home.domain.model.DataKind
 import dev.mausam.home.domain.model.HourlyForecast
 import dev.mausam.home.domain.model.Location
 import dev.mausam.home.domain.model.MarineState
+import dev.mausam.home.domain.model.SoilState
 import dev.mausam.home.domain.model.RainfallSummary
 import dev.mausam.home.domain.model.SourceInfo
 import dev.mausam.home.domain.model.WarningSeverity
@@ -152,11 +155,12 @@ class WeatherAssembler {
 
         // ---- rainfall ------------------------------------------------------------------
         val rainfall = buildRainfall(synop, allDaily, today, now, sources, raw)
+        val soil = forecast?.hourly?.let { buildSoil(it, zone, now, sources, raw[SourceKey.OM_FORECAST]) }
 
         val fetchedAt = raw.values.maxOfOrNull { it.fetchedAt } ?: now
         return WeatherBundle(
             location = location, current = current, hourly = hourly, daily = daily, warnings = warnings.distinctBy { it.id },
-            airQuality = air, marine = marine, rainfall = rainfall, advisory = null as AgroAdvisory?,
+            airQuality = air, marine = marine, rainfall = rainfall, advisory = null as AgroAdvisory?, soil = soil,
             fetchedAt = fetchedAt, sources = sources,
         )
     }
@@ -248,6 +252,28 @@ class WeatherAssembler {
         return AirQuality(localToInstant(c.time, zone) ?: now, aqi, c.pm25, c.pm10, IndianAqi.dominant(c.pm25, c.pm10), history, null)
     }
 
+    /** Depth-weighted 0–9 cm and 9–27 cm model soil water at the current hour, plus the 24 h trend. */
+    private fun buildSoil(h: OmHourly, zone: ZoneId, now: Instant, sources: MutableMap<DataKind, SourceInfo>, payload: RawPayload?): SoilState? {
+        if (h.soil3to9.isEmpty()) return null
+        val times = h.time.map { localToInstant(it, zone) }
+        val i = times.indexOfLast { it != null && !it.isAfter(now) }.takeIf { it >= 0 } ?: return null
+        fun top(at: Int): Double? {
+            val a = h.soil0to1.getOrNull(at); val b = h.soil1to3.getOrNull(at); val c = h.soil3to9.getOrNull(at)
+            if (a == null || b == null || c == null) return null
+            return (a * 1 + b * 2 + c * 6) / 9.0 * 100.0
+        }
+        val topNow = top(i) ?: return null
+        val later = top(minOf(i + 24, h.time.size - 1))
+        payload?.let { sources[DataKind.SOIL] = SourceInfo("Open-Meteo soil model".tr(), it.fetchedAt, it.fromSnapshot) }
+        return SoilState(
+            topPct = topNow,
+            rootPct = h.soil9to27.getOrNull(i)?.let { it * 100.0 },
+            temperatureC = h.soilTemperature6cm.getOrNull(i),
+            trend = later?.let { it - topNow },
+            asOf = times[i] ?: now,
+        )
+    }
+
     private fun buildRainfall(
         synop: JsonObject?, allDaily: List<DailyForecast>, today: LocalDate, now: Instant,
         sources: MutableMap<DataKind, SourceInfo>, raw: Map<SourceKey, RawPayload>,
@@ -308,14 +334,12 @@ class WeatherAssembler {
     }
 
     private fun sachetWarnings(alerts: JsonArray, location: Location): List<WeatherWarning> {
-        val district = location.district?.lowercase()
-        val name = location.name.lowercase()
         return alerts.mapNotNull { el ->
             val a = el as? JsonObject ?: return@mapNotNull null
             val area = a.str("area_description") ?: ""
             val centroid = a.str("centroid")?.split(',')?.mapNotNull { it.trim().toDoubleOrNull() }
             val near = centroid != null && centroid.size == 2 && Geo.haversineKm(location.latitude, location.longitude, centroid[1], centroid[0]) <= 40.0
-            val mentions = (district != null && area.lowercase().contains(district)) || area.lowercase().contains(name)
+            val mentions = PlaceMatch.mentions(area, location.district) || PlaceMatch.mentions(area, location.name)
             if (!near && !mentions) return@mapNotNull null
             val severity = WarningSeverity.fromText(a.str("severity_color")) ?: return@mapNotNull null
             val id = a.str("identifier") ?: return@mapNotNull null
