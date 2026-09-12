@@ -6,7 +6,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,17 +16,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.Commute
+import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -40,89 +52,155 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import dev.mausam.home.domain.cards.UserSettings
 import dev.mausam.home.domain.model.Units
 import dev.mausam.home.domain.personas.Persona
+import dev.mausam.home.ui.common.GlassGroup
+import dev.mausam.home.ui.common.HairlineDivider
+import dev.mausam.home.ui.common.SectionHeader
+import dev.mausam.home.ui.onboarding.personaIcon
+import dev.mausam.home.ui.scene.AuroraBackdrop
+import dev.mausam.home.ui.theme.Fluent
+import dev.mausam.home.ui.theme.LocalIsDynamic
+import dev.mausam.home.ui.theme.LocalMausamA11y
 import dev.mausam.home.ui.theme.Space
-import dev.mausam.home.ui.theme.micaBase
+import dev.mausam.home.ui.theme.supportsDynamicColour
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun SettingsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
     val s by vm.settings.collectAsStateWithLifecycle()
+    SettingsContent(s = s, update = { vm.update(it) }, previewBrief = { vm.previewBrief(it) }, onBack = onBack)
+}
+
+@Composable
+fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) -> Unit, previewBrief: (Boolean) -> Unit, onBack: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
+    val a11y = LocalMausamA11y.current
     val fmt = DateTimeFormatter.ofPattern("HH:mm")
     var picking by remember { mutableStateOf<String?>(null) }
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val haze = remember { HazeState() }
+    haze.blurEnabled = a11y.glassBlur
 
-    Column(Modifier.fillMaxSize().background(micaBase()).safeDrawingPadding().verticalScroll(rememberScrollState())) {
-        Row(Modifier.fillMaxWidth().padding(Space.s2), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back") }
-            Text("Settings", style = MaterialTheme.typography.titleLarge, color = cs.onSurface)
-        }
-        Column(Modifier.padding(horizontal = Space.s4), verticalArrangement = Arrangement.spacedBy(Space.s3)) {
-            Section("Personas")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
-                Persona.pickable.forEach { p ->
-                    val on = p in s.personas
-                    FilterChip(selected = on, onClick = {
-                        haptics.performHapticFeedback(if (on) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn)
-                        vm.update { it.copy(personas = (if (on) it.personas - p else it.personas + p) + Persona.GENERAL) }
-                    }, label = { Text(p.title) })
-                }
+    Box(Modifier.fillMaxSize()) {
+        AuroraBackdrop(animated = a11y.sceneAnimated, modifier = Modifier.fillMaxSize().hazeSource(haze))
+        Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState())) {
+            Row(Modifier.fillMaxWidth().padding(Space.s2), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back") }
+                Text("Settings", style = MaterialTheme.typography.headlineSmallEmphasized, color = cs.onSurface)
             }
-
-            Section("Daily briefs")
-            TimeRow("Morning brief", s.morningBrief, fmt) { picking = "morning" }
-            TimeRow("Evening brief", s.eveningBrief, fmt) { picking = "evening" }
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
-                OutlinedButton(onClick = { vm.previewBrief(false) }) { Text("Preview morning brief") }
-                OutlinedButton(onClick = { vm.previewBrief(true) }) { Text("Evening") }
-            }
-            if (Build.VERSION.SDK_INT >= 33) {
-                TextButton(onClick = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }) { Text("Allow notifications") }
-            }
-
-            Section("Quiet hours")
-            Text("Briefs stay silent in this window. Orange and red alerts still come through.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-            TimeRow("Start", s.quietStart, fmt) { picking = "quietStart" }
-            TimeRow("End", s.quietEnd, fmt) { picking = "quietEnd" }
-
-            Section("Commute")
-            TimeRow("Commute starts", s.commuteStart, fmt) { picking = "commuteStart" }
-            TimeRow("Commute ends", s.commuteEnd, fmt) { picking = "commuteEnd" }
-
-            Section("Display")
-            SwitchRow("Weather effects", "Ambient rain, rays and fog behind the cards", s.effectsEnabled) { on -> vm.update { it.copy(effectsEnabled = on) } }
-            SwitchRow("Large text", "Single column, bigger values, denser glass", s.largeText) { on -> vm.update { it.copy(largeText = on) } }
-
-            Section("Units")
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                Units.entries.forEachIndexed { i, u ->
-                    SegmentedButton(selected = s.units == u, onClick = { vm.update { it.copy(units = u) } }, shape = SegmentedButtonDefaults.itemShape(index = i, count = Units.entries.size)) {
-                        Text(if (u == Units.METRIC) "°C · km/h" else "°F · mph")
+            Column(Modifier.padding(horizontal = Space.s4)) {
+                SectionHeader("Personas", Icons.Rounded.Explore, Fluent.SkyBlue, "Cards on your home page come from these")
+                GlassGroup(haze, wash = Fluent.SkyBlue.copy(alpha = 0.16f)) {
+                    FlowRow(Modifier.padding(horizontal = Space.s4, vertical = Space.s2), horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
+                        Persona.pickable.forEach { p ->
+                            val on = p in s.personas
+                            val accent = Fluent.forPersona(p)
+                            FilterChip(
+                                selected = on,
+                                onClick = {
+                                    haptics.performHapticFeedback(if (on) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn)
+                                    update { it.copy(personas = (if (on) it.personas - p else it.personas + p) + Persona.GENERAL) }
+                                },
+                                leadingIcon = { Icon(personaIcon(p), contentDescription = null, tint = if (on) cs.onSecondaryContainer else accent, modifier = Modifier.size(18.dp)) },
+                                label = { Text(p.title) },
+                            )
+                        }
                     }
                 }
-            }
 
-            Section("Language")
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                listOf("en" to "English", "hi" to "हिन्दी").forEachIndexed { i, (code, label) ->
-                    SegmentedButton(selected = s.language == code, onClick = { vm.update { it.copy(language = code) } }, shape = SegmentedButtonDefaults.itemShape(index = i, count = 2)) { Text(label) }
+                SectionHeader("Appearance", Icons.Rounded.Palette, Fluent.Violet)
+                GlassGroup(haze, wash = Fluent.Violet.copy(alpha = 0.16f)) {
+                    val dynamicNow = LocalIsDynamic.current
+                    SwitchRow(
+                        "Wallpaper colours",
+                        if (!supportsDynamicColour()) "Needs Android 12 or newer; using the IMD blue palette"
+                        else if (dynamicNow) "Material You palette from your wallpaper" else "Off: IMD blue palette",
+                        s.wallpaperColours, enabled = supportsDynamicColour(),
+                    ) { on -> update { it.copy(wallpaperColours = on) } }
+                    Row(Modifier.padding(horizontal = Space.s4, vertical = Space.s2), horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
+                        listOf(cs.primary, cs.primaryContainer, cs.secondary, cs.secondaryContainer, cs.tertiary, cs.tertiaryContainer).forEach { c ->
+                            Box(Modifier.size(24.dp).clip(CircleShape).background(c))
+                        }
+                        Spacer(Modifier.width(Space.s1))
+                        Text("Current palette", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.align(Alignment.CenterVertically))
+                    }
+                    HairlineDivider()
+                    SwitchRow("Weather effects", "Animated sky, clouds, rain and glass blur", s.effectsEnabled) { on -> update { it.copy(effectsEnabled = on) } }
+                    HairlineDivider()
+                    SwitchRow("Large text", "Single column, bigger values, denser glass", s.largeText) { on -> update { it.copy(largeText = on) } }
                 }
-            }
-            Text("Hindi copy is on the way; the app stays in English for now.", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
 
-            Section("Privacy")
-            Text("Your usage never leaves this phone. Card ranking, taps and preferences are stored only on this device.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
-            Spacer(Modifier.height(Space.s4))
-            Text("Data: India Meteorological Department, NDMA SACHET, CPCB via data.gov.in, Weather data by Open-Meteo.com (CC BY 4.0). Icons: Meteocons by Bas Milius (MIT). Font: Roboto Flex (OFL).", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-            Spacer(Modifier.height(Space.s12))
+                SectionHeader("Daily briefs", Icons.Rounded.Notifications, Fluent.Amber, "A morning and evening note for your persona")
+                GlassGroup(haze, wash = Fluent.Amber.copy(alpha = 0.16f)) {
+                    TimeRow("Morning brief", s.morningBrief, fmt) { picking = "morning" }
+                    HairlineDivider()
+                    TimeRow("Evening brief", s.eveningBrief, fmt) { picking = "evening" }
+                    HairlineDivider()
+                    Row(Modifier.padding(horizontal = Space.s4, vertical = Space.s2), horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
+                        FilledTonalButton(onClick = { previewBrief(false) }) { Text("Preview morning") }
+                        FilledTonalButton(onClick = { previewBrief(true) }) { Text("Preview evening") }
+                    }
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        TextButton(onClick = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }, modifier = Modifier.padding(horizontal = Space.s2)) { Text("Allow notifications") }
+                    }
+                }
+
+                SectionHeader("Quiet hours", Icons.Rounded.Bedtime, Fluent.Indigo, "Briefs stay silent; orange and red alerts still come through")
+                GlassGroup(haze, wash = Fluent.Indigo.copy(alpha = 0.16f)) {
+                    TimeRow("Start", s.quietStart, fmt) { picking = "quietStart" }
+                    HairlineDivider()
+                    TimeRow("End", s.quietEnd, fmt) { picking = "quietEnd" }
+                }
+
+                SectionHeader("Commute", Icons.Rounded.Commute, Fluent.Teal, "Leave-earlier nudges use this window")
+                GlassGroup(haze, wash = Fluent.Teal.copy(alpha = 0.16f)) {
+                    TimeRow("Commute starts", s.commuteStart, fmt) { picking = "commuteStart" }
+                    HairlineDivider()
+                    TimeRow("Commute ends", s.commuteEnd, fmt) { picking = "commuteEnd" }
+                }
+
+                SectionHeader("Units", Icons.Rounded.Straighten, Fluent.Coral)
+                GlassGroup(haze, wash = Fluent.Coral.copy(alpha = 0.16f)) {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(Space.s4)) {
+                        Units.entries.forEachIndexed { i, u ->
+                            SegmentedButton(selected = s.units == u, onClick = { update { it.copy(units = u) } }, shape = SegmentedButtonDefaults.itemShape(index = i, count = Units.entries.size)) {
+                                Text(if (u == Units.METRIC) "°C · km/h" else "°F · mph")
+                            }
+                        }
+                    }
+                }
+
+                SectionHeader("Language", Icons.Rounded.Language, Fluent.Mint)
+                GlassGroup(haze, wash = Fluent.Mint.copy(alpha = 0.16f)) {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.s4, vertical = Space.s3)) {
+                        listOf("en" to "English", "hi" to "हिन्दी").forEachIndexed { i, (code, label) ->
+                            SegmentedButton(selected = s.language == code, onClick = { update { it.copy(language = code) } }, shape = SegmentedButtonDefaults.itemShape(index = i, count = 2)) { Text(label) }
+                        }
+                    }
+                    Text("Hindi copy is on the way; the app stays in English for now.", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(horizontal = Space.s4, vertical = Space.s2))
+                }
+
+                SectionHeader("Privacy & credits", Icons.Rounded.Shield, Fluent.Green)
+                GlassGroup(haze, wash = Fluent.Green.copy(alpha = 0.16f)) {
+                    Column(Modifier.padding(Space.s4)) {
+                        Text("Your usage never leaves this phone. Card ranking, taps and preferences are stored only on this device.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
+                        Spacer(Modifier.height(Space.s3))
+                        Text("Data: India Meteorological Department, NDMA SACHET, CPCB via data.gov.in, Weather data by Open-Meteo.com (CC BY 4.0). Icons: Meteocons by Bas Milius (MIT). Font: Roboto Flex (OFL).", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+                    }
+                }
+                Spacer(Modifier.height(Space.s12))
+            }
         }
     }
 
@@ -137,7 +215,7 @@ fun SettingsScreen(vm: SettingsViewModel, onBack: () -> Unit) {
             confirmButton = {
                 TextButton(onClick = {
                     val t = LocalTime.of(state.hour, state.minute)
-                    vm.update { it.apply(key, t) }
+                    update { it.apply(key, t) }
                     picking = null
                 }) { Text("Set") }
             },
@@ -154,25 +232,20 @@ private fun UserSettings.apply(key: String, t: LocalTime): UserSettings = when (
 }
 
 @Composable
-private fun Section(title: String) {
-    Text(title, style = MaterialTheme.typography.titleMediumEmphasized, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = Space.s4))
-}
-
-@Composable
 private fun TimeRow(label: String, time: LocalTime, fmt: DateTimeFormatter, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+    Row(Modifier.fillMaxWidth().padding(start = Space.s4, end = Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-        TextButton(onClick = onClick) { Text(fmt.format(time)) }
+        FilledTonalButton(onClick = onClick) { Text(fmt.format(time), style = MaterialTheme.typography.titleSmall) }
     }
 }
 
 @Composable
-private fun SwitchRow(label: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+private fun SwitchRow(label: String, hint: String, checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = Space.s4, vertical = Space.s2), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
             Text(hint, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = checked, onCheckedChange = onChange)
+        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
     }
 }

@@ -35,6 +35,7 @@ class InMemoryHomeRepository(
     private val prefs = MutableStateFlow<Map<String, CardPref>>(emptyMap())
     private val notified = MutableStateFlow<Set<String>>(emptySet())
     private val onboardedFlow = MutableStateFlow(false)
+    private val dismissed = MutableStateFlow<String?>(null)
 
     override val settings: Flow<UserSettings> = settingsFlow
     override suspend fun currentSettings(): UserSettings = settingsFlow.value
@@ -88,6 +89,8 @@ class InMemoryHomeRepository(
         prefs.update { m -> m + (cardId to transform(m[cardId] ?: CardPref(cardId))) }
     }
 
+    override val dismissedBanner: Flow<String?> = dismissed
+    override suspend fun dismissBanner(warningId: String?) { dismissed.value = warningId }
     override suspend fun notifiedWarningIds(): Set<String> = notified.value
     override suspend fun markWarningsNotified(ids: Set<String>) = notified.update { it + ids }
 

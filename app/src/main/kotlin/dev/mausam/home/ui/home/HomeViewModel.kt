@@ -15,6 +15,8 @@ import dev.mausam.home.domain.model.CachedResult
 import dev.mausam.home.domain.model.Freshness
 import dev.mausam.home.domain.model.Location
 import dev.mausam.home.domain.model.SceneKind
+import dev.mausam.home.ui.scene.SceneSpec
+import dev.mausam.home.ui.scene.sunProgress
 import dev.mausam.home.domain.model.WeatherBundle
 import dev.mausam.home.domain.model.WeatherWarning
 import dev.mausam.home.work.Notifier
@@ -42,9 +44,7 @@ data class HomeUiState(
     val cards: List<RenderedCard> = emptyList(),
     val banner: WeatherWarning? = null,
     val activeWarnings: List<WeatherWarning> = emptyList(),
-    val scene: SceneKind = SceneKind.CLEAR_DAY,
-    val windKph: Float = 0f,
-    val intensity: Float = 0f,
+    val scene: SceneSpec = SceneSpec(),
     val isRefreshing: Boolean = false,
     val isLoading: Boolean = true,
     val settings: UserSettings = UserSettings(),
@@ -77,7 +77,7 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
         Inputs(loc, settings, usage, prefs)
     }.flatMapLatest { inp ->
         val loc = inp.location ?: return@flatMapLatest flowOf(HomeUiState(isLoading = false, settings = inp.settings))
-        combine(repo.bundle(loc), freezeOrder) { cached, frozen -> build(loc, inp, cached, frozen) }
+        combine(repo.bundle(loc), freezeOrder, repo.dismissedBanner) { cached, frozen, dismissed -> build(loc, inp, cached, frozen, dismissed) }
     }.combine(refreshing) { s, r -> s.copy(isRefreshing = r) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
@@ -95,7 +95,7 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
         }
     }
 
-    private suspend fun build(loc: Location, inp: Inputs, cached: CachedResult<WeatherBundle>?, frozen: Boolean): HomeUiState {
+    private suspend fun build(loc: Location, inp: Inputs, cached: CachedResult<WeatherBundle>?, frozen: Boolean, dismissed: String?): HomeUiState {
         if (cached == null) return HomeUiState(location = loc, isLoading = true, settings = inp.settings)
         val now = ZonedDateTime.now(loc.zoneId)
         val others = repo.currentLocations().filter { it.id != loc.id }.mapNotNull { repo.cachedBundle(it)?.data }
@@ -111,13 +111,18 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
         } else ranked.also { lastOrder = it.map { c -> c.spec.id } }
         val active = cached.data.activeWarnings(now.toInstant())
         val cur = cached.data.current
+        val today = cached.data.daily.firstOrNull()
+        val scene = SceneSpec(
+            kind = cur?.let { SceneKind.from(it.condition, it.isDay) } ?: SceneKind.CLEAR_DAY,
+            sunProgress = sunProgress(now.hour * 60 + now.minute, today?.sunrise?.toSecondOfDay()?.div(60), today?.sunset?.toSecondOfDay()?.div(60)),
+            windKph = cur?.windKph?.toFloat() ?: 0f,
+            intensity = ((cur?.precipitationMm ?: 0.0) / 5.0).toFloat().coerceIn(0f, 1f),
+        )
         return HomeUiState(
             location = loc, bundle = cached.data,
             freshness = Freshness.of(cached.fetchedAt, now.toInstant(), loc.zoneId), origin = cached.origin,
-            cards = ordered, banner = active.firstOrNull(), activeWarnings = active,
-            scene = cur?.let { SceneKind.from(it.condition, it.isDay) } ?: SceneKind.CLEAR_DAY,
-            windKph = cur?.windKph?.toFloat() ?: 0f,
-            intensity = ((cur?.precipitationMm ?: 0.0) / 5.0).toFloat().coerceIn(0f, 1f),
+            cards = ordered, banner = active.firstOrNull()?.takeIf { it.id != dismissed }, activeWarnings = active,
+            scene = scene,
             isLoading = false, settings = inp.settings, context = ctx, prefs = inp.prefs,
         )
     }
@@ -155,6 +160,7 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
     }
 
     fun openWarnings() { overlay.value = HomeOverlay.Detail(CardRegistry.warnings.id) }
+    fun dismissBanner() = viewModelScope.launch { repo.dismissBanner(state.value.banner?.id) }
     fun openCatalogue() { overlay.value = HomeOverlay.Catalogue }
     fun closeOverlay() { overlay.value = null }
 

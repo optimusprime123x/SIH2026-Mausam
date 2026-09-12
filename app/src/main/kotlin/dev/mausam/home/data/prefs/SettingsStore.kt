@@ -35,6 +35,8 @@ class SettingsStore(private val context: Context) {
         val onboarded = booleanPreferencesKey("onboarded")
         val primaryLocation = stringPreferencesKey("primary_location")
         val notifiedWarnings = stringSetPreferencesKey("notified_warnings")
+        val wallpaper = booleanPreferencesKey("wallpaper_colours")
+        val dismissedBanner = stringPreferencesKey("dismissed_banner")
     }
 
     private val store get() = context.settingsDataStore
@@ -42,6 +44,8 @@ class SettingsStore(private val context: Context) {
     val settings: Flow<UserSettings> = store.data.map { p -> p.toSettings() }
     val onboarded: Flow<Boolean> = store.data.map { it[Keys.onboarded] ?: false }
     val primaryLocationId: Flow<String?> = store.data.map { it[Keys.primaryLocation] }
+    /** Id of the warning whose banner the user closed; the banner returns when a new warning is issued. */
+    val dismissedBanner: Flow<String?> = store.data.map { it[Keys.dismissedBanner] }
 
     suspend fun current(): UserSettings = settings.first()
 
@@ -59,7 +63,12 @@ class SettingsStore(private val context: Context) {
             p[Keys.quietEnd] = s.quietEnd.toString()
             p[Keys.commuteStart] = s.commuteStart.toString()
             p[Keys.commuteEnd] = s.commuteEnd.toString()
+            p[Keys.wallpaper] = s.wallpaperColours
         }
+    }
+
+    suspend fun dismissBanner(warningId: String?) {
+        store.edit { p -> if (warningId == null) p.remove(Keys.dismissedBanner) else p[Keys.dismissedBanner] = warningId }
     }
 
     suspend fun setOnboarded(done: Boolean) { store.edit { it[Keys.onboarded] = done } }
@@ -88,6 +97,7 @@ class SettingsStore(private val context: Context) {
             quietEnd = time(Keys.quietEnd, d.quietEnd),
             commuteStart = time(Keys.commuteStart, d.commuteStart),
             commuteEnd = time(Keys.commuteEnd, d.commuteEnd),
+            wallpaperColours = this[Keys.wallpaper] ?: d.wallpaperColours,
         )
     }
 }

@@ -240,6 +240,8 @@ class HomeRepositoryImpl(
         db.cardPrefs().upsert(CardPrefEntity(cardId, next.pinnedAt?.toEpochMilli(), next.hidden, next.boostUntil?.toEpochMilli(), next.added))
     }
 
+    override val dismissedBanner: Flow<String?> get() = settingsStore.dismissedBanner
+    override suspend fun dismissBanner(warningId: String?) = settingsStore.dismissBanner(warningId)
     override suspend fun notifiedWarningIds(): Set<String> = settingsStore.notifiedWarnings()
     override suspend fun markWarningsNotified(ids: Set<String>) = settingsStore.markNotified(ids)
 

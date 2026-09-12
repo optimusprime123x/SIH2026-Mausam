@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <!-- "All clear, no warnings": big soft sun, a small cloud and a mint shield with a tick. Light from top-left. -->
+  <defs>
+    <linearGradient id="sun" gradientUnits="userSpaceOnUse" x1="76" y1="56" x2="134" y2="118">
+      <stop offset="0" stop-color="#FFDC7A"/>
+      <stop offset="1" stop-color="#FFC83D"/>
+    </linearGradient>
+    <linearGradient id="shield" gradientUnits="userSpaceOnUse" x1="150" y1="104" x2="204" y2="180">
+      <stop offset="0" stop-color="#7CE0A9"/>
+      <stop offset="1" stop-color="#29D3C3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- backdrop blobs -->
+  <path fill="#4CC2FF" fill-opacity="0.2" d="M22,100 C16,52 60,18 118,22 C176,26 214,60 208,110 C202,160 152,186 98,178 C48,171 28,146 22,100 Z"/>
+  <path fill="#7CE0A9" fill-opacity="0.26" d="M132,132 C136,106 166,94 194,102 C222,110 234,140 224,164 C214,188 178,194 154,180 C136,170 128,152 132,132 Z"/>
+
+  <!-- sun glow + rays -->
+  <path fill="#FFC83D" d="M148.85,108.37 L158.09,112.19 A3.5,3.5 0 0 1 160.77,105.73 L151.53,101.9 A3.5,3.5 0 0 1 148.85,108.37 Z"/>
+  <path fill="#FFC83D" d="M119.9,133.53 L123.73,142.77 A3.5,3.5 0 0 1 130.19,140.09 L126.37,130.85 A3.5,3.5 0 0 1 119.9,133.53 Z"/>
+  <path fill="#FFC83D" d="M81.63,130.85 L77.81,140.09 A3.5,3.5 0 0 1 84.27,142.77 L88.1,133.53 A3.5,3.5 0 0 1 81.63,130.85 Z"/>
+  <path fill="#FFC83D" d="M56.47,101.9 L47.23,105.73 A3.5,3.5 0 0 1 49.91,112.19 L59.15,108.37 A3.5,3.5 0 0 1 56.47,101.9 Z"/>
+  <path fill="#FFC83D" d="M59.15,63.63 L49.91,59.81 A3.5,3.5 0 0 1 47.23,66.27 L56.47,70.1 A3.5,3.5 0 0 1 59.15,63.63 Z"/>
+  <path fill="#FFC83D" d="M88.1,38.47 L84.27,29.23 A3.5,3.5 0 0 1 77.81,31.91 L81.63,41.15 A3.5,3.5 0 0 1 88.1,38.47 Z"/>
+  <path fill="#FFC83D" d="M126.37,41.15 L130.19,31.91 A3.5,3.5 0 0 1 123.73,29.23 L119.9,38.47 A3.5,3.5 0 0 1 126.37,41.15 Z"/>
+  <path fill="#FFC83D" d="M151.53,70.1 L160.77,66.27 A3.5,3.5 0 0 1 158.09,59.81 L148.85,63.63 A3.5,3.5 0 0 1 151.53,70.1 Z"/>
+  <circle cx="104" cy="86" r="40" fill="url(#sun)"/>
+  <circle cx="88" cy="70" r="8" fill="#FFFFFF" fill-opacity="0.45"/>
+  <circle cx="100" cy="60" r="4" fill="#FFFFFF" fill-opacity="0.45"/>
+
+  <!-- small cloud, bottom-left -->
+  <rect x="37" y="135" width="56" height="14" rx="7" fill="#DCE6F2"/>
+  <circle cx="51" cy="135" r="11" fill="#DCE6F2"/>
+  <circle cx="69" cy="127" r="16" fill="#DCE6F2"/>
+  <circle cx="85" cy="137" r="10" fill="#DCE6F2"/>
+  <rect x="34" y="132" width="56" height="14" rx="7" fill="#FFFFFF"/>
+  <circle cx="48" cy="132" r="11" fill="#FFFFFF"/>
+  <circle cx="66" cy="124" r="16" fill="#FFFFFF"/>
+  <circle cx="82" cy="134" r="10" fill="#FFFFFF"/>
+
+  <!-- shield with tick, bottom-right -->
+  <ellipse cx="178" cy="184" rx="30" ry="6" fill="#0078D4" fill-opacity="0.14"/>
+  <path fill="#FFFFFF" d="M176,93 C188,100 199,104 212,106 L212,139 C212,163 196,178 176,187 C156,178 140,163 140,139 L140,106 C153,104 164,100 176,93 Z"/>
+  <path fill="url(#shield)" d="M176,98 C188,104 198,108 208,110 L208,138 C208,160 194,174 176,182 C158,174 144,160 144,138 L144,110 C154,108 164,104 176,98 Z"/>
+  <path fill="#FFFFFF" d="M160.53,141.47 L169.53,150.47 A3.5,3.5 0 0 1 174.47,145.53 L165.47,136.53 A3.5,3.5 0 0 1 160.53,141.47 Z"/>
+  <path fill="#FFFFFF" d="M174.6,150.34 L192.6,130.34 A3.5,3.5 0 0 1 187.4,125.66 L169.4,145.66 A3.5,3.5 0 0 1 174.6,150.34 Z"/>
+
+  <!-- sparkles -->
+  <path fill="#29D3C3" d="M186,46 C187,53 189,55 196,56 C189,57 187,59 186,66 C185,59 183,57 176,56 C183,55 185,53 186,46 Z"/>
+  <circle cx="34" cy="60" r="3" fill="#FF6B9A"/>
+  <circle cx="206" cy="78" r="2.5" fill="#4CC2FF"/>
+  <circle cx="30" cy="112" r="2.2" fill="#7CE0A9"/>
+</svg>

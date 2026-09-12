@@ -8,7 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,10 +41,11 @@ import dev.mausam.home.ui.theme.Space
 
 /**
  * IMD colour, four channels (colour, icon, word, motion). Near-opaque glass at tier 2; the only
- * surface allowed a saturated container. Orange and red shake the icon once.
+ * surface allowed a saturated container. Orange and red shake the icon once. The cross closes it
+ * until a new warning is issued.
  */
 @Composable
-fun AlertBanner(warning: WeatherWarning, haze: HazeState, onClick: () -> Unit) {
+fun AlertBanner(warning: WeatherWarning, haze: HazeState, onClick: () -> Unit, onDismiss: () -> Unit) {
     val tier = ImdTiers.of(warning.severity, LocalIsDark.current)
     val a11y = LocalMausamA11y.current
     val shake = remember { Animatable(0f) }
@@ -57,13 +63,13 @@ fun AlertBanner(warning: WeatherWarning, haze: HazeState, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = Space.screenMargin, vertical = Space.s2)
-            .mausamGlass(haze, GlassTier.BANNER, MausamRadius.bannerShape, tint = tier.container)
+            .mausamGlass(haze, GlassTier.BANNER, MausamRadius.bannerShape, tint = tier.container, wash = tier.accent.copy(alpha = 0.35f))
             .clickable(onClick = onClick)
-            .padding(Space.s3)
+            .padding(start = Space.s3, top = Space.s2, bottom = Space.s2, end = Space.s1)
             .semantics { liveRegion = LiveRegionMode.Assertive },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MeteoconIcon(icon, size = 40.dp, modifier = Modifier.graphicsLayer { rotationZ = shake.value })
+        MeteoconIcon(icon, size = 44.dp, modifier = Modifier.graphicsLayer { rotationZ = shake.value })
         Spacer(Modifier.width(Space.s3))
         Column(Modifier.weight(1f)) {
             Text(
@@ -71,6 +77,9 @@ fun AlertBanner(warning: WeatherWarning, haze: HazeState, onClick: () -> Unit) {
                 style = MaterialTheme.typography.titleMediumEmphasized, color = tier.onContainer,
             )
             Text(warning.headline, style = MaterialTheme.typography.bodyMedium, color = tier.onContainer, maxLines = 2)
+        }
+        IconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
+            Icon(Icons.Rounded.Close, contentDescription = "Close alert", tint = tier.onContainer)
         }
     }
 }

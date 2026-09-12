@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <!-- Onboarding "allow location": map pin hovering over rounded hills, sun peeking behind a cloud.
+       Light comes from the top-left. Subset: path/circle/ellipse/rect + userSpaceOnUse gradients, no transforms. -->
+  <defs>
+    <linearGradient id="pin" gradientUnits="userSpaceOnUse" x1="90" y1="50" x2="150" y2="140">
+      <stop offset="0" stop-color="#4CC2FF"/>
+      <stop offset="1" stop-color="#0078D4"/>
+    </linearGradient>
+    <linearGradient id="ground" gradientUnits="userSpaceOnUse" x1="40" y1="140" x2="200" y2="192">
+      <stop offset="0" stop-color="#9BE8BC"/>
+      <stop offset="1" stop-color="#7CE0A9"/>
+    </linearGradient>
+    <linearGradient id="hillL" gradientUnits="userSpaceOnUse" x1="50" y1="115" x2="150" y2="170">
+      <stop offset="0" stop-color="#6FE2CC"/>
+      <stop offset="1" stop-color="#29D3C3"/>
+    </linearGradient>
+    <linearGradient id="sun" gradientUnits="userSpaceOnUse" x1="176" y1="36" x2="200" y2="66">
+      <stop offset="0" stop-color="#FFDC7A"/>
+      <stop offset="1" stop-color="#FFC83D"/>
+    </linearGradient>
+  </defs>
+
+  <!-- backdrop blobs -->
+  <path fill="#4CC2FF" fill-opacity="0.22" d="M28,112 C20,62 66,24 126,28 C186,32 226,68 218,118 C210,168 156,192 100,184 C50,177 34,152 28,112 Z"/>
+  <path fill="#FFC83D" fill-opacity="0.16" d="M150,52 C150,24 176,10 200,14 C226,18 236,44 230,66 C224,90 196,96 178,86 C160,76 150,70 150,52 Z"/>
+
+  <!-- sun peeking behind the cloud -->
+  <circle cx="188" cy="50" r="28" fill="#FFC83D" fill-opacity="0.25"/>
+  <path fill="#FFC83D" d="M208.39,60.88 L213.93,63.18 A2.25,2.25 0 0 1 215.65,59.02 L210.11,56.72 A2.25,2.25 0 0 1 208.39,60.88 Z"/>
+  <path fill="#FFC83D" d="M194.72,72.11 L197.02,77.65 A2.25,2.25 0 0 1 201.18,75.93 L198.88,70.39 A2.25,2.25 0 0 1 194.72,72.11 Z"/>
+  <path fill="#FFC83D" d="M177.12,70.39 L174.82,75.93 A2.25,2.25 0 0 1 178.98,77.65 L181.28,72.11 A2.25,2.25 0 0 1 177.12,70.39 Z"/>
+  <path fill="#FFC83D" d="M165.89,56.72 L160.35,59.02 A2.25,2.25 0 0 1 162.07,63.18 L167.61,60.88 A2.25,2.25 0 0 1 165.89,56.72 Z"/>
+  <path fill="#FFC83D" d="M167.61,39.12 L162.07,36.82 A2.25,2.25 0 0 1 160.35,40.98 L165.89,43.28 A2.25,2.25 0 0 1 167.61,39.12 Z"/>
+  <path fill="#FFC83D" d="M181.28,27.89 L178.98,22.35 A2.25,2.25 0 0 1 174.82,24.07 L177.12,29.61 A2.25,2.25 0 0 1 181.28,27.89 Z"/>
+  <path fill="#FFC83D" d="M198.88,29.61 L201.18,24.07 A2.25,2.25 0 0 1 197.02,22.35 L194.72,27.89 A2.25,2.25 0 0 1 198.88,29.61 Z"/>
+  <path fill="#FFC83D" d="M210.11,43.28 L215.65,40.98 A2.25,2.25 0 0 1 213.93,36.82 L208.39,39.12 A2.25,2.25 0 0 1 210.11,43.28 Z"/>
+  <circle cx="188" cy="50" r="18" fill="url(#sun)"/>
+  <circle cx="181" cy="43" r="5" fill="#FFFFFF" fill-opacity="0.45"/>
+
+  <!-- cloud in front of the sun (shade copy offset to bottom-right, then white) -->
+  <rect x="149" y="73" width="60" height="14" rx="7" fill="#DCE6F2"/>
+  <circle cx="165" cy="73" r="12" fill="#DCE6F2"/>
+  <circle cx="185" cy="65" r="17" fill="#DCE6F2"/>
+  <circle cx="201" cy="75" r="11" fill="#DCE6F2"/>
+  <rect x="146" y="70" width="60" height="14" rx="7" fill="#FFFFFF"/>
+  <circle cx="162" cy="70" r="12" fill="#FFFFFF"/>
+  <circle cx="182" cy="62" r="17" fill="#FFFFFF"/>
+  <circle cx="198" cy="72" r="11" fill="#FFFFFF"/>
+
+  <!-- small cloud on the left -->
+  <rect x="34" y="60" width="36" height="9" rx="4.5" fill="#DCE6F2"/>
+  <circle cx="44" cy="60" r="7" fill="#DCE6F2"/>
+  <circle cx="56" cy="54" r="10" fill="#DCE6F2"/>
+  <circle cx="65" cy="61" r="6.5" fill="#DCE6F2"/>
+  <rect x="32" y="58" width="36" height="9" rx="4.5" fill="#FFFFFF"/>
+  <circle cx="42" cy="58" r="7" fill="#FFFFFF"/>
+  <circle cx="54" cy="52" r="10" fill="#FFFFFF"/>
+  <circle cx="63" cy="59" r="6.5" fill="#FFFFFF"/>
+
+  <!-- sparkles -->
+  <circle cx="76" cy="36" r="3" fill="#FF6B9A"/>
+  <circle cx="214" cy="112" r="2.5" fill="#4CC2FF"/>
+  <circle cx="26" cy="126" r="2.2" fill="#FFC83D"/>
+
+  <!-- hills and ground -->
+  <path fill="url(#hillL)" d="M32,166 C40,118 96,110 136,140 C152,152 162,160 172,166 Z"/>
+  <path fill="#A9EAC6" d="M118,166 C128,130 176,124 202,146 C210,152 214,160 216,166 Z"/>
+  <ellipse cx="120" cy="166" rx="98" ry="24" fill="url(#ground)"/>
+  <ellipse cx="122" cy="151" rx="20" ry="5.5" fill="#0078D4" fill-opacity="0.22"/>
+
+  <!-- pin (own group so it can be bobbed) -->
+  <g id="pin">
+    <path fill="url(#pin)" d="M120,148 C112,128 84,112 84,84 A36,36 0 1 1 156,84 C156,112 128,128 120,148 Z"/>
+    <circle cx="121" cy="85" r="15" fill="#0078D4" fill-opacity="0.35"/>
+    <circle cx="120" cy="84" r="15" fill="#FFFFFF"/>
+    <circle cx="100" cy="66" r="6" fill="#FFFFFF" fill-opacity="0.55"/>
+    <circle cx="110" cy="57" r="3" fill="#FFFFFF" fill-opacity="0.55"/>
+  </g>
+</svg>

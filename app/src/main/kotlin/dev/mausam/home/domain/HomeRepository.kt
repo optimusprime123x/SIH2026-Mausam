@@ -39,6 +39,10 @@ interface HomeRepository {
     suspend fun recordTap(cardId: String)
     suspend fun updatePref(cardId: String, transform: (CardPref) -> CardPref)
 
+    /** The warning id whose home banner was closed by the user, if any. */
+    val dismissedBanner: Flow<String?>
+    suspend fun dismissBanner(warningId: String?)
+
     suspend fun notifiedWarningIds(): Set<String>
     suspend fun markWarningsNotified(ids: Set<String>)
 
