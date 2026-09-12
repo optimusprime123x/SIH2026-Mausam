@@ -21,6 +21,8 @@ interface HomeRepository {
     val locations: Flow<List<Location>>
     suspend fun currentLocations(): List<Location>
     suspend fun primaryLocation(): Location?
+    /** Emits whenever the home location changes, so screens switch without a list change. */
+    val primaryLocationId: Flow<String?>
     suspend fun setPrimary(locationId: String)
     suspend fun addLocation(location: Location)
     suspend fun removeLocation(locationId: String)

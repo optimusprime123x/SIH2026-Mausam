@@ -76,6 +76,7 @@ class HomeRepositoryImpl(
         val id = settingsStore.primaryLocationId.first()
         return all.firstOrNull { it.id == id } ?: all.firstOrNull()
     }
+    override val primaryLocationId: Flow<String?> get() = settingsStore.primaryLocationId
     override suspend fun setPrimary(locationId: String) = settingsStore.setPrimaryLocation(locationId)
     override suspend fun addLocation(location: Location) {
         val enriched = stations.enrich(location)

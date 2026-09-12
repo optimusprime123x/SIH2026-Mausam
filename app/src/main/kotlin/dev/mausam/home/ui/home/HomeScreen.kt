@@ -172,7 +172,8 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
                     .height(440.dp)
                     .graphicsLayer {
                         translationY = -0.45f * (heroMaxPx - heroPx)
-                        alpha = (1f - collapse / 0.9f).coerceIn(0f, 1f)
+                        // Never fully gone: the collapsed glass bar still has sky to blur.
+                        alpha = 1f - 0.4f * collapse
                     },
             )
         }
@@ -253,7 +254,7 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
                     itemsIndexedKeyed(state.cards) { index, card ->
                         GlassCard(
                             card = card, index = index, haze = haze, freshness = state.freshness,
-                            sourceInfo = state.bundle?.sources?.values?.firstOrNull { it.label.contains(card.spec.sourceLabel.take(8), true) },
+                            sourceInfo = card.spec.sourceLabel.takeIf { it.length >= 8 }?.let { l -> state.bundle?.sources?.values?.firstOrNull { it.label.contains(l.take(8), true) } },
                             animatedVisibilityScope = animatedVisibilityScope,
                             refract = index < 2 && a11y.refraction,
                             onTap = { actions.openCard(card.spec.id) },

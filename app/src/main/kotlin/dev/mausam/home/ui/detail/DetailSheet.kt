@@ -177,8 +177,8 @@ fun SharedTransitionScope.DetailSheet(
                     is CardValue.Ready -> if (spec != null && ctx != null) DetailBody(spec.detail, ctx, value, state, accent.accent)
                 }
                 Spacer(Modifier.height(Space.s6))
-                val src = state.bundle?.sources?.values?.firstOrNull { spec != null && it.label.contains(spec.sourceLabel.take(8), true) }?.label ?: spec?.sourceLabel
-                Text("Source: $src", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+                val src = spec?.sourceLabel?.takeIf { it.length >= 8 }?.let { l -> state.bundle?.sources?.values?.firstOrNull { it.label.contains(l.take(8), true) }?.label } ?: spec?.sourceLabel
+                if (!src.isNullOrBlank()) Text(src, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                 state.freshness?.let { Text("Last updated ${it.fetchedAt.let { t -> state.context?.fmt?.time(t) ?: "" }}", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant) }
                 Spacer(Modifier.height(Space.s8))
             }
@@ -315,7 +315,7 @@ private fun WarningRow(w: WeatherWarning) {
         }
         Text(w.area, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
         Text(w.description.ifBlank { w.headline }, style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
-        Text("Source: ${w.source}", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+        Text(w.source, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
     }
 }
 

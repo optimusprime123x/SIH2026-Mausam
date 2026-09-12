@@ -30,7 +30,8 @@ enum class WeatherIcon(val assetName: String, val symbol: Boolean = false) {
     CALENDAR("celsius"), NOT_AVAILABLE("not-available"), SUN_HOT("sun-hot"), SNOWFLAKE("snowflake"), HAIL("hail"), HURRICANE("hurricane"), MIST("mist"),
     // Symbols (no Lottie file): activities and services that Meteocons has no picture for.
     RUN("", true), POLLEN("", true), TIDES("", true), SHIELD("", true), FLIGHT("", true), SCHOOL("", true),
-    AGRO("", true), TRAFFIC("", true), COMMUTE("", true), COMFORT("", true), LUGGAGE("", true), AIR("", true), PENDING("", true);
+    AGRO("", true), TRAFFIC("", true), COMMUTE("", true), COMFORT("", true), LUGGAGE("", true), AIR("", true), PENDING("", true),
+    HEART_BROKEN("", true);
 
     companion object {
         fun forCondition(c: dev.mausam.home.domain.model.WeatherCondition, isDay: Boolean): WeatherIcon = when (c) {

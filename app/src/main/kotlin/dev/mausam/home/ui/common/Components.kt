@@ -31,6 +31,7 @@ import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Flare
 import androidx.compose.material.icons.rounded.Flight
 import androidx.compose.material.icons.rounded.GppGood
+import androidx.compose.material.icons.rounded.HeartBroken
 import androidx.compose.material.icons.rounded.LocalFlorist
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.NightsStay
@@ -113,6 +114,7 @@ fun symbolFor(icon: WeatherIcon): ImageVector = when (icon) {
     WeatherIcon.COMFORT -> Icons.Rounded.Spa
     WeatherIcon.LUGGAGE -> Icons.Rounded.Luggage
     WeatherIcon.AIR -> Icons.Rounded.Air
+    WeatherIcon.HEART_BROKEN -> Icons.Rounded.HeartBroken
 }
 
 /**

@@ -78,7 +78,7 @@ fun placeholderIcon(cardId: String): WeatherIcon = when (cardId) {
     "health.pollen" -> WeatherIcon.POLLEN
     "beach.tides" -> WeatherIcon.TIDES
     "beach.sea" -> WeatherIcon.WAVES
-    "travel.destinations" -> WeatherIcon.FLIGHT
+    "travel.destinations" -> WeatherIcon.HEART_BROKEN
     "travel.packing" -> WeatherIcon.LUGGAGE
     "parents.school" -> WeatherIcon.SCHOOL
     "agri.rainfall" -> WeatherIcon.RAINDROP
@@ -206,7 +206,7 @@ private fun CardTitle(card: RenderedCard, stale: Boolean) {
 @Composable
 private fun SourceLine(card: RenderedCard, sourceInfo: SourceInfo?, freshness: Freshness?) {
     Text(
-        listOfNotNull(sourceInfo?.label ?: card.spec.sourceLabel, freshness?.label).joinToString(" · "),
+        listOfNotNull((sourceInfo?.label ?: card.spec.sourceLabel).ifBlank { null }, freshness?.label).joinToString(" · "),
         style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
     )
 }
