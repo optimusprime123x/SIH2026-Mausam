@@ -25,6 +25,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.MyLocation
+import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
@@ -50,6 +51,8 @@ import dev.mausam.home.R
 import dev.mausam.home.domain.cards.WeatherIcon
 import dev.mausam.home.domain.model.Formatter
 import dev.mausam.home.domain.model.SceneKind
+import dev.mausam.home.ui.common.GlassGroup
+import dev.mausam.home.ui.common.HairlineDivider
 import dev.mausam.home.ui.common.MeteoconIcon
 import dev.mausam.home.ui.glass.GlassTier
 import dev.mausam.home.ui.glass.mausamGlass
@@ -104,12 +107,30 @@ fun LocationsContent(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = Space.s4),
             )
             LazyColumn(contentPadding = PaddingValues(Space.s4)) {
-                if (results.isNotEmpty()) {
-                    items(results.size) { i ->
-                        val loc = results[i]
-                        Column(Modifier.fillMaxWidth().clip(MausamRadius.innerShape).clickable { onAdd(loc) }.padding(vertical = Space.s3, horizontal = Space.s2)) {
-                            Text(loc.name, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
-                            Text(loc.region ?: "", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                if (query.length >= 2) {
+                    if (results.isEmpty()) {
+                        item {
+                            Column(Modifier.fillMaxWidth().padding(top = Space.s8), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Image(painterResource(R.drawable.spot_search), contentDescription = null, modifier = Modifier.size(200.dp))
+                                Text("No place called \"$query\"", style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+                                Text("Try a district or a nearby city.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                            }
+                        }
+                    } else {
+                        item {
+                            GlassGroup(haze) {
+                                results.forEachIndexed { i, loc ->
+                                    Row(Modifier.fillMaxWidth().clickable { onAdd(loc) }.padding(horizontal = Space.s4, vertical = Space.s3), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Rounded.Place, contentDescription = null, tint = cs.primary)
+                                        Spacer(Modifier.width(Space.s3))
+                                        Column {
+                                            Text(loc.name, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
+                                            Text(loc.region ?: "", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                                        }
+                                    }
+                                    if (i < results.lastIndex) HairlineDivider()
+                                }
+                            }
                         }
                     }
                 } else {
@@ -156,7 +177,7 @@ fun LocationsContent(
                                 cur?.let {
                                     Text(fmt.temp(it.temperatureC), style = MaterialTheme.typography.displaySmall, color = Color.White)
                                     Spacer(Modifier.width(Space.s2))
-                                    MeteoconIcon(WeatherIcon.forCondition(it.condition, it.isDay), 64.dp, animated = false)
+                                    MeteoconIcon(WeatherIcon.forCondition(it.condition, it.isDay), 64.dp, animated = false, tint = Color.White)
                                 }
                             }
                         }

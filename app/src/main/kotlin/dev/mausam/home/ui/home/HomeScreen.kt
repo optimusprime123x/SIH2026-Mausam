@@ -32,7 +32,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.ui.zIndex
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -125,14 +126,24 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
     var toolbarExpanded by remember { mutableStateOf(true) }
     val collapse = (1f - (heroPx - heroMinPx) / (heroMaxPx - heroMinPx)).coerceIn(0f, 1f)
 
-    val connection = remember {
+    // One list state shared with the connection so "at the top" is known before the list scrolls.
+    val listState = rememberLazyListState()
+    val connection = remember(listState) {
         object : NestedScrollConnection {
+            private fun listAtTop() = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (available.y < -6f) toolbarExpanded = false else if (available.y > 6f) toolbarExpanded = true
+                // Scrolling up: the hero collapses before the list moves.
                 if (available.y < 0 && heroPx > heroMinPx) {
                     val consumed = maxOf(available.y, heroMinPx - heroPx)
                     heroPx += consumed
                     return Offset(0f, consumed)
+                }
+                // Dragging down at the top: the hero expands first; pull-to-refresh only arms once it is open.
+                if (available.y > 0 && heroPx < heroMaxPx && listAtTop()) {
+                    val take = minOf(available.y, heroMaxPx - heroPx)
+                    heroPx += take
+                    return Offset(0f, take)
                 }
                 return Offset.Zero
             }
@@ -146,6 +157,7 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
             }
         }
     }
+    val heroExpanded = heroPx >= heroMaxPx - 0.5f
 
     Box(Modifier.fillMaxSize()) {
         // Everything the glass samples lives in this one source layer.
@@ -160,7 +172,8 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
                     .height(440.dp)
                     .graphicsLayer {
                         translationY = -0.45f * (heroMaxPx - heroPx)
-                        alpha = (1f - collapse / 0.9f).coerceIn(0f, 1f)
+                        // Never fully gone: the collapsed glass bar still has sky to blur.
+                        alpha = 1f - 0.4f * collapse
                     },
             )
         }
@@ -173,8 +186,8 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
             ) { current ->
                 when (current) {
                     null -> HomeContent(
-                        state = state, actions = actions, haze = haze, connection = connection,
-                        heroPx = heroPx, collapse = collapse, toolbarExpanded = toolbarExpanded,
+                        state = state, actions = actions, haze = haze, connection = connection, listState = listState,
+                        heroPx = heroPx, collapse = collapse, toolbarExpanded = toolbarExpanded, refreshEnabled = heroExpanded,
                         animatedVisibilityScope = this@AnimatedContent,
                     )
                     is HomeOverlay.Detail -> DetailSheet(
@@ -194,12 +207,13 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
     actions: HomeActions,
     haze: HazeState,
     connection: NestedScrollConnection,
+    listState: androidx.compose.foundation.lazy.LazyListState,
     heroPx: Float,
     collapse: Float,
     toolbarExpanded: Boolean,
+    refreshEnabled: Boolean,
     animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope,
 ) {
-    val listState = rememberLazyListState()
     val ptr = rememberPullToRefreshState()
     val haptics = LocalHapticFeedback.current
     LaunchedEffect(ptr.distanceFraction >= 1f) {
@@ -219,18 +233,16 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
                 state.banner?.let { AlertBanner(it, haze, onClick = actions.openWarnings, onDismiss = actions.dismissBanner) }
             }
             Hero(state = state, heightPx = heroPx, collapse = collapse, haze = haze)
-            PullToRefreshBox(
-                isRefreshing = state.isRefreshing,
-                onRefresh = actions.refresh,
-                state = ptr,
-                modifier = Modifier.fillMaxSize(),
-                indicator = {
-                    PullToRefreshDefaults.LoadingIndicator(
-                        state = ptr, isRefreshing = state.isRefreshing, modifier = Modifier.align(Alignment.TopCenter),
-                        containerColor = cs.primaryContainer, color = cs.onPrimaryContainer,
-                    )
-                },
+            // Pull-to-refresh arms only once the hero is fully open, so a drag never fights the expansion.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .pullToRefresh(isRefreshing = state.isRefreshing, state = ptr, enabled = refreshEnabled, onRefresh = actions.refresh),
             ) {
+                PullToRefreshDefaults.LoadingIndicator(
+                    state = ptr, isRefreshing = state.isRefreshing, modifier = Modifier.align(Alignment.TopCenter).zIndex(1f),
+                    containerColor = cs.primaryContainer, color = cs.onPrimaryContainer,
+                )
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
@@ -242,7 +254,7 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
                     itemsIndexedKeyed(state.cards) { index, card ->
                         GlassCard(
                             card = card, index = index, haze = haze, freshness = state.freshness,
-                            sourceInfo = state.bundle?.sources?.values?.firstOrNull { it.label.contains(card.spec.sourceLabel.take(8), true) },
+                            sourceInfo = card.spec.sourceLabel.takeIf { it.length >= 8 }?.let { l -> state.bundle?.sources?.values?.firstOrNull { it.label.contains(l.take(8), true) } },
                             animatedVisibilityScope = animatedVisibilityScope,
                             refract = index < 2 && a11y.refraction,
                             onTap = { actions.openCard(card.spec.id) },

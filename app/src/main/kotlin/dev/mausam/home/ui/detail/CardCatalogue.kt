@@ -35,6 +35,7 @@ import dev.mausam.home.ui.common.SectionHeader
 import dev.mausam.home.ui.glass.GlassTier
 import dev.mausam.home.ui.glass.mausamGlass
 import dev.mausam.home.ui.home.HomeUiState
+import dev.mausam.home.ui.home.placeholderIcon
 import dev.mausam.home.ui.onboarding.personaIcon
 import dev.mausam.home.ui.theme.Fluent
 import dev.mausam.home.ui.theme.MausamRadius
@@ -70,7 +71,7 @@ fun CardCatalogue(state: HomeUiState, haze: HazeState, onToggle: (String, Boolea
                             val shown = pref?.hidden != true && (persona == Persona.GENERAL || persona in state.settings.personas || pref?.added == true)
                             val accent = accentSet(Fluent.forCard(spec.id))
                             Row(Modifier.fillMaxWidth().padding(vertical = Space.s2), verticalAlignment = Alignment.CenterVertically) {
-                                AccentIconDisc(null, accent, 36.dp, animated = false)
+                                AccentIconDisc(placeholderIcon(spec.id), accent, 36.dp, animated = false)
                                 Spacer(Modifier.width(Space.s3))
                                 Column(Modifier.weight(1f)) {
                                     Text(spec.title, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)

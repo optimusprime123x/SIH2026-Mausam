@@ -1,6 +1,12 @@
 package dev.mausam.home.ui.home
 
+import androidx.compose.animation.core.EaseInOutSine
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +47,7 @@ import dev.mausam.home.ui.common.MeteoconIcon
 import dev.mausam.home.ui.common.RollingValue
 import dev.mausam.home.ui.glass.GlassTier
 import dev.mausam.home.ui.glass.mausamGlass
+import dev.mausam.home.ui.theme.LocalMausamA11y
 import dev.mausam.home.ui.theme.Space
 import dev.mausam.home.ui.theme.robotoFlexAt
 import kotlin.math.roundToInt
@@ -65,6 +72,12 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState) 
     val weight = (200 + (300 * collapse).toInt()).let { (it / 25) * 25 }
     val family = remember(weight) { robotoFlexAt(weight, opsz = 64f) }
     val collapsed = collapse > 0.6f
+    // The condition icon floats: a slow 4 dp bob, off under reduce-motion.
+    val a11y = LocalMausamA11y.current
+    val bob = if (a11y.sceneAnimated) {
+        val t = rememberInfiniteTransition(label = "bob")
+        t.animateFloat(-4f, 4f, infiniteRepeatable(tween(2600, easing = EaseInOutSine), RepeatMode.Reverse), label = "bobY").value
+    } else 0f
     val barShape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
     val ink = if (collapsed) cs.onSurface else Color.White
     val inkSoft = if (collapsed) cs.onSurfaceVariant else Color.White.copy(alpha = 0.86f)
@@ -96,7 +109,7 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState) 
                     Text(state.location?.name ?: "", style = MaterialTheme.typography.titleSmall, color = ink, maxLines = 1)
                     Text(cur?.condition?.label() ?: "", style = MaterialTheme.typography.labelSmall, color = inkSoft, maxLines = 1)
                 }
-                if (cur != null) MeteoconIcon(WeatherIcon.forCondition(cur.condition, cur.isDay), size = 40.dp)
+                if (cur != null) MeteoconIcon(WeatherIcon.forCondition(cur.condition, cur.isDay), size = 40.dp, tint = ink)
             }
         } else {
             Column(Modifier.fillMaxSize().padding(horizontal = Space.screenMargin, vertical = Space.s4), verticalArrangement = Arrangement.Bottom) {
@@ -115,7 +128,12 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState) 
                             style = MaterialTheme.typography.titleMedium, color = ink, fontWeight = FontWeight.Medium,
                         )
                     }
-                    if (cur != null) MeteoconIcon(WeatherIcon.forCondition(cur.condition, cur.isDay), size = 112.dp)
+                    if (cur != null) {
+                        MeteoconIcon(
+                            icon = WeatherIcon.forCondition(cur.condition, cur.isDay), size = 112.dp, tint = Color.White,
+                            modifier = Modifier.graphicsLayer { this.translationY = bob * this.density },
+                        )
+                    }
                 }
                 Spacer(Modifier.height(Space.s2))
                 Row(horizontalArrangement = Arrangement.spacedBy(Space.s2)) {
@@ -134,12 +152,12 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState) 
     }
 }
 
+/** A small glass pill over the scene: toolbar-tier blur with a deep-blue tint so white text reads on any sky. */
 @Composable
 private fun HeroChip(text: String, haze: HazeState) {
     Box(
         Modifier
-            .clip(RoundedCornerShape(50))
-            .background(Color.White.copy(alpha = 0.16f))
+            .mausamGlass(haze, GlassTier.TOOLBAR, RoundedCornerShape(50), tint = Color(0xFF1B2A44), shadow = false)
             .padding(horizontal = Space.s3, vertical = 5.dp),
     ) {
         Text(text, style = MaterialTheme.typography.labelLarge, color = Color.White, maxLines = 1, softWrap = false)

@@ -1,6 +1,16 @@
 package dev.mausam.home.ui.home
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -83,18 +93,24 @@ fun HomeToolbar(
             }
         }
         val shape = RoundedCornerShape(fabCorner)
+        val interaction = remember { MutableInteractionSource() }
+        val pressed by interaction.collectIsPressedAsState()
+        val press by animateFloatAsState(if (pressed) 0.92f else 1f, spring(dampingRatio = 0.5f, stiffness = 600f), label = "fabPress")
         Box(
             Modifier
                 .size(fabSize)
+                .graphicsLayer { scaleX = press; scaleY = press }
                 .shadow(8.dp, shape, ambientColor = cs.primary.copy(alpha = 0.3f), spotColor = cs.primary.copy(alpha = 0.4f))
                 .clip(shape)
                 .background(Brush.linearGradient(listOf(cs.primary, cs.primaryContainer)))
-                .clickable(onClick = onRefresh)
+                .clickable(interactionSource = interaction, indication = null, onClick = onRefresh)
                 .semantics { role = Role.Button; contentDescription = if (refreshing) "Refreshing" else "Refresh" },
             contentAlignment = Alignment.Center,
         ) {
-            if (refreshing) LoadingIndicator(Modifier.size(fabSize * 0.6f), color = cs.onPrimary)
-            else Icon(Icons.Rounded.Refresh, contentDescription = null, tint = cs.onPrimary, modifier = Modifier.size(fabSize * 0.42f))
+            AnimatedContent(refreshing, transitionSpec = { scaleIn() + fadeIn() togetherWith scaleOut() + fadeOut() }, label = "fabIcon") { busy ->
+                if (busy) LoadingIndicator(Modifier.size(fabSize * 0.6f), color = cs.onPrimary)
+                else Icon(Icons.Rounded.Refresh, contentDescription = null, tint = cs.onPrimary, modifier = Modifier.size(fabSize * 0.42f))
+            }
         }
     }
 }

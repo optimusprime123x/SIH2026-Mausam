@@ -1,49 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
-  <!-- "Offline / bundled sample data": muted lavender cloud carrying a broken (dashed) wifi symbol with a rose slash.
-       Wifi centre is (120,112); arcs are annular sectors. Light from top-left. -->
+  <!-- 'Offline / sample data': soft lavender cloud with a muted no-signal mark (three arcs, slashed). Light from top-left.
+       Generated geometry: only path/circle/ellipse/rect + userSpaceOnUse gradients, no transforms, no strokes. -->
   <defs>
-    <linearGradient id="cloud" gradientUnits="userSpaceOnUse" x1="80" y1="70" x2="170" y2="150">
-      <stop offset="0" stop-color="#F1EEFF"/>
-      <stop offset="1" stop-color="#D6CFF8"/>
+    <linearGradient id="cloud" gradientUnits="userSpaceOnUse" x1="70" y1="60" x2="176" y2="140">
+      <stop offset="0" stop-color="#F7F4FF"/>
+      <stop offset="0.5" stop-color="#EEE9FF"/>
+      <stop offset="1" stop-color="#D5CCF6"/>
     </linearGradient>
-    <linearGradient id="slash" gradientUnits="userSpaceOnUse" x1="100" y1="80" x2="140" y2="122">
-      <stop offset="0" stop-color="#FF8AB0"/>
-      <stop offset="1" stop-color="#FF6B9A"/>
+    <linearGradient id="slash" gradientUnits="userSpaceOnUse" x1="100" y1="82" x2="140" y2="122">
+      <stop offset="0" stop-color="#FF8FB3"/>
+      <stop offset="1" stop-color="#FF5F92"/>
     </linearGradient>
   </defs>
-
-  <!-- backdrop blobs -->
-  <path fill="#A78BFA" fill-opacity="0.24" d="M28,110 C22,62 68,26 126,30 C186,34 226,70 218,120 C210,168 156,192 100,184 C50,177 34,154 28,110 Z"/>
-  <path fill="#6B7BFF" fill-opacity="0.18" d="M150,150 C160,128 190,124 208,138 C226,152 226,180 208,190 C190,200 162,194 152,178 C146,168 146,160 150,150 Z"/>
-
-  <!-- cloud shade (offset to bottom-right) -->
-  <rect x="64" y="112" width="120" height="28" rx="14" fill="#B9AEF3"/>
-  <circle cx="92" cy="110" r="26" fill="#B9AEF3"/>
-  <circle cx="128" cy="94" r="35" fill="#B9AEF3"/>
-  <circle cx="162" cy="114" r="22" fill="#B9AEF3"/>
-  <!-- cloud body -->
-  <rect x="60" y="108" width="120" height="28" rx="14" fill="url(#cloud)"/>
-  <circle cx="88" cy="106" r="26" fill="url(#cloud)"/>
-  <circle cx="124" cy="90" r="35" fill="url(#cloud)"/>
-  <circle cx="158" cy="110" r="22" fill="url(#cloud)"/>
-
-  <!-- wifi arcs (broken into dashes), indigo -->
-  <circle cx="120" cy="112" r="5" fill="#6B7BFF"/>
-  <path fill="#6B7BFF" d="M107.98,99.98 A17,17 0 0 1 132.02,99.98 A2.5,2.5 0 0 1 128.49,103.51 A12,12 0 0 0 111.51,103.51 A2.5,2.5 0 0 1 107.98,99.98 Z"/>
-  <path fill="#6B7BFF" d="M100.91,92.91 A27,27 0 0 1 116.24,85.26 A2.5,2.5 0 0 1 116.94,90.21 A22,22 0 0 0 104.44,96.44 A2.5,2.5 0 0 1 100.91,92.91 Z"/>
-  <path fill="#6B7BFF" d="M123.76,85.26 A27,27 0 0 1 139.09,92.91 A2.5,2.5 0 0 1 135.56,96.44 A22,22 0 0 0 123.06,90.21 A2.5,2.5 0 0 1 123.76,85.26 Z"/>
-  <path fill="#6B7BFF" fill-opacity="0.7" d="M93.84,85.84 A37,37 0 0 1 107.35,77.23 A2.5,2.5 0 0 1 109.06,81.93 A32,32 0 0 0 97.37,89.37 A2.5,2.5 0 0 1 93.84,85.84 Z"/>
-  <path fill="#6B7BFF" fill-opacity="0.7" d="M112.31,75.81 A37,37 0 0 1 127.69,75.81 A2.5,2.5 0 0 1 126.65,80.7 A32,32 0 0 0 113.35,80.7 A2.5,2.5 0 0 1 112.31,75.81 Z"/>
-  <path fill="#6B7BFF" fill-opacity="0.7" d="M132.65,77.23 A37,37 0 0 1 146.16,85.84 A2.5,2.5 0 0 1 142.63,89.37 A32,32 0 0 0 130.94,81.93 A2.5,2.5 0 0 1 132.65,77.23 Z"/>
-
-  <!-- slash: a cloud-coloured gap first, then the rose bar -->
-  <path fill="url(#cloud)" d="M94.05,84.95 L136.05,126.95 A7,7 0 0 1 145.95,117.05 L103.95,75.05 A7,7 0 0 1 94.05,84.95 Z"/>
-  <path fill="url(#slash)" d="M96.88,82.12 L138.88,124.12 A3,3 0 0 1 143.12,119.88 L101.12,77.88 A3,3 0 0 1 96.88,82.12 Z"/>
-
-  <!-- muted sparkles / drifting dots -->
-  <circle cx="52" cy="70" r="3" fill="#A78BFA"/>
-  <circle cx="196" cy="60" r="2.6" fill="#6B7BFF"/>
-  <circle cx="40" cy="146" r="2.2" fill="#4CC2FF"/>
-  <circle cx="184" cy="160" r="2.4" fill="#A78BFA"/>
-  <path fill="#A78BFA" fill-opacity="0.8" d="M186,32 C187,38 189,40 195,41 C189,42 187,44 186,50 C185,44 183,42 177,41 C183,40 185,38 186,32 Z"/>
+  <path fill="#A78BFA" fill-opacity="0.22" d="M212.63,141.81 C203.48,157.95 176.64,172.97 154.49,179.42 C132.34,185.87 99.88,188.12 79.74,180.5 C59.6,172.89 41.73,151.44 33.67,133.72 C25.61,116 22.12,90.51 31.37,74.19 C40.62,57.88 67.02,42.28 89.17,35.83 C111.31,29.38 144.22,27.71 164.26,35.5 C184.3,43.28 201.33,64.83 209.39,82.55 C217.45,100.27 221.78,125.67 212.63,141.81 Z"/>
+  <path fill="#6B7BFF" fill-opacity="0.18" d="M235.39,165.9 C233.45,173.42 224.83,181.03 217.11,185.62 C209.38,190.22 197.76,194.67 189.05,193.48 C180.35,192.3 169.89,185.03 164.87,178.53 C159.86,172.02 157.61,162.18 158.97,154.45 C160.34,146.72 165.77,136.58 173.06,132.15 C180.34,127.72 193.38,126.46 202.67,127.86 C211.95,129.25 223.31,134.16 228.77,140.5 C234.22,146.84 237.34,158.38 235.39,165.9 Z"/>
+  <path fill="#6B7BFF" fill-opacity="0.28" d="M76,144 L172,144 A14,14 0 0 0 183.6,122.16 A22,22 0 0 0 162,96 A36,36 0 0 0 90.9,88.02 A26,26 0 0 0 65.04,121.29 A14,14 0 0 0 76,144 Z"/>
+  <path fill="url(#cloud)" d="M72,138 L168,138 A14,14 0 0 0 179.6,116.16 A22,22 0 0 0 158,90 A36,36 0 0 0 86.9,82.02 A26,26 0 0 0 61.04,115.29 A14,14 0 0 0 72,138 Z"/>
+  <path fill="#FFFFFF" fill-opacity="0.6" d="M88.02,84.01 A34.5,34.5 0 0 1 127.99,56.02 A48.3,48.3 0 0 0 88.02,84.01 Z"/>
+  <path fill="#FFFFFF" fill-opacity="0.5" d="M61.87,103.75 A24.5,24.5 0 0 1 81.75,83.87 A36.75,36.75 0 0 0 61.87,103.75 Z"/>
+  <circle cx="120" cy="120" r="6" fill="#6B7BFF"/>
+  <path fill="#6B7BFF" fill-opacity="1" d="M107.27,107.27 A18,18 0 0 1 132.73,107.27 A2.75,2.75 0 0 1 128.84,111.16 A12.5,12.5 0 0 0 111.16,111.16 A2.75,2.75 0 0 1 107.27,107.27 Z"/>
+  <path fill="#6B7BFF" fill-opacity="0.78" d="M99.85,99.85 A28.5,28.5 0 0 1 140.15,99.85 A2.75,2.75 0 0 1 136.26,103.74 A23,23 0 0 0 103.74,103.74 A2.75,2.75 0 0 1 99.85,99.85 Z"/>
+  <path fill="#6B7BFF" fill-opacity="0.56" d="M92.42,92.42 A39,39 0 0 1 147.58,92.42 A2.75,2.75 0 0 1 143.69,96.31 A33.5,33.5 0 0 0 96.31,96.31 A2.75,2.75 0 0 1 92.42,92.42 Z"/>
+  <path fill="url(#cloud)" d="M88.7,85.3 L140.7,137.3 A7.5,7.5 0 0 0 151.3,126.7 L99.3,74.7 A7.5,7.5 0 0 0 88.7,85.3 Z"/>
+  <path fill="url(#slash)" d="M93.7,84.3 L141.7,132.3 A3.25,3.25 0 0 0 146.3,127.7 L98.3,79.7 A3.25,3.25 0 0 0 93.7,84.3 Z"/>
+  <path fill="#A78BFA" d="M188,29 Q189.54,34.46 195,36 Q189.54,37.54 188,43 Q186.46,37.54 181,36 Q186.46,34.46 188,29 Z"/>
+  <circle cx="48" cy="66" r="3" fill="#A78BFA"/>
+  <circle cx="198" cy="66" r="2.6" fill="#6B7BFF"/>
+  <circle cx="38" cy="146" r="2.2" fill="#4CC2FF"/>
+  <circle cx="178" cy="164" r="2.4" fill="#A78BFA"/>
 </svg>

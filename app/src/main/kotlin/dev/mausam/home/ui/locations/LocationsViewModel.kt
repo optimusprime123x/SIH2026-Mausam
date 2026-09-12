@@ -26,9 +26,9 @@ class LocationsViewModel(private val graph: AppGraph) : ViewModel() {
 
     val rows: StateFlow<List<LocationRow>> = repo.locations.flatMapLatest { list ->
         if (list.isEmpty()) flowOf(emptyList())
-        else combine(list.map { loc -> repo.bundle(loc).map { loc to it } }) { pairs ->
-            val primaryId = repo.primaryLocation()?.id
-            pairs.map { (loc, b) -> LocationRow(loc, b, loc.id == primaryId) }
+        else combine(combine(list.map { loc -> repo.bundle(loc).map { loc to it } }) { it.toList() }, repo.primaryLocationId) { pairs, primaryId ->
+            val effective = primaryId ?: list.firstOrNull()?.id
+            pairs.map { (loc, b) -> LocationRow(loc, b, loc.id == effective) }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 

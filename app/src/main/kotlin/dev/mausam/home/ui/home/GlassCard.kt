@@ -2,6 +2,7 @@ package dev.mausam.home.ui.home
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -71,6 +72,23 @@ fun toneColor(tone: Tone): Color? {
     }
 }
 
+/** What a card is about, for its pending or empty state. */
+fun placeholderIcon(cardId: String): WeatherIcon = when (cardId) {
+    "health.aqi" -> WeatherIcon.AIR
+    "health.pollen" -> WeatherIcon.POLLEN
+    "beach.tides" -> WeatherIcon.TIDES
+    "beach.sea" -> WeatherIcon.WAVES
+    "travel.destinations" -> WeatherIcon.HEART_BROKEN
+    "travel.packing" -> WeatherIcon.LUGGAGE
+    "parents.school" -> WeatherIcon.SCHOOL
+    "agri.rainfall" -> WeatherIcon.RAINDROP
+    "agri.advisory" -> WeatherIcon.AGRO
+    "fitness.run" -> WeatherIcon.RUN
+    "events.comfort" -> WeatherIcon.COMFORT
+    "general.warnings", "parents.severe", "travel.severe" -> WeatherIcon.SHIELD
+    else -> WeatherIcon.PENDING
+}
+
 private fun toneLabel(tone: Tone) = when (tone) {
     Tone.GOOD -> "Good"; Tone.CAUTION -> "Caution"; Tone.WARNING -> "Watch"; Tone.DANGER -> "Danger"; Tone.NEUTRAL -> ""
 }
@@ -127,8 +145,7 @@ fun SharedTransitionScope.GlassCard(
     }
     val icon = when (value) {
         is CardValue.Ready -> value.icon
-        is CardValue.Pending -> WeatherIcon.NOT_AVAILABLE
-        is CardValue.Unavailable -> null
+        is CardValue.Pending, is CardValue.Unavailable -> placeholderIcon(card.spec.id)
     }
 
     Box(
@@ -144,6 +161,7 @@ fun SharedTransitionScope.GlassCard(
                 resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(),
             )
             .mausamGlass(haze, GlassTier.CARD, MausamRadius.cardShape, pressed = pressed, wash = accent.wash)
+            .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
             .lensEdge(MausamRadius.Card, enabled = refract)
             .pointerInput(card.spec.id) {
                 detectTapGestures(
@@ -188,7 +206,7 @@ private fun CardTitle(card: RenderedCard, stale: Boolean) {
 @Composable
 private fun SourceLine(card: RenderedCard, sourceInfo: SourceInfo?, freshness: Freshness?) {
     Text(
-        listOfNotNull(sourceInfo?.label ?: card.spec.sourceLabel, freshness?.label).joinToString(" · "),
+        listOfNotNull((sourceInfo?.label ?: card.spec.sourceLabel).ifBlank { null }, freshness?.label).joinToString(" · "),
         style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
     )
 }

@@ -45,6 +45,7 @@ class InMemoryHomeRepository(
     override suspend fun currentLocations(): List<Location> = locationsFlow.value
     override suspend fun primaryLocation(): Location? =
         locationsFlow.value.firstOrNull { it.id == primaryId.value } ?: locationsFlow.value.firstOrNull()
+    override val primaryLocationId: Flow<String?> = primaryId
     override suspend fun setPrimary(locationId: String) { primaryId.value = locationId }
     override suspend fun addLocation(location: Location) {
         locationsFlow.update { list -> if (list.any { it.id == location.id }) list else list + location }

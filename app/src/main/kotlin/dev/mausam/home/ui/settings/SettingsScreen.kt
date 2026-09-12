@@ -4,7 +4,10 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.res.painterResource
+import dev.mausam.home.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -143,6 +146,7 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
 
                 SectionHeader("Daily briefs", Icons.Rounded.Notifications, Fluent.Amber, "A morning and evening note for your persona")
                 GlassGroup(haze, wash = Fluent.Amber.copy(alpha = 0.16f)) {
+                    Image(painterResource(R.drawable.spot_brief), contentDescription = null, modifier = Modifier.fillMaxWidth().height(150.dp).padding(top = Space.s2))
                     TimeRow("Morning brief", s.morningBrief, fmt) { picking = "morning" }
                     HairlineDivider()
                     TimeRow("Evening brief", s.eveningBrief, fmt) { picking = "evening" }

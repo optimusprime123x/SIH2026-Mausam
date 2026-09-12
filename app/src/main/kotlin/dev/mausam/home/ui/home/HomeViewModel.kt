@@ -68,8 +68,7 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
     private val _refreshCompleted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val refreshCompleted: SharedFlow<Unit> = _refreshCompleted
 
-    private val primary = repo.locations.map { list ->
-        val id = repo.primaryLocation()?.id
+    private val primary = combine(repo.locations, repo.primaryLocationId) { list, id ->
         list.firstOrNull { it.id == id } ?: list.firstOrNull()
     }
 

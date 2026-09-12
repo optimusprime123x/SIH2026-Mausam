@@ -57,8 +57,9 @@ fun Modifier.fluentShadow(tier: GlassTier, shape: Shape): Modifier {
 }
 
 /**
- * The 1 dp specular edge: a diagonal gradient stroke inside the clip, white at 45 % top-left
- * (55 % in dark), a faint 8 % bounce on the far edge. Rotates 20° while pressed.
+ * The 1 dp specular edge: a diagonal gradient stroke inside the clip, white at 16 % top-left
+ * (20 % in dark), a faint 4 % bounce on the far edge. Subtle on purpose: it should read as a
+ * catch-light on the glass, never as a border. Rotates 20° while pressed.
  */
 @Composable
 fun Modifier.specularRim(shape: Shape, pressed: Boolean): Modifier {
@@ -67,7 +68,7 @@ fun Modifier.specularRim(shape: Shape, pressed: Boolean): Modifier {
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "rim",
     )
-    val top = if (LocalIsDark.current) 0.55f else 0.45f
+    val top = if (LocalIsDark.current) 0.20f else 0.16f
     val clear = Color.White.copy(alpha = 0f)
     return this.drawWithContent {
         drawContent()
@@ -76,9 +77,9 @@ fun Modifier.specularRim(shape: Shape, pressed: Boolean): Modifier {
         val dy = sin(rad).toFloat() * size.height
         val brush = Brush.linearGradient(
             0.00f to Color.White.copy(alpha = top),
-            0.28f to Color.White.copy(alpha = 0.14f),
+            0.28f to Color.White.copy(alpha = 0.06f),
             0.55f to clear,
-            0.85f to Color.White.copy(alpha = 0.08f),
+            0.85f to Color.White.copy(alpha = 0.04f),
             1.00f to clear,
             start = Offset(size.width / 2 - dx / 2, size.height / 2 - dy / 2),
             end = Offset(size.width / 2 + dx / 2, size.height / 2 + dy / 2),

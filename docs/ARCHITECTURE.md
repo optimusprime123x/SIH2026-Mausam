@@ -92,16 +92,42 @@ Three languages, one layer each:
 * **Structure and components: Material 3 Expressive** (material3 1.5.0-alpha27): `MaterialExpressiveTheme`,
   `MotionScheme.expressive()`, `HorizontalFloatingToolbar`, `LoadingIndicator`, `ButtonGroup`,
   `MaterialShapes` for persona tiles, Roboto Flex variable font.
-* **Surfaces: Liquid Glass with the Fluent acrylic recipe** via Haze: backdrop blur 24–32 dp,
-  surface tint 55–70 %, noise 2–4 %, 1 dp specular gradient stroke (white 35 % top-left → 0),
-  AGSL refraction only on API 33+. Concentric corners 28 / 20 / 12 dp.
+* **Surfaces: Liquid Glass with the Fluent acrylic recipe** via Haze: backdrop blur 24–36 dp,
+  surface tint 50–90 % by tier, noise 2–4 %, 1 dp specular gradient stroke (white 45 % top-left → 0),
+  AGSL refraction only on API 33+. Concentric corners 28 / 20 / 12 dp. Everything the glass
+  samples sits in one Haze source: the aurora backdrop (three drifting blobs in the theme's
+  primary, tertiary and secondary containers) plus the hero scene. Cards, the banner, the
+  toolbar pill, the collapsed hero bar, the hero chips, the sheet and the persona tiles are glass.
 * **Depth and layout: Fluent 2**: four tiers (scene 0, cards 1, toolbar+banner 2, sheet 3),
   soft coloured shadows, 4 dp grid, 16 dp margins, 12 dp gaps, mica-style tinted base.
 
 Two corrections to the spec, both applied: the expressive springs are the library's own
 (spatial 0.8/380, fast 0.6/800, slow 0.8/200; effects 1.0/1600, 3800, 800), never the spec's
-700/1400, so `MaterialTheme.motionScheme` is always used; and the glass tint floor is 0.72
-(0.85 in large-text mode) because 0.55 fails WCAG AA over a sunlit-cloud scene.
+700/1400, so `MaterialTheme.motionScheme` is always used; and the glass tint floors at 0.72
+only over the raw scene (hero bar), while cards over the soft aurora run at 0.52–0.60 because
+the backdrop itself is low-contrast (large-text mode adds 0.20 everywhere).
+
+**Colour.** A Fluent-inspired accent per card and per persona (`ui.theme.Accents`), nudged
+12 % toward the theme primary so a wallpaper palette still ties the page together. Each card
+carries its accent as a top-left wash on the glass and an icon disc; tone (good / caution /
+watch / danger) is a small chip, never the whole card.
+
+**Icons.** Meteocons (animated Lottie) for weather; Material symbols for activities and
+services Meteocons has no picture for (running, pollen, tides, school run, agromet, traffic,
+commute, comfort, packing, air). `WeatherIcon.symbol` marks the latter; `ui.common.symbolFor`
+also supplies the static stand-in used in previews and while a Lottie file loads. Pending and
+empty cards show the icon of what they are about, never a generic "not available" glyph.
+
+**Scene.** `ui.scene.WeatherScene` paints a time-of-day sky (warm near sunrise and sunset),
+a vector sun or moon on an arc, drifting vector clouds (storm variants for rain), rolling hills
+and an Indian skyline in front, then rain, stars, fog bands or lightning. Layers move at
+different rates with the hero collapse. The canvas fills its box; gradients never end in
+`Color.Transparent` (black at zero alpha), always the same hue at zero alpha.
+
+**Motion.** Card stagger-in, press scale with rim rotation, digit roll on value change,
+`animateContentSize`, card→sheet morph with `scaleToBounds` (no remeasure mid-flight), chart
+bars that grow in, a bobbing hero icon and breathing sun, bouncy persona selection
+(spring 0.45/420), slide-and-fade route transitions, a toolbar pill that shrinks into the FAB.
 
 The card→sheet morph is an in-window sheet (`ui.detail.DetailSheet`), not `ModalBottomSheet`,
 because a dialog window can neither share elements nor sample the scene for blur.
