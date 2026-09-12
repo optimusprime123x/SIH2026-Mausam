@@ -37,6 +37,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
@@ -114,20 +116,22 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                 if (cur != null) MeteoconIcon(WeatherIcon.forCondition(cur.condition, cur.isDay), size = 40.dp, tint = ink)
             }
         } else {
+            // A soft drop shadow keeps white type legible on pale skies (fog, noon) without a heavier scrim.
+            val lift = Shadow(Color(0x66081020), Offset(0f, 2f), blurRadius = 10f)
             Column(Modifier.fillMaxSize().padding(horizontal = Space.screenMargin, vertical = Space.s4), verticalArrangement = Arrangement.Bottom) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(state.location?.name ?: "—", style = MaterialTheme.typography.titleLargeEmphasized, color = ink)
+                        Text(state.location?.name ?: "—", style = MaterialTheme.typography.titleLargeEmphasized.copy(shadow = lift), color = ink)
                         RollingValue(
                             text = cur?.let { fmt.temp(it.temperatureC) } ?: "—",
                             numeric = cur?.temperatureC,
-                            style = MaterialTheme.typography.displayLarge.copy(fontSize = fontSize, fontFamily = family, lineHeight = fontSize * 1.05f),
+                            style = MaterialTheme.typography.displayLarge.copy(fontSize = fontSize, fontFamily = family, lineHeight = fontSize * 1.05f, shadow = lift),
                             color = ink,
                         )
                         val hiLo = state.bundle?.daily?.firstOrNull()?.let { "H ${fmt.temp(it.maxC)}  L ${fmt.temp(it.minC)}" }
                         Text(
                             listOfNotNull(cur?.condition?.label(), hiLo).joinToString("  ·  "),
-                            style = MaterialTheme.typography.titleMedium, color = ink, fontWeight = FontWeight.Medium,
+                            style = MaterialTheme.typography.titleMedium.copy(shadow = lift), color = ink, fontWeight = FontWeight.Medium,
                         )
                     }
                     if (cur != null) {
@@ -146,7 +150,7 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                 Spacer(Modifier.height(Space.s2))
                 Text(
                     state.freshness?.label ?: "loading…",
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelMedium.copy(shadow = lift),
                     color = if (state.freshness?.isStale == true) Color(0xFFFFD27A) else inkSoft,
                 )
             }
