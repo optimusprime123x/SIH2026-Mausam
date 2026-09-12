@@ -6,6 +6,26 @@ package dev.mausam.home.domain.i18n
  */
 object HindiCards {
     val table: Map<String, String> = mapOf(
+        // Soil moisture
+        "Soil moisture" to "मिट्टी की नमी",
+        "Open-Meteo soil model" to "Open-Meteo मृदा मॉडल",
+        "Soil moisture needs a fresh forecast" to "मिट्टी की नमी के लिए ताज़ा पूर्वानुमान चाहिए",
+        "Very dry" to "बहुत सूखी",
+        "Dry" to "सूखी",
+        "Adequate" to "पर्याप्त",
+        "Wet" to "गीली",
+        "Saturated" to "जलमग्न",
+        "rising" to "बढ़ रही",
+        "drying" to "सूख रही",
+        "steady" to "स्थिर",
+        "root zone %d%%" to "जड़ क्षेत्र %d%%",
+        "% top 9 cm" to "% ऊपरी 9 cm",
+        "Top soil is drying out; irrigate unless rain is due in the next day." to "ऊपरी मिट्टी सूख रही है; अगले दिन बारिश न हो तो सिंचाई करें।",
+        "Soil water in the top 9 cm is in a comfortable range for most crops." to "ऊपरी 9 cm में मिट्टी की नमी अधिकांश फ़सलों के लिए ठीक है।",
+        "Top soil is wet; hold irrigation and check drainage in low fields." to "ऊपरी मिट्टी गीली है; सिंचाई रोकें और निचले खेतों में जल निकासी जाँचें।",
+        "Soil is saturated; avoid field traffic and watch for waterlogging." to "मिट्टी जलमग्न है; खेत में आवाजाही से बचें और जलभराव पर नज़र रखें।",
+        "Soil temperature at 6 cm: %s." to "6 cm पर मिट्टी का तापमान: %s।",
+        "Volumetric water content from the Open-Meteo soil model; field capacity varies with soil type, so treat thresholds as a guide." to "Open-Meteo मृदा मॉडल से आयतनी जल अंश; क्षेत्र क्षमता मिट्टी के प्रकार पर निर्भर करती है, इसलिए सीमाओं को संकेत मानें।",
         // ---- Card titles
         "Air quality" to "वायु गुणवत्ता",
         "Humidity" to "आर्द्रता",
