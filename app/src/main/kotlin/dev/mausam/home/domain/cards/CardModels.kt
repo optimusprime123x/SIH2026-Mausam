@@ -26,7 +26,8 @@ enum class WeatherIcon(val assetName: String) {
     SNOW("snow"), WIND("wind"), HUMIDITY("humidity"), UV_INDEX("uv-index"), SUNRISE("sunrise"), SUNSET("sunset"),
     THERMOMETER("thermometer"), THERMOMETER_WARMER("thermometer-warmer"), THERMOMETER_COLDER("thermometer-colder"),
     RAINDROPS("raindrops"), RAINDROP("raindrop"), UMBRELLA("umbrella"), COMPASS("compass"),
-    ALERT("code-orange"), TIDE("tide"), WAVES("waves"), STAR("star"), CALENDAR("celsius");
+    ALERT("code-orange"), ALERT_YELLOW("code-yellow"), ALERT_RED("code-red"), TIDE("tide-low"), WAVES("tide-high"), STAR("star"),
+    CALENDAR("celsius"), NOT_AVAILABLE("not-available"), SUN_HOT("sun-hot"), SNOWFLAKE("snowflake"), HAIL("hail"), HURRICANE("hurricane"), MIST("mist");
 
     companion object {
         fun forCondition(c: dev.mausam.home.domain.model.WeatherCondition, isDay: Boolean): WeatherIcon = when (c) {

@@ -19,6 +19,11 @@ android {
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        // data.gov.in keys are per-user and free; the public sample key is rate-limited. Override with
+        // -PcpcbApiKey=... or cpcbApiKey= in ~/.gradle/gradle.properties.
+        val cpcbKey = (project.findProperty("cpcbApiKey") as String?) ?: "579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b"
+        buildConfigField("String", "CPCB_API_KEY", "\"$cpcbKey\"")
     }
 
     buildTypes {
@@ -73,7 +78,6 @@ kotlin {
 }
 
 ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
     arg("room.incremental", "true")
 }
 

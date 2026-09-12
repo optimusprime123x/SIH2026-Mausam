@@ -11,7 +11,7 @@ Personalised homepage module for the Mausam app (SIH26076). Single `:app` module
 | Gradle | 9.6.0 | AGP 9.4 minimum |
 | Kotlin | 2.4.20, KSP 2.3.12 | Current stable; matches the Compose compiler plugin |
 | compileSdk / targetSdk / minSdk | 37 / 37 / 26 | Spec says min 26 |
-| Compose BOM | 2026.09.00 → material3 **1.4.0 stable**, ui 1.12.1 | Expressive APIs are stable in 1.4.0, no alpha needed |
+| Compose BOM | 2026.09.00 → ui 1.12.1; material3 pinned to **1.5.0-alpha27** | 1.4.0 ships only the tokens for FloatingToolbar / LoadingIndicator / MaterialShapes; the components need the 1.5 alpha (pairs with foundation 1.12) |
 | Haze 1.7.3, Lottie 6.7.1, compose-shimmer 1.5.0 | | Glass, Meteocons, skeletons |
 | Room 2.8.5, DataStore 1.2.1, WorkManager 2.11.2, Glance 1.2.0 | | Cache, prefs, background, widget |
 | Retrofit 3.0.0 + kotlinx-serialization converter, OkHttp 4.12.0 | | Network |
@@ -61,8 +61,10 @@ widget.*        Glance widget, reads the cache only.
 
 ### Data
 
-`HomeRepository` (domain interface) is the only door. Implementation notes and the concrete
-source-per-card matrix live in `docs/DATA_SOURCES.md` (written from the API research).
+`HomeRepository` (domain interface) is the only door. `HomeRepositoryImpl` fetches each source
+in parallel, stores the raw payload per (source, location) in Room, and `WeatherAssembler`
+re-assembles the normalised bundle on every read. The source-per-card matrix, the IMD colour-code
+findings and the fallback chain are in `docs/DATA_SOURCES.md`.
 
 Rules that hold regardless of provider:
 
@@ -87,7 +89,7 @@ Rules that hold regardless of provider:
 
 Three languages, one layer each:
 
-* **Structure and components: Material 3 Expressive** (material3 1.4.0): `MaterialExpressiveTheme`,
+* **Structure and components: Material 3 Expressive** (material3 1.5.0-alpha27): `MaterialExpressiveTheme`,
   `MotionScheme.expressive()`, `HorizontalFloatingToolbar`, `LoadingIndicator`, `ButtonGroup`,
   `MaterialShapes` for persona tiles, Roboto Flex variable font.
 * **Surfaces: Liquid Glass with the Fluent acrylic recipe** via Haze: backdrop blur 24–32 dp,
@@ -96,5 +98,10 @@ Three languages, one layer each:
 * **Depth and layout: Fluent 2**: four tiers (scene 0, cards 1, toolbar+banner 2, sheet 3),
   soft coloured shadows, 4 dp grid, 16 dp margins, 12 dp gaps, mica-style tinted base.
 
-Details, numbers and the conflict resolutions are in the research notes and mirrored in
-`ui.theme` / `ui.glass` once implemented.
+Two corrections to the spec, both applied: the expressive springs are the library's own
+(spatial 0.8/380, fast 0.6/800, slow 0.8/200; effects 1.0/1600, 3800, 800), never the spec's
+700/1400, so `MaterialTheme.motionScheme` is always used; and the glass tint floor is 0.72
+(0.85 in large-text mode) because 0.55 fails WCAG AA over a sunlit-cloud scene.
+
+The card→sheet morph is an in-window sheet (`ui.detail.DetailSheet`), not `ModalBottomSheet`,
+because a dialog window can neither share elements nor sample the scene for blur.

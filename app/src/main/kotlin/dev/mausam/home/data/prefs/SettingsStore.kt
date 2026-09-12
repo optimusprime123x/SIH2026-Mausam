@@ -62,12 +62,14 @@ class SettingsStore(private val context: Context) {
         }
     }
 
-    suspend fun setOnboarded(done: Boolean) = store.edit { it[Keys.onboarded] = done }
-    suspend fun setPrimaryLocation(id: String) = store.edit { it[Keys.primaryLocation] = id }
+    suspend fun setOnboarded(done: Boolean) { store.edit { it[Keys.onboarded] = done } }
+    suspend fun setPrimaryLocation(id: String) { store.edit { it[Keys.primaryLocation] = id } }
     suspend fun notifiedWarnings(): Set<String> = store.data.first()[Keys.notifiedWarnings] ?: emptySet()
-    suspend fun markNotified(ids: Set<String>) = store.edit { p ->
-        // Keep the set bounded; ids are unique per warning issue.
-        p[Keys.notifiedWarnings] = ((p[Keys.notifiedWarnings] ?: emptySet()) + ids).toList().takeLast(200).toSet()
+    suspend fun markNotified(ids: Set<String>) {
+        store.edit { p ->
+            // Keep the set bounded; ids are unique per warning issue.
+            p[Keys.notifiedWarnings] = ((p[Keys.notifiedWarnings] ?: emptySet()) + ids).toList().takeLast(200).toSet()
+        }
     }
 
     private fun Preferences.toSettings(): UserSettings {

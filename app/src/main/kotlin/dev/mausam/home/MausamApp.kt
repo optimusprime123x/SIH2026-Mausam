@@ -2,8 +2,11 @@ package dev.mausam.home
 
 import android.app.Application
 import android.content.Context
+import androidx.glance.appwidget.updateAll
 import androidx.work.Configuration
 import dev.mausam.home.data.DataModule
+import dev.mausam.home.data.geo.Stations
+import dev.mausam.home.data.location.DeviceLocation
 import dev.mausam.home.domain.HomeRepository
 import dev.mausam.home.work.Notifier
 import dev.mausam.home.work.WorkScheduler
@@ -18,7 +21,12 @@ import kotlinx.coroutines.launch
  */
 class AppGraph(val context: Context) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    val repository: HomeRepository by lazy { DataModule.repository(context) }
+    val stations: Stations by lazy { DataModule.stations(context) }
+    val repository: HomeRepository by lazy { DataModule.repository(context, stations) }
+    val deviceLocation: DeviceLocation by lazy { DeviceLocation(context, stations) }
+
+    /** Set from a notification tap before the UI is composed; consumed once by the home screen. */
+    @Volatile var pendingOpen: String? = null
     val notifier: Notifier by lazy { Notifier(context) }
     val scheduler: WorkScheduler by lazy { WorkScheduler(context) }
 
@@ -44,6 +52,7 @@ class MausamApp : Application(), Configuration.Provider {
         super.onCreate()
         graph.notifier.ensureChannels()
         graph.scheduler.schedulePeriodicRefresh()
+        graph.addRefreshListener { dev.mausam.home.widget.MausamWidget().updateAll(this) }
         graph.appScope.launch {
             graph.scheduler.scheduleBriefs(graph.repository.currentSettings())
         }

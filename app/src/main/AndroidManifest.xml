@@ -34,6 +34,17 @@
         </activity>
 
         <receiver
+            android:name=".widget.MausamWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/mausam_widget_info" />
+        </receiver>
+
+        <receiver
             android:name=".work.BootReceiver"
             android:enabled="true"
             android:exported="false">
