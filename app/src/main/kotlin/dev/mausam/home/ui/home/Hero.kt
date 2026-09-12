@@ -21,6 +21,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material3.Icon
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import dev.mausam.home.domain.briefs.SpokenBrief
+import dev.mausam.home.ui.common.rememberSpeaker
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -121,10 +132,28 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
         } else {
             // A soft drop shadow keeps white type legible on pale skies (fog, noon) without a heavier scrim.
             val lift = Shadow(Color(0x66081020), Offset(0f, 2f), blurRadius = 10f)
+            val speaker = rememberSpeaker()
             Column(Modifier.fillMaxSize().padding(horizontal = Space.screenMargin, vertical = Space.s4), verticalArrangement = Arrangement.Bottom) {
+                // City name with the spoken-brief button on the trailing edge.
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        state.location?.name ?: "—",
+                        style = MaterialTheme.typography.titleLargeEmphasized.copy(shadow = lift), color = ink,
+                        modifier = Modifier.weight(1f), maxLines = 1,
+                    )
+                    val speaking = speaker?.speaking == true
+                    SpeakButton(
+                        speaking = speaking, haze = haze,
+                        enabled = cur != null && (speaker == null || speaker.available),
+                        onClick = {
+                            if (speaker == null) return@SpeakButton
+                            if (speaking) speaker.stop()
+                            else speaker.speak(SpokenBrief.compose(state.location?.name, cur, state.bundle?.airQuality, state.activeWarnings.firstOrNull(), fmt))
+                        },
+                    )
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(state.location?.name ?: "—", style = MaterialTheme.typography.titleLargeEmphasized.copy(shadow = lift), color = ink)
                         RollingValue(
                             text = cur?.let { fmt.temp(it.temperatureC) } ?: "—",
                             numeric = cur?.temperatureC,
@@ -163,6 +192,26 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                 )
             }
         }
+    }
+}
+
+/** Speaker while idle, pause while the brief is being read; the same glass as the hero chips. */
+@Composable
+private fun SpeakButton(speaking: Boolean, haze: HazeState, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(40.dp)
+            .mausamGlass(haze, GlassTier.TOOLBAR, CircleShape, tint = Color(0xFF1B2A44), shadow = false)
+            .clickable(enabled = enabled, onClick = onClick)
+            .semantics { role = Role.Button; contentDescription = if (speaking) "Stop reading" else "Read the weather aloud" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            if (speaking) Icons.Rounded.Pause else Icons.AutoMirrored.Rounded.VolumeUp,
+            contentDescription = null,
+            tint = Color.White.copy(alpha = if (enabled) 1f else 0.5f),
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 
