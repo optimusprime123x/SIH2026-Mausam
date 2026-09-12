@@ -6,6 +6,26 @@ package dev.mausam.home.domain.i18n
  */
 object HindiCards {
     val table: Map<String, String> = mapOf(
+        // Soil moisture
+        "Soil moisture" to "मिट्टी की नमी",
+        "Open-Meteo soil model" to "Open-Meteo मृदा मॉडल",
+        "Soil moisture needs a fresh forecast" to "मिट्टी की नमी के लिए ताज़ा पूर्वानुमान चाहिए",
+        "Very dry soil" to "मिट्टी बहुत सूखी",
+        "Dry soil" to "मिट्टी सूखी",
+        "Adequate moisture" to "नमी पर्याप्त",
+        "Wet soil" to "मिट्टी गीली",
+        "Saturated soil" to "मिट्टी जलमग्न",
+        "rising" to "बढ़ रही",
+        "drying" to "सूख रही",
+        "steady" to "स्थिर",
+        "root zone %d%%" to "जड़ क्षेत्र %d%%",
+        "% top 9 cm" to "% ऊपरी 9 cm",
+        "Top soil is drying out; irrigate unless rain is due in the next day." to "ऊपरी मिट्टी सूख रही है; अगले दिन बारिश न हो तो सिंचाई करें।",
+        "Soil water in the top 9 cm is in a comfortable range for most crops." to "ऊपरी 9 cm में मिट्टी की नमी अधिकांश फ़सलों के लिए ठीक है।",
+        "Top soil is wet; hold irrigation and check drainage in low fields." to "ऊपरी मिट्टी गीली है; सिंचाई रोकें और निचले खेतों में जल निकासी जाँचें।",
+        "Soil is saturated; avoid field traffic and watch for waterlogging." to "मिट्टी जलमग्न है; खेत में आवाजाही से बचें और जलभराव पर नज़र रखें।",
+        "Soil temperature at 6 cm: %s." to "6 cm पर मिट्टी का तापमान: %s।",
+        "Volumetric water content from the Open-Meteo soil model; field capacity varies with soil type, so treat thresholds as a guide." to "Open-Meteo मृदा मॉडल से आयतनी जल अंश; क्षेत्र क्षमता मिट्टी के प्रकार पर निर्भर करती है, इसलिए सीमाओं को संकेत मानें।",
         // ---- Card titles
         "Air quality" to "वायु गुणवत्ता",
         "Humidity" to "आर्द्रता",
@@ -48,7 +68,7 @@ object HindiCards {
         "Ocean state forecast" to "समुद्री स्थिति पूर्वानुमान",
         "7-day city forecast" to "7 दिन का शहर पूर्वानुमान",
         "Based on the 7-day forecast" to "7 दिन के पूर्वानुमान के आधार पर",
-        "Hourly forecast, 7 to 9 am" to "घंटेवार पूर्वानुमान, सुबह 7 से 9 बजे",
+        "Hourly forecast for the school run" to "स्कूल आने-जाने के समय का घंटेवार पूर्वानुमान",
         "Hourly forecast" to "घंटेवार पूर्वानुमान",
         "District rainfall" to "ज़िला वर्षा",
         "City forecast" to "शहर का पूर्वानुमान",
@@ -57,7 +77,7 @@ object HindiCards {
         "Current observation and warnings" to "वर्तमान प्रेक्षण और चेतावनियाँ",
         "Nowcast and district warnings" to "नाउकास्ट और ज़िला चेतावनियाँ",
         "Rain overlapping your commute" to "आपके सफ़र के समय बारिश",
-        "Opens Maps" to "Maps खोलता है",
+        "Weather on the road · tap for live traffic" to "सड़क पर मौसम · लाइव ट्रैफ़िक के लिए टैप करें",
         "Heat index and humidex" to "ताप सूचकांक और ह्यूमिडेक्स",
         "Based on rain, heat and wind" to "बारिश, गर्मी और हवा के आधार पर",
 
@@ -188,9 +208,14 @@ object HindiCards {
         "Expected around %s" to "%s के आसपास संभावित",
         "+%d min" to "+%d मिनट",
         "%d%% rain chance %s" to "%2\$s %1\$d%% बारिश की संभावना",
-        "Live traffic" to "लाइव ट्रैफ़िक",
-        "Open Maps for %s" to "%s के लिए Maps खोलें",
-        "Open in Maps" to "Maps में खोलें",
+        "Open live traffic" to "लाइव ट्रैफ़िक खोलें",
+        "Low visibility" to "कम दृश्यता",
+        "%s visibility · slow down, headlights on" to "%s दृश्यता · धीरे चलें, हेडलाइट जलाएँ",
+        "Wet roads likely" to "सड़कें गीली रहने की संभावना",
+        "%d%% rain" to "%d%% बारिश",
+        "Showers possible" to "बौछारें संभव",
+        "Clear roads expected" to "सड़कें साफ़ रहने की उम्मीद",
+        "Tap for live traffic" to "लाइव ट्रैफ़िक के लिए टैप करें",
 
         // ---- Events
         "Wettest %s %d%% · driest %s" to "सबसे नम %s %d%% · सबसे शुष्क %s",

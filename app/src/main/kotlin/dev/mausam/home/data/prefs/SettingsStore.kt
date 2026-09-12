@@ -32,6 +32,8 @@ class SettingsStore(private val context: Context) {
         val quietEnd = stringPreferencesKey("quiet_end")
         val commuteStart = stringPreferencesKey("commute_start")
         val commuteEnd = stringPreferencesKey("commute_end")
+        val schoolStart = stringPreferencesKey("school_start")
+        val schoolEnd = stringPreferencesKey("school_end")
         val onboarded = booleanPreferencesKey("onboarded")
         val primaryLocation = stringPreferencesKey("primary_location")
         val notifiedWarnings = stringSetPreferencesKey("notified_warnings")
@@ -63,6 +65,8 @@ class SettingsStore(private val context: Context) {
             p[Keys.quietEnd] = s.quietEnd.toString()
             p[Keys.commuteStart] = s.commuteStart.toString()
             p[Keys.commuteEnd] = s.commuteEnd.toString()
+            p[Keys.schoolStart] = s.schoolStart.toString()
+            p[Keys.schoolEnd] = s.schoolEnd.toString()
             p[Keys.wallpaper] = s.wallpaperColours
         }
     }
@@ -97,6 +101,8 @@ class SettingsStore(private val context: Context) {
             quietEnd = time(Keys.quietEnd, d.quietEnd),
             commuteStart = time(Keys.commuteStart, d.commuteStart),
             commuteEnd = time(Keys.commuteEnd, d.commuteEnd),
+            schoolStart = time(Keys.schoolStart, d.schoolStart),
+            schoolEnd = time(Keys.schoolEnd, d.schoolEnd),
             wallpaperColours = this[Keys.wallpaper] ?: d.wallpaperColours,
         )
     }

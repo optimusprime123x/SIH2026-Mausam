@@ -286,7 +286,8 @@ object CardRegistry {
     // ---------------------------------------------------------------- Parents
     val schoolRun: CardSpec = CardSpec(
         id = "parents.school", persona = Persona.PARENTS, titleEn = "School commute",
-        sourceLabelEn = "Hourly forecast, 7 to 9 am", detail = DetailKind.Hourly(HourlyMetric.PRECIPITATION), kind = DataKind.HOURLY,
+        sourceLabelEn = "Hourly forecast for the school run", detail = DetailKind.Hourly(HourlyMetric.PRECIPITATION), kind = DataKind.HOURLY,
+        gate = { !it.isWeekend },
     ) { ctx ->
         val s = ctx.settings
         val r = Commute.rainIn(ctx.bundle.hourly, ctx.now, s.schoolStart, s.schoolEnd, ctx.location.zoneId)
@@ -345,11 +346,11 @@ object CardRegistry {
     ) { ctx ->
         val s = ctx.bundle.soil ?: return@CardSpec CardValue.Unavailable("Soil moisture needs a fresh forecast".tr())
         val label = when (s.category) {
-            SoilCategory.VERY_DRY -> "Very dry".tr()
-            SoilCategory.DRY -> "Dry".tr()
-            SoilCategory.ADEQUATE -> "Adequate".tr()
-            SoilCategory.WET -> "Wet".tr()
-            SoilCategory.SATURATED -> "Saturated".tr()
+            SoilCategory.VERY_DRY -> "Very dry soil".tr()
+            SoilCategory.DRY -> "Dry soil".tr()
+            SoilCategory.ADEQUATE -> "Adequate moisture".tr()
+            SoilCategory.WET -> "Wet soil".tr()
+            SoilCategory.SATURATED -> "Saturated soil".tr()
         }
         val tone = when (s.category) {
             SoilCategory.VERY_DRY -> Tone.WARNING
@@ -484,10 +485,31 @@ object CardRegistry {
 
     val traffic: CardSpec = CardSpec(
         id = "commute.traffic", persona = Persona.COMMUTERS, titleEn = "Traffic",
-        sourceLabelEn = "Opens Maps", detail = DetailKind.None,
-        action = CardAction.DeepLink("geo:0,0?q=traffic", "Open in Maps"),
+        sourceLabelEn = "Weather on the road · tap for live traffic", detail = DetailKind.None, kind = DataKind.HOURLY,
+        // Google Maps with the traffic layer on, centred on the user; the view model fills the coordinates.
+        action = CardAction.DeepLink("https://www.google.com/maps/@{lat},{lon},13z/data=!5m1!1e1", "Open live traffic"),
     ) { ctx ->
-        CardValue.Ready(primary = "Live traffic".tr(), secondary = "Open Maps for %s".trf(ctx.location.name), icon = WeatherIcon.TRAFFIC)
+        // What the weather does to the road in the commute window (or the next three hours once it has passed).
+        val s = ctx.settings
+        val window = Commute.rainIn(ctx.bundle.hourly, ctx.now, s.commuteStart, s.commuteEnd, ctx.location.zoneId)
+        val rain = if (window.hours.isNotEmpty()) window else Commute.nextHours(ctx.bundle.hourly, ctx.now.toInstant(), 3)
+        val vis = ctx.bundle.current?.visibilityKm
+        val span = rain.hours.takeIf { it.isNotEmpty() }?.let { ctx.fmt.clockRange(it.first().time, it.last().time.plusSeconds(3600)) }
+        when {
+            vis != null && vis < 2.0 -> CardValue.Ready(
+                "Low visibility".tr(), secondary = "%s visibility · slow down, headlights on".trf(ctx.fmt.distance(vis)),
+                tone = Tone.WARNING, icon = WeatherIcon.FOG,
+            )
+            rain.likely -> CardValue.Ready(
+                "Wet roads likely".tr(), secondary = listOfNotNull("%d%% rain".trf(rain.maxProbabilityPct), span).joinToString(" "),
+                tone = Tone.CAUTION, icon = WeatherIcon.RAIN, numeric = rain.maxProbabilityPct.toDouble(),
+            )
+            rain.possible -> CardValue.Ready(
+                "Showers possible".tr(), secondary = listOfNotNull("%d%% rain".trf(rain.maxProbabilityPct), span).joinToString(" "),
+                tone = Tone.NEUTRAL, icon = WeatherIcon.DRIZZLE, numeric = rain.maxProbabilityPct.toDouble(),
+            )
+            else -> CardValue.Ready("Clear roads expected".tr(), secondary = "Tap for live traffic".tr(), tone = Tone.GOOD, icon = WeatherIcon.TRAFFIC)
+        }
     }
 
     // ---------------------------------------------------------------- Event planners

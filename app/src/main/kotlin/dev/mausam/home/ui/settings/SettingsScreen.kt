@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Commute
+import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Notifications
@@ -180,6 +181,13 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
                     TimeRow("Commute ends".tr(), s.commuteEnd, fmt) { picking = "commuteEnd" }
                 }
 
+                SectionHeader("School run".tr(), Icons.Rounded.School, Fluent.Coral, "The school-commute card and the parents' brief use this window".tr())
+                GlassGroup(haze, wash = Fluent.Coral.copy(alpha = 0.16f)) {
+                    TimeRow("School run starts".tr(), s.schoolStart, fmt) { picking = "schoolStart" }
+                    HairlineDivider()
+                    TimeRow("School run ends".tr(), s.schoolEnd, fmt) { picking = "schoolEnd" }
+                }
+
                 SectionHeader("Units".tr(), Icons.Rounded.Straighten, Fluent.Coral)
                 GlassGroup(haze, wash = Fluent.Coral.copy(alpha = 0.16f)) {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(Space.s4)) {
@@ -216,7 +224,8 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
     picking?.let { key ->
         val initial = when (key) {
             "morning" -> s.morningBrief; "evening" -> s.eveningBrief; "quietStart" -> s.quietStart; "quietEnd" -> s.quietEnd
-            "commuteStart" -> s.commuteStart; else -> s.commuteEnd
+            "commuteStart" -> s.commuteStart; "commuteEnd" -> s.commuteEnd
+            "schoolStart" -> s.schoolStart; else -> s.schoolEnd
         }
         val state = rememberTimePickerState(initialHour = initial.hour, initialMinute = initial.minute, is24Hour = true)
         AlertDialog(
@@ -237,7 +246,8 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
 private fun UserSettings.apply(key: String, t: LocalTime): UserSettings = when (key) {
     "morning" -> copy(morningBrief = t); "evening" -> copy(eveningBrief = t)
     "quietStart" -> copy(quietStart = t); "quietEnd" -> copy(quietEnd = t)
-    "commuteStart" -> copy(commuteStart = t); else -> copy(commuteEnd = t)
+    "commuteStart" -> copy(commuteStart = t); "commuteEnd" -> copy(commuteEnd = t)
+    "schoolStart" -> copy(schoolStart = t); else -> copy(schoolEnd = t)
 }
 
 @Composable

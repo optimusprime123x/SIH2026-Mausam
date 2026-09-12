@@ -117,8 +117,9 @@ fun HomeScreen(vm: HomeViewModel, onOpenLocations: () -> Unit, onOpenSettings: (
     }
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        vm.openUri.collectLatest { uri ->
-            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        vm.openUri.collectLatest { uris ->
+            // Google Maps with traffic when it is installed, any maps app otherwise; give up quietly if neither exists.
+            uris.any { uri -> runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess }
         }
     }
     LaunchedEffect(Unit) {

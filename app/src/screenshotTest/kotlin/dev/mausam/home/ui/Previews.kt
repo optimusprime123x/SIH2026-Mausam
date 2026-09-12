@@ -141,7 +141,7 @@ fun LocationPreview(@PreviewParameter(DarkProvider::class) dark: Boolean) {
 }
 
 @PreviewTest
-@Preview(name = "settings", widthDp = 412, heightDp = 1400)
+@Preview(name = "settings", widthDp = 412, heightDp = 2300)
 @Composable
 fun SettingsPreview(@PreviewParameter(DarkProvider::class) dark: Boolean) {
     InLang(dev.mausam.home.domain.i18n.Lang.EN) {
@@ -233,7 +233,7 @@ fun HindiDetailPreview() {
 }
 
 @PreviewTest
-@Preview(name = "hi_settings", widthDp = 412, heightDp = 1400)
+@Preview(name = "hi_settings", widthDp = 412, heightDp = 2300)
 @Composable
 fun HindiSettingsPreview() {
     InLang(dev.mausam.home.domain.i18n.Lang.HI) {

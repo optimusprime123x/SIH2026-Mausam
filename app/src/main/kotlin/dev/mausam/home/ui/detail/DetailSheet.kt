@@ -237,7 +237,7 @@ private fun DetailBody(kind: DetailKind, ctx: CardContext, value: CardValue.Read
             val hi = week.maxOfOrNull { it.maxC } ?: 1.0
             week.forEach { d ->
                 Row(Modifier.fillMaxWidth().padding(vertical = Space.s2), verticalAlignment = Alignment.CenterVertically) {
-                    Text(dayFmt.format(d.date), style = MaterialTheme.typography.titleSmall, color = cs.onSurface, modifier = Modifier.width(44.dp))
+                    Text(dayFmt.format(d.date).tr(), style = MaterialTheme.typography.titleSmall, color = cs.onSurface, modifier = Modifier.width(44.dp))
                     MeteoconIcon(WeatherIcon.forCondition(d.condition, true), 32.dp, animated = false)
                     Spacer(Modifier.width(Space.s2))
                     Text("${d.precipitationProbabilityPct ?: 0}%", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.width(40.dp))
