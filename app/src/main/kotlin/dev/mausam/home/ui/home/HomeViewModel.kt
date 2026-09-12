@@ -178,14 +178,20 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
         }
     }
 
-    /** One-shot URIs for cards whose action is a deep link (opened by the screen). */
-    private val _openUri = MutableSharedFlow<String>(extraBufferCapacity = 1)
-    val openUri: SharedFlow<String> = _openUri
+    /** One-shot URIs for cards whose action is a deep link, most specific first; the screen tries each in turn. */
+    private val _openUri = MutableSharedFlow<List<String>>(extraBufferCapacity = 1)
+    val openUri: SharedFlow<List<String>> = _openUri
 
     fun openCard(cardId: String) {
         viewModelScope.launch { repo.recordTap(cardId) }
         val action = CardRegistry.all.firstOrNull { it.id == cardId }?.action
-        if (action is CardAction.DeepLink) _openUri.tryEmit(action.uri) else overlay.value = HomeOverlay.Detail(cardId)
+        if (action is CardAction.DeepLink) {
+            val loc = state.value.location
+            val lat = loc?.latitude?.let { String.format(java.util.Locale.ENGLISH, "%.5f", it) } ?: "0"
+            val lon = loc?.longitude?.let { String.format(java.util.Locale.ENGLISH, "%.5f", it) } ?: "0"
+            val primary = action.uri.replace("{lat}", lat).replace("{lon}", lon)
+            _openUri.tryEmit(listOf(primary, "geo:$lat,$lon?z=13"))
+        } else overlay.value = HomeOverlay.Detail(cardId)
     }
 
     fun openWarnings() { overlay.value = HomeOverlay.Detail(CardRegistry.warnings.id) }
