@@ -345,11 +345,11 @@ object CardRegistry {
     ) { ctx ->
         val s = ctx.bundle.soil ?: return@CardSpec CardValue.Unavailable("Soil moisture needs a fresh forecast".tr())
         val label = when (s.category) {
-            SoilCategory.VERY_DRY -> "Very dry".tr()
-            SoilCategory.DRY -> "Dry".tr()
-            SoilCategory.ADEQUATE -> "Adequate".tr()
-            SoilCategory.WET -> "Wet".tr()
-            SoilCategory.SATURATED -> "Saturated".tr()
+            SoilCategory.VERY_DRY -> "Very dry soil".tr()
+            SoilCategory.DRY -> "Dry soil".tr()
+            SoilCategory.ADEQUATE -> "Adequate moisture".tr()
+            SoilCategory.WET -> "Wet soil".tr()
+            SoilCategory.SATURATED -> "Saturated soil".tr()
         }
         val tone = when (s.category) {
             SoilCategory.VERY_DRY -> Tone.WARNING
