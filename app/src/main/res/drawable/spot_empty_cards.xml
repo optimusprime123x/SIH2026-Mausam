@@ -77,14 +77,15 @@
         android:fillColor="#994CC2FF"
         android:pathData="M81.5,131.5 L114.5,131.5 A3.5,3.5 0 0 1 118,135 L118,135 A3.5,3.5 0 0 1 114.5,138.5 L81.5,138.5 A3.5,3.5 0 0 1 78,135 L78,135 A3.5,3.5 0 0 1 81.5,131.5 Z"/>
     <path
-        android:fillColor="#120078D4"
-        android:pathData="M152,82 a20,20 0 1 0 40,0 a20,20 0 1 0 -40,0 Z"/>
-    <path
-        android:fillColor="#120078D4"
-        android:pathData="M156.4,82 a15.6,15.6 0 1 0 31.2,0 a15.6,15.6 0 1 0 -31.2,0 Z"/>
-    <path
-        android:fillColor="#120078D4"
-        android:pathData="M161,82 a11,11 0 1 0 22,0 a11,11 0 1 0 -22,0 Z"/>
+        android:pathData="M148,82 a26,26 0 1 0 52,0 a26,26 0 1 0 -52,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="174" android:centerY="82" android:gradientRadius="26">
+                <item android:offset="0" android:color="#330078D4"/>
+                <item android:offset="0.55" android:color="#140078D4"/>
+                <item android:offset="1" android:color="#000078D4"/>
+            </gradient>
+        </aapt:attr>
+    </path>
     <path
         android:fillColor="#FFFFFFFF"
         android:pathData="M153,78 a19,19 0 1 0 38,0 a19,19 0 1 0 -38,0 Z"/>

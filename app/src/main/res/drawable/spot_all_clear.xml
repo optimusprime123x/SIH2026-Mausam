@@ -95,14 +95,35 @@
         </aapt:attr>
     </path>
     <path
-        android:fillColor="#1C0078D4"
-        android:pathData="M146,186 a30,6 0 1 0 60,0 a30,6 0 1 0 -60,0 Z"/>
+        android:pathData="M146,186 a16,16 0 1 0 32,0 a16,16 0 1 0 -32,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="162" android:centerY="186" android:gradientRadius="16">
+                <item android:offset="0" android:color="#420078D4"/>
+                <item android:offset="0.55" android:color="#1A0078D4"/>
+                <item android:offset="1" android:color="#000078D4"/>
+            </gradient>
+        </aapt:attr>
+    </path>
     <path
-        android:fillColor="#1C0078D4"
-        android:pathData="M152.6,186 a23.4,4.68 0 1 0 46.8,0 a23.4,4.68 0 1 0 -46.8,0 Z"/>
+        android:pathData="M160,186 a16,16 0 1 0 32,0 a16,16 0 1 0 -32,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="176" android:centerY="186" android:gradientRadius="16">
+                <item android:offset="0" android:color="#420078D4"/>
+                <item android:offset="0.55" android:color="#1A0078D4"/>
+                <item android:offset="1" android:color="#000078D4"/>
+            </gradient>
+        </aapt:attr>
+    </path>
     <path
-        android:fillColor="#1C0078D4"
-        android:pathData="M159.5,186 a16.5,3.3 0 1 0 33,0 a16.5,3.3 0 1 0 -33,0 Z"/>
+        android:pathData="M174,186 a16,16 0 1 0 32,0 a16,16 0 1 0 -32,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="190" android:centerY="186" android:gradientRadius="16">
+                <item android:offset="0" android:color="#420078D4"/>
+                <item android:offset="0.55" android:color="#1A0078D4"/>
+                <item android:offset="1" android:color="#000078D4"/>
+            </gradient>
+        </aapt:attr>
+    </path>
     <path
         android:fillColor="#FFFFFFFF"
         android:pathData="M176,92 C189,100 200,104 214,106 L214,140 C214,164 197,179 176,188 C155,179 138,164 138,140 L138,106 C152,104 163,100 176,92 Z"/>
@@ -116,7 +137,7 @@
         </aapt:attr>
     </path>
     <path
-        android:fillColor="#29FFFFFF"
+        android:fillColor="#1FFFFFFF"
         android:pathData="M176,98.5 C164,105 154,109 143.5,111 L143.5,139 C143.5,150 147,159 153,166 C160,150 168,122 176,98.5 Z"/>
     <path
         android:fillColor="#FFFFFFFF"

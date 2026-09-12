@@ -8,8 +8,8 @@
       <stop offset="1" stop-color="#D5DFEC"/>
     </linearGradient>
     <linearGradient id="glass" gradientUnits="userSpaceOnUse" x1="74" y1="48" x2="162" y2="136">
-      <stop offset="0" stop-color="#4CC2FF" stop-opacity="0.34"/>
-      <stop offset="1" stop-color="#4CC2FF" stop-opacity="0.16"/>
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#4CC2FF" stop-opacity="0.14"/>
     </linearGradient>
     <linearGradient id="handle" gradientUnits="userSpaceOnUse" x1="158" y1="128" x2="200" y2="170">
       <stop offset="0" stop-color="#4CC2FF"/>
@@ -24,17 +24,30 @@
       <stop offset="0.55" stop-color="#FFFFFF"/>
       <stop offset="1" stop-color="#DCE6F2"/>
     </linearGradient>
+    <radialGradient id="sh6" gradientUnits="userSpaceOnUse" cx="112" cy="126" r="12">
+      <stop offset="0" stop-color="#0078D4" stop-opacity="0.26"/>
+      <stop offset="0.55" stop-color="#0078D4" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#0078D4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sh7" gradientUnits="userSpaceOnUse" cx="188" cy="176" r="14">
+      <stop offset="0" stop-color="#0078D4" stop-opacity="0.22"/>
+      <stop offset="0.55" stop-color="#0078D4" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#0078D4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sh8" gradientUnits="userSpaceOnUse" cx="200" cy="176" r="14">
+      <stop offset="0" stop-color="#0078D4" stop-opacity="0.22"/>
+      <stop offset="0.55" stop-color="#0078D4" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#0078D4" stop-opacity="0"/>
+    </radialGradient>
   </defs>
   <path fill="#4CC2FF" fill-opacity="0.2" d="M188.71,162.57 C173.21,175.24 141.57,182 118,182 C94.43,182 62.96,175.24 47.29,162.57 C31.62,149.9 24,124.86 24,106 C24,87.14 31.62,62.23 47.29,49.43 C62.96,36.63 94.43,29.2 118,29.2 C141.57,29.2 173.21,36.63 188.71,49.43 C204.21,62.23 211,87.14 211,106 C211,124.86 204.21,149.9 188.71,162.57 Z"/>
   <path fill="#29D3C3" fill-opacity="0.18" d="M79.71,163.63 C76.43,170.75 66.89,176.96 58.77,180.35 C50.66,183.74 38.92,186.4 31,183.95 C23.09,181.5 14.71,172.8 11.28,165.65 C7.85,158.5 7.66,148.48 10.43,141.07 C13.21,133.66 20.27,124.48 27.94,121.19 C35.61,117.9 48.06,118.59 56.48,121.33 C64.89,124.07 74.57,130.58 78.44,137.63 C82.31,144.68 82.99,156.51 79.71,163.63 Z"/>
   <path fill="#0078D4" fill-opacity="0.16" d="M62,155 L112,155 A7,7 0 0 0 115.52,141.95 A10,10 0 0 0 105,135.05 A16,16 0 0 0 73.02,134.19 A11,11 0 0 0 60.71,141.12 A7,7 0 0 0 62,155 Z"/>
   <path fill="url(#cloud)" d="M59,150 L109,150 A7,7 0 0 0 112.52,136.95 A10,10 0 0 0 102,130.05 A16,16 0 0 0 70.02,129.19 A11,11 0 0 0 57.71,136.12 A7,7 0 0 0 59,150 Z"/>
-  <ellipse cx="113" cy="128" rx="12" ry="3.5" fill="#0078D4" fill-opacity="0.11"/>
-  <ellipse cx="113" cy="128" rx="9.36" ry="2.73" fill="#0078D4" fill-opacity="0.11"/>
-  <ellipse cx="113" cy="128" rx="6.6" ry="1.93" fill="#0078D4" fill-opacity="0.11"/>
+  <circle cx="112" cy="126" r="12" fill="url(#sh6)"/>
   <g id="pin">
     <path fill="url(#pin)" d="M112,126 C104.44,113.89 97.1,104.84 97.82,99.08 A18,18 0 1 1 126.18,99.08 C126.9,104.84 119.56,113.89 112,126 Z"/>
-    <path fill="#00437A" fill-opacity="0.22" d="M121,72.41 A18,18 0 0 1 121,103.59 A26.1,26.1 0 0 0 121,72.41 Z"/>
+    <path fill="#00437A" fill-opacity="0.16" d="M125.38,75.96 A18,18 0 0 1 124.04,101.38 A30.6,30.6 0 0 0 125.38,75.96 Z"/>
     <path fill="#FFFFFF" fill-opacity="0.26" d="M95.77,92.35 A16.8,16.8 0 0 1 113.46,71.26 A23.52,23.52 0 0 0 95.77,92.35 Z"/>
     <circle cx="112" cy="88" r="8.46" fill="#00437A" fill-opacity="0.28"/>
     <circle cx="112" cy="88" r="6.84" fill="#FFFFFF"/>
@@ -42,17 +55,16 @@
     <circle cx="102.1" cy="79" r="2.88" fill="#FFFFFF" fill-opacity="0.6"/>
     <circle cx="106.96" cy="74.32" r="1.44" fill="#FFFFFF" fill-opacity="0.6"/>
   </g>
-  <ellipse cx="196" cy="178" rx="22" ry="5" fill="#0078D4" fill-opacity="0.09"/>
-  <ellipse cx="196" cy="178" rx="17.16" ry="3.9" fill="#0078D4" fill-opacity="0.09"/>
-  <ellipse cx="196" cy="178" rx="12.1" ry="2.75" fill="#0078D4" fill-opacity="0.09"/>
+  <circle cx="188" cy="176" r="14" fill="url(#sh7)"/>
+  <circle cx="200" cy="176" r="14" fill="url(#sh8)"/>
   <path fill="#0078D4" fill-opacity="0.18" d="M152.99,141.01 L190.99,179.01 A8.5,8.5 0 0 0 203.01,166.99 L165.01,128.99 A8.5,8.5 0 0 0 152.99,141.01 Z"/>
   <path fill="url(#handle)" d="M149.99,136.01 L187.99,174.01 A8.5,8.5 0 0 0 200.01,161.99 L162.01,123.99 A8.5,8.5 0 0 0 149.99,136.01 Z"/>
   <path fill="#FFFFFF" fill-opacity="0.3" d="M158.23,135.77 L170.23,147.77 A2.5,2.5 0 0 0 173.77,144.23 L161.77,132.23 A2.5,2.5 0 0 0 158.23,135.77 Z"/>
-  <path fill="#0078D4" fill-opacity="0.16" fill-rule="evenodd" d="M69,98 55,58 3,7 3,110 3,58 55,6 4,6 -101,6 Z M78,98 46,49 3,7 3,92 3,49 46,6 4,6 -83,6 Z"/>
+  <path fill="#0078D4" fill-opacity="0.16" fill-rule="evenodd" d="M69,98 A52,52 0 1 0 173,98 A52,52 0 1 0 69,98 Z M78,98 A43,43 0 1 0 164,98 A43,43 0 1 0 78,98 Z"/>
   <circle cx="118" cy="92" r="44" fill="url(#glass)"/>
-  <path fill="#FFFFFF" fill-opacity="0.5" d="M78.4,81.39 A41,41 0 0 1 121.57,51.16 A51.25,51.25 0 0 0 78.4,81.39 Z"/>
-  <path fill="#FFFFFF" fill-opacity="0.22" d="M156.53,106.02 A41,41 0 0 1 125.12,132.38 A61.5,61.5 0 0 0 156.53,106.02 Z"/>
-  <path fill="url(#rim)" fill-rule="evenodd" d="M66,92 a52,52 0 1 0 104,0 a52,52 0 1 0 -104,0 Z M75,92 a43,43 0 1 0 86,0 a43,43 0 1 0 -86,0 Z"/>
+  <path fill="#FFFFFF" fill-opacity="0.55" d="M78.4,81.39 A41,41 0 0 1 121.57,51.16 A51.25,51.25 0 0 0 78.4,81.39 Z"/>
+  <path fill="#FFFFFF" fill-opacity="0.26" d="M156.53,106.02 A41,41 0 0 1 125.12,132.38 A61.5,61.5 0 0 0 156.53,106.02 Z"/>
+  <path fill="url(#rim)" fill-rule="evenodd" d="M66,92 A52,52 0 1 0 170,92 A52,52 0 1 0 66,92 Z M75,92 A43,43 0 1 0 161,92 A43,43 0 1 0 75,92 Z"/>
   <path fill="#FFFFFF" fill-opacity="0.5" d="M66.7,87.51 A51.5,51.5 0 0 1 126.94,41.28 A61.8,61.8 0 0 0 66.7,87.51 Z"/>
   <path fill="#FFC83D" d="M40,48 Q41.76,54.24 48,56 Q41.76,57.76 40,64 Q38.24,57.76 32,56 Q38.24,54.24 40,48 Z"/>
   <path fill="#FF6B9A" d="M200,54 Q201.32,58.68 206,60 Q201.32,61.32 200,66 Q198.68,61.32 194,60 Q198.68,58.68 200,54 Z"/>

@@ -53,11 +53,11 @@
         android:pathData="M186.55,50.82 A13.5,13.5 0 0 1 203.49,38.96 A18.23,18.23 0 0 0 186.55,50.82 Z"/>
     <path
         android:fillColor="#290078D4"
-        android:pathData="M33,79 L63,79 A5,5 0 0 0 67.33,76.5 A7,7 0 0 0 64,64.07 A11,11 0 0 0 42.01,63.59 A8,8 0 0 0 31.17,69.35 A5,5 0 0 0 33,79 Z"/>
+        android:pathData="M21,73 L53,73 A5,5 0 0 0 57.95,68.68 A7,7 0 0 0 52,58 A11,11 0 0 0 30.01,57.59 A8,8 0 0 0 19.17,63.35 A5,5 0 0 0 21,73 Z"/>
     <path
-        android:pathData="M31,76 L61,76 A5,5 0 0 0 65.33,73.5 A7,7 0 0 0 62,61.07 A11,11 0 0 0 40.01,60.59 A8,8 0 0 0 29.17,66.35 A5,5 0 0 0 31,76 Z">
+        android:pathData="M19,70 L51,70 A5,5 0 0 0 55.95,65.68 A7,7 0 0 0 50,55 A11,11 0 0 0 28.01,54.59 A8,8 0 0 0 17.17,60.35 A5,5 0 0 0 19,70 Z">
         <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="26" android:startY="52" android:endX="66" android:endY="76">
+            <gradient android:type="linear" android:startX="14" android:startY="46" android:endX="56" android:endY="70">
                 <item android:offset="0" android:color="#FFFFFFFF"/>
                 <item android:offset="0.55" android:color="#FFFFFFFF"/>
                 <item android:offset="1" android:color="#FFDCE6F2"/>
