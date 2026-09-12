@@ -26,6 +26,13 @@ import dev.mausam.home.ui.scene.SceneSpec
 import dev.mausam.home.ui.settings.SettingsContent
 import dev.mausam.home.ui.theme.MausamTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.dp
 
 /** Rendered by the Compose screenshot plugin (`updateDebugScreenshotTest`), inspected as PNGs. */
 private val personas = setOf(Persona.HEALTH, Persona.FITNESS, Persona.TRAVEL, Persona.GENERAL)
@@ -122,5 +129,51 @@ fun LocationsPreview(@PreviewParameter(DarkProvider::class) dark: Boolean) {
     )
     MausamTheme(settings = settings, dark = dark) {
         LocationsContent(rows = rows, query = "", results = emptyList(), locating = false, onBack = {}, onQuery = {}, onAdd = {}, onDeviceLocation = {}, onSetPrimary = {}, onMove = { _, _ -> }, onRemove = {})
+    }
+}
+
+/** The collapsed hero bar and toolbar over the scene, with the software blur path active. */
+@PreviewTest
+@Preview(name = "hero_bar", widthDp = 412, heightDp = 360)
+@Composable
+fun HeroBarPreview(@PreviewParameter(DarkProvider::class) dark: Boolean) {
+    MausamTheme(settings = settings, dark = dark) {
+        androidx.compose.runtime.CompositionLocalProvider(
+            dev.mausam.home.ui.theme.LocalMausamA11y provides dev.mausam.home.ui.theme.MausamA11y(
+                largeText = false, reduceMotion = true, reduceTransparency = false, effectsEnabled = true, powerSave = false,
+            ),
+        ) {
+            val state = homeState(SceneKind.CLEAR_DAY, withBanner = false)
+            val aurora = dev.mausam.home.ui.scene.rememberAuroraRenderer(animated = false)
+            val scene = dev.mausam.home.ui.scene.rememberSceneRenderer(state.scene, animated = false)
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val sceneHeightPx = with(density) { 440.dp.toPx() }
+            var rootSize by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+            val sampler = androidx.compose.runtime.remember {
+                dev.mausam.home.ui.glass.BackdropSampler(
+                    frame = { rootSize.height },
+                    draw = {
+                        val full = androidx.compose.ui.geometry.Size(rootSize.width.toFloat(), rootSize.height.toFloat())
+                        with(aurora) { drawAurora(full) }
+                        with(scene) { drawScene(androidx.compose.ui.geometry.Size(full.width, sceneHeightPx), 1f) }
+                    },
+                )
+            }
+            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().onSizeChanged { rootSize = it }) {
+                dev.mausam.home.ui.scene.AuroraBackdrop(renderer = aurora, modifier = androidx.compose.ui.Modifier.fillMaxSize())
+                dev.mausam.home.ui.scene.WeatherScene(renderer = scene, collapse = 1f, modifier = androidx.compose.ui.Modifier.fillMaxWidth().height(440.dp))
+                androidx.compose.foundation.layout.Column {
+                    androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(32.dp))
+                    dev.mausam.home.ui.home.Hero(
+                        state = state, heightPx = with(density) { 76.dp.toPx() }, collapse = 1f,
+                        haze = dev.chrisbanes.haze.HazeState(), sampler = sampler,
+                    )
+                }
+                dev.mausam.home.ui.home.HomeToolbar(
+                    expanded = true, refreshing = false, sampler = sampler, onRefresh = {}, onLocations = {}, onCatalogue = {}, onSettings = {},
+                    modifier = androidx.compose.ui.Modifier.align(androidx.compose.ui.Alignment.BottomEnd).padding(16.dp),
+                )
+            }
+        }
     }
 }

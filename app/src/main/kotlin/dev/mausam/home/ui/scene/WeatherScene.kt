@@ -1,9 +1,7 @@
 package dev.mausam.home.ui.scene
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,7 +44,7 @@ data class SceneSpec(
 )
 
 /** Three gradient stops for the sky, top to horizon. */
-private data class Sky(val top: Color, val mid: Color, val horizon: Color, val cloudTint: Color, val landTint: Color)
+internal data class Sky(val top: Color, val mid: Color, val horizon: Color, val cloudTint: Color, val landTint: Color)
 
 private fun sky(kind: SceneKind, dark: Boolean): Sky = when (kind) {
     SceneKind.CLEAR_DAY -> Sky(Color(0xFF2B7FE0), Color(0xFF6FB7FF), Color(0xFFBFE3FF), Color.White, Color(0xFF5FA6E8))
@@ -77,7 +75,7 @@ private fun Sky.blend(other: Sky, f: Float) = Sky(
 )
 
 /** Mutable simulation state shared by every scene kind; one frame int is the only observable. */
-private class SceneState(seed: Int) {
+internal class SceneState(seed: Int) {
     val rnd = Random(seed)
     var frame by mutableIntStateOf(0)
     var t = 0f
@@ -120,63 +118,51 @@ private class SceneState(seed: Int) {
 
 /**
  * The hero illustration: a time-of-day sky, a vector sun or moon, drifting vector clouds, hills
- * and an Indian skyline in front, then rain, stars, fog or lightning on top. Parallax comes from
- * [collapse] (0 expanded, 1 collapsed): the sky barely moves, the skyline moves most.
- * Crossfades over 600 ms when the condition changes.
+ * and an Indian skyline in front, then rain, stars, fog bands or lightning on top. Parallax comes
+ * from [collapse] (0 expanded, 1 collapsed): the sky barely moves, the skyline moves most.
+ * Drawing lives in [SceneRenderer] so the same frame can be painted on screen and into the
+ * software blur behind a glass bar.
  */
 @Composable
-fun WeatherScene(spec: SceneSpec, animated: Boolean, collapse: Float, modifier: Modifier = Modifier) {
-    Crossfade(targetState = spec.kind, animationSpec = tween(600), label = "scene", modifier = modifier) { k ->
-        SceneLayer(spec.copy(kind = k), animated, collapse, Modifier.fillMaxSize().clearAndSetSemantics { })
+fun WeatherScene(renderer: SceneRenderer, collapse: Float, modifier: Modifier = Modifier) {
+    // A short fade-in whenever the condition changes stands in for a crossfade.
+    val inspecting = androidx.compose.ui.platform.LocalInspectionMode.current
+    val reveal = remember(renderer) { androidx.compose.animation.core.Animatable(if (inspecting) 1f else 0f) }
+    LaunchedEffect(renderer) { reveal.animateTo(1f, tween(600)) }
+    Canvas(modifier.clearAndSetSemantics { }) {
+        @Suppress("UNUSED_EXPRESSION") renderer.frame
+        val a = reveal.value
+        if (a >= 1f) with(renderer) { drawScene(size, collapse) }
+        else {
+            val paint = androidx.compose.ui.graphics.Paint().apply { alpha = a }
+            drawContext.canvas.saveLayer(androidx.compose.ui.geometry.Rect(Offset.Zero, size), paint)
+            with(renderer) { drawScene(size, collapse) }
+            drawContext.canvas.restore()
+        }
     }
 }
 
-@Composable
-private fun SceneLayer(spec: SceneSpec, animated: Boolean, collapse: Float, modifier: Modifier) {
-    val dark = LocalIsDark.current
-    val base = micaBase()
-    val kind = spec.kind
-    val state = remember(kind) { SceneState(kind.ordinal * 7919 + 17) }
-    val count = when (kind) {
-        SceneKind.RAIN -> (120 + 30 * spec.intensity).toInt().coerceIn(120, 150)
-        SceneKind.THUNDERSTORM -> 140
-        SceneKind.DRIZZLE -> 60
-        SceneKind.CLEAR_NIGHT -> 40
-        else -> 0
-    }
-    val windX = (spec.windKph / 3.6f) * 6f
-    val palette = remember(kind, dark, spec.sunProgress) {
-        val s = sky(kind, dark)
-        val w = warmth(spec.sunProgress) * (if (kind == SceneKind.CLEAR_DAY || kind == SceneKind.CLEAR_NIGHT) 1f else 0.5f)
-        if (w > 0f) s.blend(Dawn, w) else s
-    }
-    val isNight = kind == SceneKind.CLEAR_NIGHT || (dark && kind != SceneKind.CLEAR_DAY)
+/** Painters, palette and particle state for one condition; recreated when the condition changes. */
+class SceneRenderer internal constructor(
+    val spec: SceneSpec,
+    private val dark: Boolean,
+    private val base: Color,
+    private val palette: Sky,
+    private val count: Int,
+    private val cloud1: Painter, private val cloud2: Painter, private val cloud3: Painter,
+    private val hillsFar: Painter, private val hillsNear: Painter, private val skyline: Painter,
+    private val bolt: Painter, private val storm: Painter, private val birds: Painter,
+    private val sun: Painter, private val moon: Painter,
+) {
+    internal val state = SceneState(spec.kind.ordinal * 7919 + 17)
+    internal val windX = (spec.windKph / 3.6f) * 6f
+    val frame: Int get() = state.frame
 
-    val cloud1 = painterResource(R.drawable.scene_cloud_1)
-    val cloud2 = painterResource(R.drawable.scene_cloud_2)
-    val cloud3 = painterResource(R.drawable.scene_cloud_3)
-    val hillsFar = painterResource(R.drawable.scene_hills_far)
-    val hillsNear = painterResource(R.drawable.scene_hills_near)
-    val skyline = painterResource(R.drawable.scene_skyline)
-    val bolt = painterResource(R.drawable.scene_bolt)
-    val storm = painterResource(R.drawable.scene_cloud_storm)
-    val birds = painterResource(R.drawable.scene_birds)
-    val sun = painterResource(R.drawable.scene_sun)
-    val moon = painterResource(R.drawable.scene_moon)
+    internal fun step(dt: Float) { if (state.seeded) state.step(dt, count, windX) }
 
-    LaunchedEffect(kind, animated) {
-        if (!animated) return@LaunchedEffect
-        var last = withFrameNanos { it }
-        while (true) {
-            withFrameNanos { now ->
-                val dt = ((now - last) / 1_000_000_000.0).toFloat().coerceAtMost(0.05f)
-                last = now
-                if (state.seeded) state.step(dt, count, windX)
-            }
-        }
-    }
-
-    Canvas(modifier) {
+    fun DrawScope.drawScene(size: Size, collapse: Float) {
+        val kind = spec.kind
+        val isNight = kind == SceneKind.CLEAR_NIGHT || (dark && kind != SceneKind.CLEAR_DAY)
         if (!state.seeded || state.size != size) {
             when (kind) {
                 SceneKind.RAIN, SceneKind.THUNDERSTORM -> state.seed(size, count, size.height * 1.2f, size.height * 1.8f, 16f * density, 30f * density)
@@ -184,14 +170,13 @@ private fun SceneLayer(spec: SceneSpec, animated: Boolean, collapse: Float, modi
                 else -> state.seed(size, count, 0f, 0f, 0f, 0f)
             }
         }
-        @Suppress("UNUSED_EXPRESSION") state.frame
         val t = state.t
         val w = size.width
         val h = size.height
         val d = density
 
         // Sky, fading into the mica base at the bottom so the list continues it seamlessly.
-        drawRect(Brush.verticalGradient(0f to palette.top, 0.45f to palette.mid, 0.78f to palette.horizon, 1f to base))
+        drawRect(Brush.verticalGradient(0f to palette.top, 0.45f to palette.mid, 0.78f to palette.horizon, 1f to base, endY = h), size = size)
 
         // Sun or moon on an arc from left to right through the day.
         val p = if (spec.sunProgress.isNaN()) (if (isNight) -1f else 0.5f) else spec.sunProgress
@@ -216,7 +201,7 @@ private fun SceneLayer(spec: SceneSpec, animated: Boolean, collapse: Float, modi
                 translate(cx - moonSize / 2, cy - moonSize / 2) { with(moon) { draw(Size(moonSize, moonSize)) } }
             }
         }
-        if (kind == SceneKind.CLEAR_NIGHT) drawStars(state, count, Color(0xFFF4F1E1))
+        if (kind == SceneKind.CLEAR_NIGHT) drawStars(state, count, Color(0xFFF4F1E1), size)
 
         // Clouds: count and tint by condition; drift with the wind; far layers move less.
         val cloudTint = palette.cloudTint
@@ -287,7 +272,7 @@ private fun SceneLayer(spec: SceneSpec, animated: Boolean, collapse: Float, modi
 
         // Legibility scrim for the hero text, continuous into the base so there is no hard edge.
         val scrim = Color(0xFF0B1220)
-        drawRect(Brush.verticalGradient(0.22f to scrim.copy(alpha = 0f), 0.62f to scrim.copy(alpha = 0.42f), 1f to scrim.copy(alpha = 0.42f)))
+        drawRect(Brush.verticalGradient(0.22f to scrim.copy(alpha = 0f), 0.62f to scrim.copy(alpha = 0.42f), 1f to scrim.copy(alpha = 0.42f), endY = h), size = size)
 
         // Weather on top.
         when (kind) {
@@ -302,18 +287,62 @@ private fun SceneLayer(spec: SceneSpec, animated: Boolean, collapse: Float, modi
                 if (kind == SceneKind.THUNDERSTORM && state.flashFrames > 0) {
                     val f = state.flashFrames
                     val a = if (f >= 7) 0.45f else if (f >= 4) 0.18f else 0.08f
-                    drawRect(Color.White.copy(alpha = a))
+                    drawRect(Color.White.copy(alpha = a), size = size)
                     val bw = 46f * d; val bh = bw * (bolt.intrinsicSize.height / bolt.intrinsicSize.width)
                     translate(w * state.boltX, h * 0.18f) { with(bolt) { draw(Size(bw, bh), alpha = if (f >= 3) 0.95f else 0.5f, colorFilter = ColorFilter.tint(Color(0xFFFFF1A8))) } }
                 }
             }
-            SceneKind.FOG -> drawFog(state, palette.horizon)
+            SceneKind.FOG -> drawFog(state, palette.horizon, size)
             else -> Unit
         }
     }
 }
 
-private fun DrawScope.drawStars(s: SceneState, count: Int, star: Color) {
+/** Builds the renderer for the current condition and runs its frame loop while [animated]. */
+@Composable
+fun rememberSceneRenderer(spec: SceneSpec, animated: Boolean): SceneRenderer {
+    val dark = LocalIsDark.current
+    val base = micaBase()
+    val kind = spec.kind
+    val count = when (kind) {
+        SceneKind.RAIN -> (120 + 30 * spec.intensity).toInt().coerceIn(120, 150)
+        SceneKind.THUNDERSTORM -> 140
+        SceneKind.DRIZZLE -> 60
+        SceneKind.CLEAR_NIGHT -> 40
+        else -> 0
+    }
+    val cloud1 = painterResource(R.drawable.scene_cloud_1)
+    val cloud2 = painterResource(R.drawable.scene_cloud_2)
+    val cloud3 = painterResource(R.drawable.scene_cloud_3)
+    val hillsFar = painterResource(R.drawable.scene_hills_far)
+    val hillsNear = painterResource(R.drawable.scene_hills_near)
+    val skyline = painterResource(R.drawable.scene_skyline)
+    val bolt = painterResource(R.drawable.scene_bolt)
+    val storm = painterResource(R.drawable.scene_cloud_storm)
+    val birds = painterResource(R.drawable.scene_birds)
+    val sun = painterResource(R.drawable.scene_sun)
+    val moon = painterResource(R.drawable.scene_moon)
+    val renderer = remember(kind, dark, base, spec.sunProgress, count, spec.windKph) {
+        val s = sky(kind, dark)
+        val w = warmth(spec.sunProgress) * (if (kind == SceneKind.CLEAR_DAY || kind == SceneKind.CLEAR_NIGHT) 1f else 0.5f)
+        val palette = if (w > 0f) s.blend(Dawn, w) else s
+        SceneRenderer(spec, dark, base, palette, count, cloud1, cloud2, cloud3, hillsFar, hillsNear, skyline, bolt, storm, birds, sun, moon)
+    }
+    LaunchedEffect(renderer, animated) {
+        if (!animated) return@LaunchedEffect
+        var last = withFrameNanos { it }
+        while (true) {
+            withFrameNanos { now ->
+                val dt = ((now - last) / 1_000_000_000.0).toFloat().coerceAtMost(0.05f)
+                last = now
+                renderer.step(dt)
+            }
+        }
+    }
+    return renderer
+}
+
+private fun DrawScope.drawStars(s: SceneState, count: Int, star: Color, size: Size) {
     for (i in 0 until count) {
         val a = 0.3f + 0.7f * abs(sin(s.t * (0.6f + (i % 5) * 0.3f) + s.phase[i]))
         val px = (s.phase[i] / 6.28f) * size.width
@@ -323,7 +352,7 @@ private fun DrawScope.drawStars(s: SceneState, count: Int, star: Color) {
 }
 
 /** Three soft horizontal bands drifting in alternate directions over the land. */
-private fun DrawScope.drawFog(s: SceneState, fog: Color) {
+private fun DrawScope.drawFog(s: SceneState, fog: Color, size: Size) {
     for (i in 0 until 3) {
         val dir = if (i % 2 == 0) 1f else -1f
         val bw = size.width * 1.4f

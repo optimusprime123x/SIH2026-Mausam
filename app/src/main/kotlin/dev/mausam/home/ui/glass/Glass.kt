@@ -154,3 +154,35 @@ fun Modifier.mausamGlass(
             .specularRim(shape, pressed)
     }
 }
+
+/**
+ * The same TOOLBAR/BANNER recipe as [mausamGlass], but blurred on the CPU from a [BackdropSampler]
+ * (see [softGlass]) so it works on renderers that never repaint a RenderEffect. Reduce-transparency
+ * and large text get the same opaque fallback as the Haze path.
+ */
+@Composable
+fun Modifier.mausamSoftGlass(
+    sampler: BackdropSampler,
+    tier: GlassTier,
+    shape: Shape,
+    shadow: Boolean = true,
+    tint: Color? = null,
+): Modifier {
+    val cs = MaterialTheme.colorScheme
+    val a11y = LocalMausamA11y.current
+    val dark = LocalIsDark.current
+    val r = recipe(tier)
+    val base = tint ?: cs.surfaceContainer
+    val alpha = (if (dark) r.alphaDark else r.alphaLight).coerceAtMost(0.94f)
+    val shadowed = if (shadow) this.fluentShadow(tier, shape) else this
+    return if (a11y.reduceTransparency || a11y.largeText) {
+        shadowed
+            .clip(shape)
+            .background(base, shape)
+            .border(1.dp, if (a11y.reduceTransparency) cs.outline else cs.outlineVariant.copy(alpha = 0.6f), shape)
+    } else {
+        shadowed
+            .softGlass(sampler, shape, tint = base, tintAlpha = alpha)
+            .specularRim(shape, pressed = false)
+    }
+}
