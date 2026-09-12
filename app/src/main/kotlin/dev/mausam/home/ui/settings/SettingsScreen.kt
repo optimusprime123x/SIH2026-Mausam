@@ -139,7 +139,11 @@ fun SettingsContent(s: UserSettings, update: ((UserSettings) -> UserSettings) ->
                         Text("Current palette", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.align(Alignment.CenterVertically))
                     }
                     HairlineDivider()
-                    SwitchRow("Weather effects", "Animated sky, clouds, rain and glass blur", s.effectsEnabled) { on -> update { it.copy(effectsEnabled = on) } }
+                    SwitchRow(
+                        "Weather effects",
+                        "Animated sky, clouds and rain · glass blur " + (a11y.glassBlurReason?.let { "off ($it)" } ?: "on"),
+                        s.effectsEnabled,
+                    ) { on -> update { it.copy(effectsEnabled = on) } }
                     HairlineDivider()
                     SwitchRow("Large text", "Single column, bigger values, denser glass", s.largeText) { on -> update { it.copy(largeText = on) } }
                 }

@@ -38,7 +38,7 @@ private data class Recipe(val blur: Dp, val alphaLight: Float, val alphaDark: Fl
 private fun recipe(tier: GlassTier) = when (tier) {
     GlassTier.CARD -> Recipe(30.dp, 0.60f, 0.52f, 0.04f, 4.dp, 0.22f)
     GlassTier.BANNER -> Recipe(24.dp, 0.90f, 0.90f, 0.02f, 8.dp, 0.24f)
-    GlassTier.TOOLBAR -> Recipe(24.dp, 0.58f, 0.50f, 0.03f, 8.dp, 0.24f)
+    GlassTier.TOOLBAR -> Recipe(24.dp, 0.55f, 0.42f, 0.03f, 8.dp, 0.24f)
     GlassTier.SHEET -> Recipe(36.dp, 0.80f, 0.78f, 0.04f, 14.dp, 0.28f)
 }
 
@@ -130,7 +130,7 @@ fun Modifier.mausamGlass(
     return if (!useBlur) {
         shadowed
             .clip(shape)
-            .background(base.copy(alpha = if (a11y.reduceTransparency || a11y.largeText) 1f else 0.90f), shape)
+            .background(base.copy(alpha = if (a11y.reduceTransparency || a11y.largeText) 1f else 0.82f), shape)
             .washed()
             .border(1.dp, if (a11y.reduceTransparency) cs.outline else cs.outlineVariant.copy(alpha = 0.6f), shape)
     } else {
@@ -141,7 +141,7 @@ fun Modifier.mausamGlass(
                 noiseFactor = r.noise
                 backgroundColor = base
                 tints = listOf(HazeTint(base.copy(alpha = alpha)))
-                fallbackTint = HazeTint(base.copy(alpha = 0.90f))
+                fallbackTint = HazeTint(base.copy(alpha = 0.82f))
             }
             .washed()
             .specularRim(shape, pressed)
