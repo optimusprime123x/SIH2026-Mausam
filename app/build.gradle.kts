@@ -17,8 +17,8 @@ android {
         applicationId = "dev.mausam.home"
         minSdk = 26
         targetSdk = 37
-        versionCode = 18
-        versionName = "0.3.6"
+        versionCode = 19
+        versionName = "0.3.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 

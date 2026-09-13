@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
@@ -144,6 +145,11 @@ fun Modifier.mausamGlass(
                 backgroundColor = base
                 tints = listOf(HazeTint(base.copy(alpha = alpha)))
                 fallbackTint = HazeTint(base.copy(alpha = 0.82f))
+                // Blur from a half-resolution copy of the backdrop (a third for the big sheet). At
+                // 24–36 dp radii the result is indistinguishable, and each effect's fill cost drops
+                // by three quarters; the noise grain gets correspondingly coarser, which at 2–4 % is
+                // not visible.
+                inputScale = if (tier == GlassTier.SHEET) HazeInputScale.Fixed(0.34f) else HazeInputScale.Fixed(0.5f)
                 // The backdrop animates every frame. On API 32+ Haze trusts the renderer to repaint
                 // an effect whose source RenderNode changed; some OEM builds (seen on Xiaomi HyperOS)
                 // never do, so the glass keeps its first, empty capture and looks opaque. Re-record on

@@ -39,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,16 +91,18 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
     LaunchedEffect(Unit) { entered = true }
     val entryScale by animateFloatAsState(if (entered) 1f else 0.95f, MaterialTheme.motionScheme.slowSpatialSpec(), label = "heroEntry")
 
-    val fontSize = lerp(88.sp, 28.sp, collapse)
+    // Half-sp steps: a new TextStyle per scrolled pixel forced a text re-layout per pixel.
+    val fontSize = ((lerp(88.sp, 28.sp, collapse).value * 2).roundToInt() / 2f).sp
     val weight = (200 + (300 * collapse).toInt()).let { (it / 25) * 25 }
     val family = remember(weight) { robotoFlexAt(weight, opsz = 64f) }
     val collapsed = collapse > 0.6f
     // The condition icon floats: a slow 4 dp bob, off under reduce-motion.
     val a11y = LocalMausamA11y.current
-    val bob = if (a11y.sceneAnimated) {
+    // Read inside the graphics layer only, so the bob never recomposes the hero.
+    val bob: State<Float>? = if (a11y.sceneAnimated) {
         val t = rememberInfiniteTransition(label = "bob")
-        t.animateFloat(-4f, 4f, infiniteRepeatable(tween(2600, easing = EaseInOutSine), RepeatMode.Reverse), label = "bobY").value
-    } else 0f
+        t.animateFloat(-4f, 4f, infiniteRepeatable(tween(2600, easing = EaseInOutSine), RepeatMode.Reverse), label = "bobY")
+    } else null
     val barShape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
     val ink = if (collapsed) cs.onSurface else Color.White
     val inkSoft = if (collapsed) cs.onSurfaceVariant else Color.White.copy(alpha = 0.86f)
@@ -176,7 +179,7 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                     if (cur != null) {
                         MeteoconIcon(
                             icon = WeatherIcon.forCondition(cur.condition, cur.isDay), size = 112.dp, tint = Color.White,
-                            modifier = Modifier.graphicsLayer { this.translationY = bob * this.density },
+                            modifier = Modifier.graphicsLayer { this.translationY = (bob?.value ?: 0f) * this.density },
                         )
                     }
                 }

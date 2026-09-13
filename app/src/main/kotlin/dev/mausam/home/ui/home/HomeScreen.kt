@@ -50,9 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
@@ -193,26 +191,26 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
         BackdropSampler(
             // Throttled to every other frame; the hero height rides in the low bits so a collapse
             // under reduce-motion still refreshes the sample.
-            frame = { ((aurora.frame + scene.frame) / 2) * 4096 + heroPx.toInt().coerceIn(0, 4095) + rootSize.height * 7 },
+            // Scene ticks re-render the sample every third frame; aurora ticks (already a third of
+            // the frame rate) and the hero height sit in their own bit fields.
+            frame = { (((scene.frame / 3) * 256 + (aurora.frame and 0xFF)) * 4096 + heroPx.toInt().coerceIn(0, 4095)) xor (rootSize.height shl 24) },
             draw = {
                 val full = Size(rootSize.width.toFloat(), rootSize.height.toFloat())
                 with(aurora) { drawAurora(full) }
                 val hp = heroPx
                 val c = (1f - (hp - heroMinPx) / (heroMaxPx - heroMinPx)).coerceIn(0f, 1f)
                 translate(top = -0.45f * (heroMaxPx - hp)) {
-                    val sceneSize = Size(full.width, sceneHeightPx)
-                    val paint = Paint().apply { alpha = 1f - 0.4f * c }
-                    drawContext.canvas.saveLayer(Rect(Offset.Zero, sceneSize), paint)
-                    with(scene) { drawScene(sceneSize, c) }
-                    drawContext.canvas.restore()
+                    with(scene) { drawScene(Size(full.width, sceneHeightPx), c) }
                 }
             },
         )
     }
 
     Box(Modifier.fillMaxSize().onSizeChanged { rootSize = it }) {
-        // Everything the glass samples lives in this one source layer.
-        Box(Modifier.fillMaxSize().hazeSource(haze)) {
+        // Everything the glass samples lives in this one source layer. Its own graphics layer
+        // means the shared-element overlay drawn by the root does not re-record the source (and
+        // with it every glass effect) on every frame of a card-open morph.
+        Box(Modifier.fillMaxSize().graphicsLayer().hazeSource(haze)) {
             AuroraBackdrop(renderer = aurora, modifier = Modifier.fillMaxSize())
             WeatherScene(
                 renderer = scene,
@@ -220,11 +218,9 @@ fun HomeScaffold(state: HomeUiState, overlay: HomeOverlay?, actions: HomeActions
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(440.dp)
-                    .graphicsLayer {
-                        translationY = -0.45f * (heroMaxPx - heroPx)
-                        // Never fully gone: the collapsed glass bar still has sky to blur.
-                        alpha = 1f - 0.4f * collapse
-                    },
+                    // Parallax only; the collapse fade is painted inside the scene, because an
+                    // alpha on this layer cost a full-scene saveLayer on every scrolled frame.
+                    .graphicsLayer { translationY = -0.45f * (heroMaxPx - heroPx) },
             )
         }
 
@@ -307,7 +303,6 @@ private fun androidx.compose.animation.SharedTransitionScope.HomeContent(
                             card = card, index = index, haze = haze, freshness = state.freshness,
                             sourceInfo = card.spec.kind?.let { state.bundle?.sources?.get(it) },
                             animatedVisibilityScope = animatedVisibilityScope,
-                            refract = index < 2 && a11y.refraction,
                             onTap = { actions.openCard(card.spec.id) },
                             onPin = { actions.togglePin(card.spec.id) },
                             onHide = { actions.hide(card.spec.id) },

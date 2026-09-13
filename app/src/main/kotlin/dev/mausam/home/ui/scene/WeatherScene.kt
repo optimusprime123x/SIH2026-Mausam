@@ -17,6 +17,13 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
@@ -87,6 +94,8 @@ internal class SceneState(seed: Int) {
     val y = FloatArray(n)
     val v = FloatArray(n)
     val len = FloatArray(n)
+    /** Line endpoints for drawPoints(Lines): one canvas call for every drop instead of one per drop. */
+    val lines = FloatArray(n * 4)
     val phase = FloatArray(n) { rnd.nextFloat() * 6.28f }
     var nextFlashAt = 6f + rnd.nextFloat() * 10f
     var flashFrames = 0
@@ -159,6 +168,52 @@ class SceneRenderer internal constructor(
     internal val windX = (spec.windKph / 3.6f) * 6f
     val frame: Int get() = state.frame
 
+    /**
+     * Each cloud is rasterised once at its display size and drawn as a bitmap. Drawing the vector
+     * painter with alpha on some devices composited its whole bounds as a faint box over
+     * neighbouring clouds; a bitmap with a transparent background has no such edge, and it is
+     * cheaper per frame than re-walking the vector.
+     */
+    private val rasters = HashMap<Pair<Painter, IntSize>, ImageBitmap>()
+    private val rasterScope = CanvasDrawScope()
+    /** The tint is baked into the bitmap, so the per-frame draw is alpha-only: no colour filter can fill the quad. */
+    private fun DrawScope.raster(painter: Painter, w: Int, h: Int, tint: ColorFilter?): ImageBitmap = rasters.getOrPut(painter to IntSize(w, h)) {
+        val bmp = ImageBitmap(w, h)
+        rasterScope.draw(this, layoutDirection, Canvas(bmp), Size(w.toFloat(), h.toFloat())) { with(painter) { draw(size, colorFilter = tint) } }
+        bmp
+    }
+    private fun DrawScope.drawRaster(painter: Painter, x: Float, y: Float, w: Float, h: Float, alpha: Float, tint: ColorFilter? = null) {
+        val iw = w.roundToInt().coerceAtLeast(1); val ih = h.roundToInt().coerceAtLeast(1)
+        drawImage(raster(painter, iw, ih, tint), dstOffset = IntOffset(x.roundToInt(), y.roundToInt()), dstSize = IntSize(iw, ih), alpha = alpha)
+    }
+    private var cloudTintColour: Color = Color.White
+    private val filters = HashMap<Color, ColorFilter>()
+    private fun tintFilter(c: Color): ColorFilter = filters.getOrPut(c) { ColorFilter.tint(c) }
+    private val cloudFilter: ColorFilter by lazy { ColorFilter.tint(cloudTintColour, BlendMode.Modulate) }
+    private var glowSize = -1f
+    private var sunGlow: Brush? = null
+    private var moonGlow: Brush? = null
+    private fun glowsFor(sunR: Float, moonR: Float) {
+        if (glowSize == sunR) return
+        glowSize = sunR
+        val sun = Color(0xFFFFD866); val moon = Color(0xFFF4F1E1)
+        sunGlow = Brush.radialGradient(0f to sun, 0.5f to sun.copy(alpha = 0.35f), 1f to sun.copy(alpha = 0f), center = Offset.Zero, radius = sunR)
+        moonGlow = Brush.radialGradient(0f to moon.copy(alpha = 0.35f), 1f to moon.copy(alpha = 0f), center = Offset.Zero, radius = moonR)
+    }
+
+    // Brushes that depend only on size are built once per size, not per frame.
+    private val rainPaint = androidx.compose.ui.graphics.Paint().apply { style = androidx.compose.ui.graphics.PaintingStyle.Stroke; strokeCap = androidx.compose.ui.graphics.StrokeCap.Round }
+    private var brushSize = Size.Zero
+    private var skyBrush: Brush? = null
+    private var scrimBrush: Brush? = null
+    private val scrim = Color(0xFF0B1220)
+    private fun brushesFor(size: Size) {
+        if (size == brushSize && skyBrush != null) return
+        brushSize = size
+        skyBrush = Brush.verticalGradient(0f to palette.top, 0.45f to palette.mid, 0.78f to palette.horizon, 1f to base, endY = size.height)
+        scrimBrush = Brush.verticalGradient(0.22f to scrim.copy(alpha = 0f), 0.62f to scrim.copy(alpha = 0.42f), 1f to scrim.copy(alpha = 0.42f), endY = size.height)
+    }
+
     internal fun step(dt: Float) { if (state.seeded) state.step(dt, count, windX) }
 
     fun DrawScope.drawScene(size: Size, collapse: Float) {
@@ -177,7 +232,8 @@ class SceneRenderer internal constructor(
         val d = density
 
         // Sky, fading into the mica base at the bottom so the list continues it seamlessly.
-        drawRect(Brush.verticalGradient(0f to palette.top, 0.45f to palette.mid, 0.78f to palette.horizon, 1f to base, endY = h), size = size)
+        brushesFor(size)
+        drawRect(skyBrush!!, size = size)
 
         // Sun or moon on an arc from left to right through the day.
         val p = if (spec.sunProgress.isNaN()) (if (isNight) -1f else 0.5f) else spec.sunProgress
@@ -186,9 +242,9 @@ class SceneRenderer internal constructor(
                 val sunSize = 150f * d
                 val cx = w * (0.14f + 0.72f * p)
                 val cy = h * (0.60f - 0.42f * sin(p * PI.toFloat())) - collapse * h * 0.15f
-                val glow = Color(0xFFFFD866)
                 val breath = 0.50f + 0.10f * sin(t * 0.8f)
-                drawCircle(Brush.radialGradient(0f to glow.copy(alpha = breath), 0.5f to glow.copy(alpha = breath * 0.35f), 1f to glow.copy(alpha = 0f), center = Offset(cx, cy), radius = sunSize * 1.6f), sunSize * 1.6f, Offset(cx, cy))
+                glowsFor(sunSize * 1.6f, 92f * d * 1.5f)
+                translate(cx, cy) { drawCircle(sunGlow!!, sunSize * 1.6f, Offset.Zero, alpha = breath) }
                 val dim = if (kind == SceneKind.CLEAR_DAY) 1f else 0.55f
                 rotate(t * 2.5f, Offset(cx, cy)) {
                     translate(cx - sunSize / 2, cy - sunSize / 2) { with(sun) { draw(Size(sunSize, sunSize), alpha = dim) } }
@@ -198,8 +254,8 @@ class SceneRenderer internal constructor(
                 // High and left of the condition icon so the two never overlap on short screens.
                 val cx = w * 0.62f
                 val cy = h * 0.11f + sin(t * 0.3f) * 3f * d - collapse * h * 0.15f
-                val glow = Color(0xFFF4F1E1)
-                drawCircle(Brush.radialGradient(0f to glow.copy(alpha = 0.35f), 1f to glow.copy(alpha = 0f), center = Offset(cx, cy), radius = moonSize * 1.5f), moonSize * 1.5f, Offset(cx, cy))
+                glowsFor(150f * d * 1.6f, moonSize * 1.5f)
+                translate(cx, cy) { drawCircle(moonGlow!!, moonSize * 1.5f, Offset.Zero) }
                 translate(cx - moonSize / 2, cy - moonSize / 2) { with(moon) { draw(Size(moonSize, moonSize)) } }
             }
         }
@@ -207,7 +263,7 @@ class SceneRenderer internal constructor(
 
         // Clouds: count and tint by condition; drift with the wind; far layers move less.
         // Night clouds lift towards white and fade, so they read as cloud and never as a grey smudge.
-        val cloudTint = if (isNight) lerp(palette.cloudTint, Color.White, 0.30f) else palette.cloudTint
+        cloudTintColour = if (isNight) lerp(palette.cloudTint, Color.White, 0.30f) else palette.cloudTint
         val cloudAlpha = when (kind) {
             SceneKind.CLEAR_DAY, SceneKind.CLEAR_NIGHT -> 0.75f
             SceneKind.FOG -> 0.55f
@@ -219,7 +275,7 @@ class SceneRenderer internal constructor(
             val span = w + cw
             val cx = ((baseX * w + t * speed * d * (if (windX >= 0) 1f else -1f)) % span + span) % span - cw
             val cy = y * h - collapse * h * par
-            translate(cx, cy) { with(painter) { draw(Size(cw, ch), alpha = alpha, colorFilter = ColorFilter.tint(cloudTint, BlendMode.Modulate)) } }
+            drawRaster(painter, cx, cy, cw, ch, alpha, cloudFilter)
         }
         val drift = 4f + windX / (6f * d) * 2f
         when (kind) {
@@ -246,7 +302,7 @@ class SceneRenderer internal constructor(
                     val ch = cw * (storm.intrinsicSize.height / storm.intrinsicSize.width)
                     val span = w + cw
                     val cx = ((baseX * w + t * speed * d) % span + span) % span - cw
-                    translate(cx, y * h - collapse * h * par) { with(storm) { draw(Size(cw, ch), alpha = if (dark) 0.85f else 0.95f) } }
+                    drawRaster(storm, cx, y * h - collapse * h * par, cw, ch, if (dark) 0.85f else 0.95f)
                 }
                 stormCloud(-0.20f, 0.02f, 0.78f, drift * 0.8f, 0.10f)
                 stormCloud(0.40f, 0.08f, 0.70f, drift * 1.1f, 0.14f)
@@ -261,7 +317,7 @@ class SceneRenderer internal constructor(
             val span = w + bw
             val bx = ((w * 0.7f + t * 9f * d) % span + span) % span - bw
             val by = h * 0.30f + sin(t * 1.3f) * 4f * d - collapse * h * 0.12f
-            translate(bx, by) { with(birds) { draw(Size(bw, bh), alpha = 0.55f, colorFilter = ColorFilter.tint(lerp(palette.landTint, base, 0.6f))) } }
+            translate(bx, by) { with(birds) { draw(Size(bw, bh), alpha = 0.55f, colorFilter = tintFilter(lerp(palette.landTint, base, 0.6f))) } }
         }
 
         // Land: far hills, near hills, skyline, each darker and moving more than the last.
@@ -270,37 +326,41 @@ class SceneRenderer internal constructor(
             val lw = w
             val lh = lw * (painter.intrinsicSize.height / painter.intrinsicSize.width) * heightFrac
             val ly = h - lh + collapse * h * par
-            translate(0f, ly) { with(painter) { draw(Size(lw, lh), alpha = alpha, colorFilter = ColorFilter.tint(tint)) } }
+            translate(0f, ly) { with(painter) { draw(Size(lw, lh), alpha = alpha, colorFilter = tintFilter(tint)) } }
         }
         layer(hillsFar, lerp(land, base, 0.35f), 0.9f, 0.08f, 1.15f)
         layer(hillsNear, lerp(land, base, 0.55f), 0.95f, 0.14f, 1.0f)
         layer(skyline, lerp(land, base, 0.72f), 1f, 0.22f, 0.95f)
 
         // Legibility scrim for the hero text, continuous into the base so there is no hard edge.
-        val scrim = Color(0xFF0B1220)
-        drawRect(Brush.verticalGradient(0.22f to scrim.copy(alpha = 0f), 0.62f to scrim.copy(alpha = 0.42f), 1f to scrim.copy(alpha = 0.42f), endY = h), size = size)
+        drawRect(scrimBrush!!, size = size)
 
         // Weather on top.
         when (kind) {
             SceneKind.RAIN, SceneKind.THUNDERSTORM, SceneKind.DRIZZLE -> {
                 val alpha = if (kind == SceneKind.DRIZZLE) 0.35f else 0.55f
                 val slant = windX / 60f
-                val drop = lerp(Color.White, palette.horizon, 0.35f)
+                val drop = lerp(Color.White, palette.horizon, 0.35f).copy(alpha = alpha)
+                val lines = state.lines
                 for (i in 0 until count) {
-                    val x0 = state.x[i]; val y0 = state.y[i]
-                    drawLine(drop.copy(alpha = alpha), Offset(x0, y0), Offset(x0 + slant * state.len[i], y0 + state.len[i]), strokeWidth = if (kind == SceneKind.DRIZZLE) 1.2f * d else 1.8f * d)
+                    val x0 = state.x[i]; val y0 = state.y[i]; val l = state.len[i]
+                    lines[i * 4] = x0; lines[i * 4 + 1] = y0; lines[i * 4 + 2] = x0 + slant * l; lines[i * 4 + 3] = y0 + l
                 }
+                drawContext.canvas.drawRawPoints(PointMode.Lines, lines, rainPaint.apply { color = drop; strokeWidth = if (kind == SceneKind.DRIZZLE) 1.2f * d else 1.8f * d })
                 if (kind == SceneKind.THUNDERSTORM && state.flashFrames > 0) {
                     val f = state.flashFrames
                     val a = if (f >= 7) 0.45f else if (f >= 4) 0.18f else 0.08f
                     drawRect(Color.White.copy(alpha = a), size = size)
                     val bw = 46f * d; val bh = bw * (bolt.intrinsicSize.height / bolt.intrinsicSize.width)
-                    translate(w * state.boltX, h * 0.18f) { with(bolt) { draw(Size(bw, bh), alpha = if (f >= 3) 0.95f else 0.5f, colorFilter = ColorFilter.tint(Color(0xFFFFF1A8))) } }
+                    translate(w * state.boltX, h * 0.18f) { with(bolt) { draw(Size(bw, bh), alpha = if (f >= 3) 0.95f else 0.5f, colorFilter = tintFilter(Color(0xFFFFF1A8))) } }
                 }
             }
             SceneKind.FOG -> drawFog(state, palette.horizon, size)
             else -> Unit
         }
+        // The collapse fade, painted rather than applied as layer alpha (which cost a full-scene
+        // saveLayer per scrolled frame). Never fully gone: the collapsed bar still has sky to blur.
+        if (collapse > 0f) drawRect(base.copy(alpha = 0.4f * collapse), size = size)
     }
 }
 

@@ -182,22 +182,31 @@ class HomeViewModel(private val graph: AppGraph) : ViewModel() {
     private val _openUri = MutableSharedFlow<List<String>>(extraBufferCapacity = 1)
     val openUri: SharedFlow<List<String>> = _openUri
 
+    /** Tap recorded when the sheet closes: a re-rank under the opening morph cost a frame of layout. */
+    private var pendingTap: String? = null
+
     fun openCard(cardId: String) {
-        viewModelScope.launch { repo.recordTap(cardId) }
         val action = CardRegistry.all.firstOrNull { it.id == cardId }?.action
         if (action is CardAction.DeepLink) {
+            viewModelScope.launch { repo.recordTap(cardId) }
             val loc = state.value.location
             val lat = loc?.latitude?.let { String.format(java.util.Locale.ENGLISH, "%.5f", it) } ?: "0"
             val lon = loc?.longitude?.let { String.format(java.util.Locale.ENGLISH, "%.5f", it) } ?: "0"
             val primary = action.uri.replace("{lat}", lat).replace("{lon}", lon)
             _openUri.tryEmit(listOf(primary, "geo:$lat,$lon?z=13"))
-        } else overlay.value = HomeOverlay.Detail(cardId)
+        } else {
+            pendingTap = cardId
+            overlay.value = HomeOverlay.Detail(cardId)
+        }
     }
 
     fun openWarnings() { overlay.value = HomeOverlay.Detail(CardRegistry.warnings.id) }
     fun dismissBanner() = viewModelScope.launch { repo.dismissBanner(state.value.banner?.id) }
     fun openCatalogue() { overlay.value = HomeOverlay.Catalogue }
-    fun closeOverlay() { overlay.value = null }
+    fun closeOverlay() {
+        overlay.value = null
+        pendingTap?.let { id -> pendingTap = null; viewModelScope.launch { repo.recordTap(id) } }
+    }
 
     fun togglePin(cardId: String) = viewModelScope.launch {
         repo.updatePref(cardId) { it.copy(pinnedAt = if (it.pinnedAt == null) Instant.now() else null) }
