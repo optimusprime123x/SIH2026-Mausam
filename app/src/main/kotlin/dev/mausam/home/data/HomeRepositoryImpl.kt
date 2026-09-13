@@ -239,11 +239,12 @@ class HomeRepositoryImpl(
     /**
      * PM2.5 rows then PM10 rows for the state, at most three requests. The sample key returns
      * ten rows per call, so asking per pollutant is what makes the nearest station reachable;
-     * data.gov.in spells some states with underscores and some with spaces, so both are tried.
+     * data.gov.in spells multi-word states with spaces ("West Bengal"); underscores are a fallback.
      */
     private suspend fun fetchCpcb(loc: Location): dev.mausam.home.data.cpcb.CpcbResponse {
         val key = BuildConfig.CPCB_API_KEY
-        val spellings = loc.state?.let { listOf(cpcbStateName(it), it.lowercase().split(' ').joinToString(" ") { w -> w.replaceFirstChar { c -> c.uppercase() } }) } ?: listOf(null)
+        // data.gov.in uses "West Bengal" (spaces); the underscore form is kept as a fallback.
+        val spellings = loc.state?.let { listOf(it.lowercase().split(' ').joinToString(" ") { w -> w.replaceFirstChar { c -> c.uppercase() } }, cpcbStateName(it)) } ?: listOf(null)
         var pm25: dev.mausam.home.data.cpcb.CpcbResponse? = null
         var usedState: String? = null
         for (state in spellings.distinct()) {
