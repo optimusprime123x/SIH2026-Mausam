@@ -1,5 +1,6 @@
 package dev.mausam.home.data
 
+import dev.mausam.home.data.cpcb.CpcbAqi
 import dev.mausam.home.data.cpcb.CpcbApi
 import dev.mausam.home.data.cpcb.CpcbResponse
 import dev.mausam.home.data.imd.ImdCodes
@@ -228,23 +229,13 @@ class WeatherAssembler {
             }
         } ?: emptyList()
 
-        // Prefer the nearest CPCB station reading when it is recent.
-        val station = cpcb?.records?.groupBy { it.station ?: "" }?.filterKeys { it.isNotEmpty() }?.mapNotNull { (name, rows) ->
-            val lat = rows.firstNotNullOfOrNull { it.latitude?.toDoubleOrNull() } ?: return@mapNotNull null
-            val lon = rows.firstNotNullOfOrNull { it.longitude?.toDoubleOrNull() } ?: return@mapNotNull null
-            val pm25 = rows.firstOrNull { it.pollutantId.equals("PM2.5", true) }?.pollutantAvg?.toDoubleOrNull()
-            val pm10 = rows.firstOrNull { it.pollutantId.equals("PM10", true) }?.pollutantAvg?.toDoubleOrNull()
-            if (pm25 == null && pm10 == null) return@mapNotNull null
-            val updated = rows.firstNotNullOfOrNull { it.lastUpdate }?.let { parseCpcbTime(it) }
-            Triple(name, Geo.haversineKm(location.latitude, location.longitude, lat, lon), Triple(pm25, pm10, updated))
-        }?.filter { it.second <= 60.0 }?.minByOrNull { it.second }
-
-        if (station != null) {
-            val (name, _, v) = station
-            val (pm25, pm10, updated) = v
-            val aqi = IndianAqi.compute(pm25, pm10)!!
-            raw[SourceKey.CPCB]?.let { sources[DataKind.AIR_QUALITY] = SourceInfo("${CpcbApi.ATTRIBUTION.tr()} ($name)", it.fetchedAt, it.fromSnapshot) }
-            return AirQuality(updated ?: now, aqi, pm25, pm10, IndianAqi.dominant(pm25, pm10), history, name)
+        // Prefer the nearest CPCB station. Its values are sub-indices, so the AQI is the worst of
+        // them and no concentration is claimed.
+        val station = cpcb?.records?.let { CpcbAqi.nearest(it, location.latitude, location.longitude) }
+        if (station != null && CpcbAqi.plausible(station)) {
+            val updated = station.lastUpdate?.let { parseCpcbTime(it) }
+            raw[SourceKey.CPCB]?.let { sources[DataKind.AIR_QUALITY] = SourceInfo("${CpcbApi.ATTRIBUTION.tr()} (${station.name})", it.fetchedAt, it.fromSnapshot) }
+            return AirQuality(updated ?: now, station.aqi, null, null, station.dominant, history, station.name)
         }
         val c = om?.current ?: return null
         val aqi = IndianAqi.compute(c.pm25, c.pm10) ?: return null

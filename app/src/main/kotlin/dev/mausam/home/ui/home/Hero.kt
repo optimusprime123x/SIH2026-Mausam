@@ -184,7 +184,8 @@ fun Hero(state: HomeUiState, heightPx: Float, collapse: Float, haze: HazeState, 
                 // AQI leads, tinted by its CPCB category, so it survives when a narrow screen drops the last chip.
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s2), verticalArrangement = Arrangement.spacedBy(Space.s1), maxLines = 1) {
                     state.bundle?.airQuality?.let { air ->
-                        HeroChip("AQI %d".trf(air.aqi), haze, tint = aqiChipTint(air.aqi))
+                        // A tilde marks the model estimate used when no CPCB station is within reach.
+                        HeroChip((if (air.stationName == null) "AQI ~%d" else "AQI %d").trf(air.aqi), haze, tint = aqiChipTint(air.aqi))
                     }
                     cur?.feelsLikeC?.let { HeroChip("Feels %s".trf(fmt.temp(it)), haze) }
                     cur?.windKph?.let { HeroChip("Wind %s".trf(fmt.speed(it)), haze) }

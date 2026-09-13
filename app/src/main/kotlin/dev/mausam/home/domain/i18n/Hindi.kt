@@ -44,6 +44,7 @@ object HindiCommon {
         // Hero
         "H %s  L %s" to "अधिकतम %s  न्यूनतम %s",
         "AQI %d" to "AQI %d",
+        "AQI ~%d" to "AQI ~%d",
         "Feels %s" to "महसूस %s",
         "Wind %s" to "हवा %s",
         "%d%% humidity" to "%d%% आर्द्रता",

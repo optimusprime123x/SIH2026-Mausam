@@ -6,6 +6,7 @@ package dev.mausam.home.domain.i18n
  */
 object HindiCards {
     val table: Map<String, String> = mapOf(
+        "Model estimate" to "मॉडल अनुमान",
         // Soil moisture
         "Soil moisture" to "मिट्टी की नमी",
         "Open-Meteo soil model" to "Open-Meteo मृदा मॉडल",
