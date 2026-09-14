@@ -15,6 +15,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import dev.mausam.home.ui.theme.LocalIsDark
@@ -43,22 +44,34 @@ class AuroraRenderer(
         internal set
     internal var t = 0f
 
+    // Radial brushes are built once per width and slid into place with translate(); building
+    // three gradients per frame was measurable on a busy scene.
+    private var brushWidth = -1f
+    private val brushes = arrayOfNulls<Brush>(3)
+    private val radii = FloatArray(3)
+    private fun brushesFor(w: Float) {
+        if (w == brushWidth) return
+        brushWidth = w
+        val colours = arrayOf(a, b, c); val fr = floatArrayOf(0.75f, 0.70f, 0.65f)
+        for (i in 0 until 3) {
+            radii[i] = w * fr[i]
+            brushes[i] = Brush.radialGradient(
+                0f to colours[i].copy(alpha = strength), 0.45f to colours[i].copy(alpha = strength * 0.45f), 1f to colours[i].copy(alpha = 0f),
+                center = Offset.Zero, radius = radii[i],
+            )
+        }
+    }
+
     fun DrawScope.drawAurora(size: Size) {
         drawRect(base, size = size)
         val w = size.width; val h = size.height
-        fun blob(color: Color, cx: Float, cy: Float, r: Float) {
-            val center = Offset(cx, cy)
-            drawCircle(
-                Brush.radialGradient(
-                    0f to color.copy(alpha = strength), 0.45f to color.copy(alpha = strength * 0.45f), 1f to color.copy(alpha = 0f),
-                    center = center, radius = r,
-                ),
-                radius = r, center = center,
-            )
+        brushesFor(w)
+        fun blob(i: Int, cx: Float, cy: Float) {
+            translate(cx, cy) { drawCircle(brushes[i]!!, radius = radii[i], center = Offset.Zero) }
         }
-        blob(a, w * (0.15f + 0.06f * sin(t * 0.11f)), h * (0.42f + 0.05f * cos(t * 0.09f)), w * 0.75f)
-        blob(b, w * (0.92f - 0.05f * cos(t * 0.13f)), h * (0.62f + 0.06f * sin(t * 0.08f)), w * 0.70f)
-        blob(c, w * (0.45f + 0.08f * sin(t * 0.07f)), h * (0.95f + 0.03f * cos(t * 0.1f)), w * 0.65f)
+        blob(0, w * (0.15f + 0.06f * sin(t * 0.11f)), h * (0.42f + 0.05f * cos(t * 0.09f)))
+        blob(1, w * (0.92f - 0.05f * cos(t * 0.13f)), h * (0.62f + 0.06f * sin(t * 0.08f)))
+        blob(2, w * (0.45f + 0.08f * sin(t * 0.07f)), h * (0.95f + 0.03f * cos(t * 0.1f)))
     }
 }
 
@@ -79,9 +92,13 @@ fun rememberAuroraRenderer(animated: Boolean): AuroraRenderer {
     LaunchedEffect(renderer, animated) {
         if (!animated) return@LaunchedEffect
         val start = withFrameNanos { it }
+        var n = 0
+        // The blobs move at about a tenth of a radian per second: a third of the frame rate is plenty.
         while (true) withFrameNanos { now ->
-            renderer.t = (now - start) / 1_000_000_000f
-            renderer.frame++
+            if (++n % 3 == 0) {
+                renderer.t = (now - start) / 1_000_000_000f
+                renderer.frame++
+            }
         }
     }
     return renderer

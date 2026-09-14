@@ -67,6 +67,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
@@ -133,12 +134,13 @@ fun MeteoconIcon(icon: WeatherIcon, size: Dp, modifier: Modifier = Modifier, ani
         } else {
             val composition by rememberLottieComposition(LottieCompositionSpec.Asset("meteocons/${icon.assetName}.json"))
             if (composition != null) {
-                LottieAnimation(
-                    composition = composition,
-                    iterations = LottieConstants.IterateForever,
-                    isPlaying = animated && !a11y.reduceMotion,
-                    modifier = Modifier.size(size),
+                // Follows the "Weather effects" switch (and reduce-motion, power saver, large text).
+                // Meteocons are authored at 60 fps; stepping them at the display rate doubled the work.
+                val progress by animateLottieCompositionAsState(
+                    composition, iterations = LottieConstants.IterateForever,
+                    isPlaying = animated && a11y.sceneAnimated, useCompositionFrameRate = true,
                 )
+                LottieAnimation(composition = composition, progress = { progress }, modifier = Modifier.size(size))
             } else {
                 Icon(symbolFor(icon), contentDescription = null, modifier = Modifier.size(size * 0.62f), tint = tint)
             }

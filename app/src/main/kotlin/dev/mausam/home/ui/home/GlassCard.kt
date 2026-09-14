@@ -56,7 +56,6 @@ import dev.mausam.home.ui.common.AccentIconDisc
 import dev.mausam.home.ui.common.RollingValue
 import dev.mausam.home.ui.common.ToneChip
 import dev.mausam.home.ui.glass.GlassTier
-import dev.mausam.home.ui.glass.lensEdge
 import dev.mausam.home.ui.glass.mausamGlass
 import dev.mausam.home.ui.theme.Fluent
 import dev.mausam.home.ui.theme.ImdTiers
@@ -115,7 +114,6 @@ fun SharedTransitionScope.GlassCard(
     freshness: Freshness?,
     sourceInfo: SourceInfo?,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    refract: Boolean,
     onTap: () -> Unit,
     onPin: () -> Unit,
     onHide: () -> Unit,
@@ -170,7 +168,6 @@ fun SharedTransitionScope.GlassCard(
             )
             .mausamGlass(haze, GlassTier.CARD, MausamRadius.cardShape, pressed = pressed, wash = accent.wash)
             .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
-            .lensEdge(MausamRadius.Card, enabled = refract)
             .pointerInput(card.spec.id) {
                 detectTapGestures(
                     // No haptic on press: a finger landing on a card to scroll is not a tap.

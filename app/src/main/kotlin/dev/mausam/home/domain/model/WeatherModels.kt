@@ -244,6 +244,7 @@ enum class SoilCategory { VERY_DRY, DRY, ADEQUATE, WET, SATURATED;
 /** Which upstream provided each kind of data, so cards can label their source honestly. */
 enum class DataKind { CURRENT, HOURLY, DAILY, WARNINGS, AIR_QUALITY, MARINE, RAINFALL, ADVISORY, SOIL }
 
+@androidx.compose.runtime.Immutable
 data class SourceInfo(val label: String, val fetchedAt: Instant, val fromSnapshot: Boolean)
 
 data class WeatherBundle(

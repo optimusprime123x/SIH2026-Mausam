@@ -77,9 +77,10 @@ object CardRegistry {
             delta < 0 -> "down %d since yesterday".trf(-delta)
             else -> "unchanged since yesterday".tr()
         }
+        val estimate = aq.stationName == null
         CardValue.Ready(
-            primary = aq.aqi.toString(), unit = "AQI",
-            secondary = "${cat.label.tr()} · $deltaText",
+            primary = (if (estimate) "~" else "") + aq.aqi, unit = "AQI",
+            secondary = listOfNotNull(if (estimate) "Model estimate".tr() else null, cat.label.tr(), deltaText).joinToString(" · "),
             trend = trend, tone = tone, icon = WeatherIcon.AIR, numeric = aq.aqi.toDouble(),
             body = cat.advice.tr(),
         )

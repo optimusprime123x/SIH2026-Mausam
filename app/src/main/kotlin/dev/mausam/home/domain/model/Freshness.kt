@@ -7,6 +7,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /** Every card shows "as of HH:MM"; past two hours it turns grey with "offline, last updated HH:MM". */
+@androidx.compose.runtime.Immutable
 data class Freshness(val fetchedAt: Instant, val isStale: Boolean, val label: String) {
     companion object {
         val STALE_AFTER: Duration = Duration.ofHours(2)

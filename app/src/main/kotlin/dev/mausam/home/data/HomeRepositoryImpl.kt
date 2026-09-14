@@ -168,7 +168,7 @@ class HomeRepositoryImpl(
                     async { fetchNational(SourceKey.SACHET) { Http.json.encodeToString(JsonArray.serializer(), sachet.allAlerts()) } },
                     async {
                         fetch(SourceKey.CPCB, loc) {
-                            val r = cpcb.stations(BuildConfig.CPCB_API_KEY, state = loc.state?.let(::cpcbStateName))
+                            val r = fetchCpcb(loc)
                             if (r.records.isEmpty()) error("empty") else Http.json.encodeToString(dev.mausam.home.data.cpcb.CpcbResponse.serializer(), r)
                         }
                     },
@@ -235,6 +235,26 @@ class HomeRepositoryImpl(
     }
 
     private fun cpcbStateName(s: String): String = s.lowercase().split(' ').joinToString("_") { it.replaceFirstChar { c -> c.uppercase() } }
+
+    /**
+     * PM2.5 rows then PM10 rows for the state, at most three requests. The sample key returns
+     * ten rows per call, so asking per pollutant is what makes the nearest station reachable;
+     * data.gov.in spells multi-word states with spaces ("West Bengal"); underscores are a fallback.
+     */
+    private suspend fun fetchCpcb(loc: Location): dev.mausam.home.data.cpcb.CpcbResponse {
+        val key = BuildConfig.CPCB_API_KEY
+        // data.gov.in uses "West Bengal" (spaces); the underscore form is kept as a fallback.
+        val spellings = loc.state?.let { listOf(it.lowercase().split(' ').joinToString(" ") { w -> w.replaceFirstChar { c -> c.uppercase() } }, cpcbStateName(it)) } ?: listOf(null)
+        var pm25: dev.mausam.home.data.cpcb.CpcbResponse? = null
+        var usedState: String? = null
+        for (state in spellings.distinct()) {
+            val r = cpcb.stations(key, state = state, pollutant = "PM2.5")
+            if (r.records.isNotEmpty()) { pm25 = r; usedState = state; break }
+        }
+        val first = pm25 ?: return dev.mausam.home.data.cpcb.CpcbResponse()
+        val pm10 = runCatching { cpcb.stations(key, state = usedState, pollutant = "PM10") }.getOrNull()
+        return first.copy(records = first.records + (pm10?.records ?: emptyList()))
+    }
 
     override suspend fun buildContext(location: Location, refresh: Boolean): CardContext? {
         val cached = if (refresh) refresh(location) else (cachedBundle(location) ?: refresh(location))
